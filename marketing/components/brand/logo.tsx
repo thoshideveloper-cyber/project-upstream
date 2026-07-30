@@ -60,10 +60,9 @@ export function UpstreamLogo({ markSize = 24, className }: { markSize?: number; 
   return (
     <span className={cn("flex items-center gap-2", className)}>
       <UpstreamMark size={markSize} className="text-foreground" />
-      <span
-        className="text-foreground font-semibold tracking-tight"
-        style={{ fontFamily: "var(--font-display)", fontSize: "20px", letterSpacing: "-0.3px" }}
-      >
+      {/* The wordmark carries the same wide cut as the page's display headings —
+          the lockup and the h1 should read as one typeface doing one job. */}
+      <span className="mkt-subhead text-foreground text-[19px] leading-none font-semibold">
         Upstream
       </span>
     </span>

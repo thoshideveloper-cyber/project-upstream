@@ -1,4 +1,4 @@
-import { CardTitle, Container, Section, SectionIntro } from "./primitives";
+import { Container, Readout, Section, SectionHead, Subhead } from "./primitives";
 
 type Step = {
   /** Mono kicker — when this happens, so the three steps read as a timeline at a glance. */
@@ -32,10 +32,12 @@ export function HowItWorks() {
   return (
     <Section id="how-it-works">
       <Container>
-        <SectionIntro eyebrow="How it works" title="Running on it the same day.">
+        {/* One of the two numbered sequences on the page, and the only one where
+            the numbers carry information: these three happen in this order. */}
+        <SectionHead title="Running on it the same day.">
           No migration project, no re-training, no new vocabulary. Import, reach out, and the
           record starts compounding from the first send.
-        </SectionIntro>
+        </SectionHead>
 
         <ol className="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
           {/* The rail the steps sit on — draws itself in as the section powers up. */}
@@ -56,16 +58,14 @@ export function HowItWorks() {
 
               {/* Amber lives in the chip's ring, not the numeral — amber-on-paper
                   can't hold 4.5:1 at 12px, so the figure itself is ink. */}
-              <span className="relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-background font-mono text-xs font-medium tracking-[0.1em] text-foreground tabular-nums">
+              <span className="relative z-10 inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-primary/40 bg-background font-mono text-xs font-medium tracking-[0.1em] text-foreground">
                 {String(i + 1).padStart(2, "0")}
               </span>
 
               <div className="min-w-0 md:mt-6">
-                <p className="font-mono text-[10px] tracking-[0.15em] text-muted-foreground uppercase">
-                  {s.when}
-                </p>
-                <CardTitle className="mt-2">{s.title}</CardTitle>
-                <p className="mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground text-pretty">
+                <Readout className="block text-[10px] tracking-[0.14em]">{s.when}</Readout>
+                <Subhead className="mt-2.5 text-xl">{s.title}</Subhead>
+                <p className="mt-2.5 max-w-[48ch] text-sm leading-relaxed text-muted-foreground text-pretty">
                   {s.detail}
                 </p>
               </div>

@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
 import { CTA_HREF } from "@/content/site";
-import { Container, CTAGhost, CTAPrimary, DisplayHeading, Section } from "./primitives";
+import { Container, CTAGhost, CTALink, CTAPrimary, Display, Readout, Section } from "./primitives";
 
 /**
  * The reassurance that makes clicking cheap — risk reversal, one line each. No
@@ -11,37 +11,42 @@ const REASSURANCE = ["A live walkthrough", "Your sheets, imported live", "No mig
 
 export function ClosingCta() {
   return (
-    <Section motion rule={false}>
+    <Section motion rule={false} rhythm="loose">
       <Container>
-        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-card/40 px-6 py-16 text-center md:px-8">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/20 px-5 py-16 text-center sm:px-8 md:py-20">
           <div aria-hidden className="mkt-grid pointer-events-none absolute inset-0 opacity-40" />
           <div
             aria-hidden
-            className="pointer-events-none absolute -top-24 left-1/2 size-[30rem] -translate-x-1/2 rounded-full"
-            style={{ background: "radial-gradient(circle, oklch(0.72 0.16 58 / 0.18), transparent 65%)" }}
+            className="pointer-events-none absolute -top-40 left-1/2 size-[34rem] -translate-x-1/2 rounded-full"
+            style={{
+              background: "radial-gradient(circle, oklch(0.72 0.16 58 / 0.18), transparent 65%)",
+            }}
           />
           <div className="relative">
-            <DisplayHeading className="mx-auto max-w-2xl">
-              Get your team out of spreadsheets.
-            </DisplayHeading>
+            <Display className="mx-auto max-w-3xl">Get your team out of spreadsheets.</Display>
             {/* One last loss-aversion beat, then the relief. */}
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-muted-foreground text-pretty">
+            <p className="mx-auto mt-5 max-w-[54ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
               Somewhere on the list a follow-up is already late, and somewhere in an inbox is
               something the next project needs to know. Put both on one record.
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <CTAPrimary href={CTA_HREF} className="mkt-shimmer">
                 Book a demo
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </CTAPrimary>
               <CTAGhost href={CTA_HREF}>See the live demo</CTAGhost>
             </div>
+            {/* The quiet third option: not everyone at this point is ready to
+                talk to someone, and the alternative to a demo is an answer. */}
+            <CTALink href="#faq" className="mt-6 justify-center text-muted-foreground">
+              Read the FAQ first
+            </CTALink>
 
-            <ul className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.15em] text-muted-foreground uppercase">
+            <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-2.5 border-t border-border pt-7">
               {REASSURANCE.map((r) => (
-                <li key={r} className="flex items-center gap-1.5">
-                  <span aria-hidden className="size-1 rounded-full bg-primary" />
-                  {r}
+                <li key={r} className="flex items-center gap-2">
+                  <span aria-hidden className="h-px w-3 bg-primary" />
+                  <Readout>{r}</Readout>
                 </li>
               ))}
             </ul>

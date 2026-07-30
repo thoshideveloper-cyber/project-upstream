@@ -1,38 +1,53 @@
 import type { Metadata } from "next";
-import { Cormorant, Outfit, JetBrains_Mono } from "next/font/google";
+import { Archivo, Azeret_Mono } from "next/font/google";
 import "./globals.css";
 
 import { THEME_INIT_SCRIPT } from "@/components/theme";
 
-// Only the weights the landing actually renders: display at 500/600, sans at
-// 400/500, mono at 400/500/600. Cormorant 700 and Outfit 300/600/700 were declared
-// but never used — browsers fetch faces on demand, so this trims the font CSS and
-// removes four faces that could only ever be requested by mistake.
-const cormorant = Cormorant({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
-
-const outfit = Outfit({
+/**
+ * Two voices, contrasted on the width axis rather than serif-vs-sans.
+ *
+ * The page used to run Cormorant display over Outfit body — a display serif with
+ * mono labels and hairline rules, which is the saturated editorial-magazine lane
+ * and reads as a magazine *about* an instrument rather than the instrument. Upstream
+ * is a working console: a shared registry, a computed clock, an append-only log.
+ *
+ * Archivo is a grotesque with a real `wdth` axis, so headings run wide (signage,
+ * a faceplate, a manifest header) and body runs normal from the same family — one
+ * voice, committed contrast. Azeret Mono is the data voice: squared terminals and
+ * mechanical rhythm, for readouts and counts, never for prose.
+ */
+const archivo = Archivo({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  axes: ["wdth"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const azeret = Azeret_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
 });
 
+const title = "Upstream — the record your outreach runs on";
+const description =
+  "Upstream runs the whole loop on one record: find the organisations worth reaching, work the follow-ups on a computed cadence, and keep the relationship memory with the team instead of in someone's inbox.";
+
 export const metadata: Metadata = {
-  title: "Upstream — Sourcing, outreach and relationship CRM",
-  description:
-    "Upstream runs the whole loop on one record: find the organisations worth reaching, work the follow-ups on a computed cadence, and keep the relationship memory with the team instead of in someone's inbox.",
+  title,
+  description,
+  applicationName: "Upstream",
+  keywords: [
+    "outreach CRM",
+    "relationship intelligence",
+    "deal sourcing",
+    "follow-up cadence",
+    "pipeline memory",
+  ],
+  openGraph: { title, description, siteName: "Upstream", type: "website" },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 export default function RootLayout({
@@ -44,7 +59,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${cormorant.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${archivo.variable} ${azeret.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
@@ -54,10 +69,14 @@ export default function RootLayout({
             logo, with six nav links between a keyboard user and the page. */}
         <a
           href="#content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[70] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground"
         >
           Skip to content
         </a>
+        {/* Film grain over the whole page. Obsidian at this size is a very large
+            flat field; a fixed 4% noise plate keeps it from reading as vector
+            emptiness without adding a request (it's an inline SVG data URI). */}
+        <div aria-hidden className="mkt-grain" />
         {children}
       </body>
     </html>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShieldCheck } from "lucide-react";
 
-import { CheckItem, Container, Section, SectionIntro } from "./primitives";
+import { Container, Marker, Readout, Section, SectionHead } from "./primitives";
 
 const PROOF = [
   "httpOnly, Secure cookies — no tokens ever touch the browser",
@@ -75,7 +75,7 @@ function EncryptedCard() {
       onFocus={() => setActive(true)}
       onBlur={() => setActive(false)}
       data-open={active || pinned ? "" : undefined}
-      className="mkt-decrypt group relative aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-border bg-background text-left"
+      className="mkt-decrypt group relative aspect-square w-full max-w-md overflow-hidden rounded-xl border border-border bg-background text-left"
     >
       {/* dotted-ledger base */}
       <span aria-hidden className="mkt-grid absolute inset-0 opacity-40" />
@@ -93,13 +93,11 @@ function EncryptedCard() {
 
       {/* center lockup */}
       <span className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-        <span className="inline-flex size-16 items-center justify-center rounded-2xl border border-border bg-card/80 backdrop-blur-sm transition-transform duration-300 group-hover:scale-95">
-          <ShieldCheck aria-hidden className="size-7 text-primary" />
+        <span className="inline-flex size-16 items-center justify-center rounded-xl border border-border bg-card/80 backdrop-blur-sm transition-transform duration-300 group-hover:scale-95">
+          <ShieldCheck aria-hidden strokeWidth={1.5} className="size-7 text-primary" />
         </span>
-        <span className="font-mono text-[11px] tracking-[0.2em] text-foreground/80 uppercase">
-          Secure by default
-        </span>
-        <span className="font-mono text-[10px] tracking-[0.15em] text-muted-foreground">
+        <Readout tone="ink">Secure by default</Readout>
+        <span className="font-mono text-[10px] tracking-[0.14em] text-muted-foreground">
           {pinned ? "tap to re-encrypt" : "hover or tap to decrypt"}
         </span>
       </span>
@@ -113,18 +111,17 @@ export function Security() {
       <Container>
         <div className="grid items-center gap-12 md:grid-cols-2 lg:gap-16">
           <div>
-            <SectionIntro
-              eyebrow="Security"
-              title={<>Built for data you can&apos;t afford to leak.</>}
-            >
+            {/* The second of the page's two kickers, and it earns it: this
+                section names a category the reader is scanning for. */}
+            <SectionHead kicker="Security" title="Built for data you can't afford to leak.">
               Who you&apos;re talking to is commercially sensitive. That record is locked down by
               default, not bolted down later.
-            </SectionIntro>
+            </SectionHead>
             {/* One list marker on the page — the per-item icons here were a third
                 chip size and a second bullet language. */}
             <ul className="mt-8 space-y-3">
               {PROOF.map((text) => (
-                <CheckItem key={text}>{text}</CheckItem>
+                <Marker key={text}>{text}</Marker>
               ))}
             </ul>
           </div>

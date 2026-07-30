@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { Plus } from "lucide-react";
 
 import { FAQ as QA, CTA_HREF } from "@/content/site";
 import { cn } from "@/lib/utils";
-import { Container, DisplayHeading, Eyebrow, Section } from "./primitives";
+import { Container, CTALink, Display, Lede, Section } from "./primitives";
 
 export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
@@ -14,48 +12,59 @@ export function Faq() {
   return (
     <Section id="faq">
       <Container>
-        <div className="grid gap-12 md:grid-cols-[0.8fr_1.2fr]">
-          <div>
-            <Eyebrow>Answers</Eyebrow>
-            <DisplayHeading className="mt-5">Questions, answered.</DisplayHeading>
-            <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-muted-foreground">
-              Everything teams ask before moving off spreadsheets. Still curious?{" "}
-              {/* Underlined at rest: amber against muted body copy is a 1.65:1
-                  difference, so colour alone never marked this as a link. */}
-              {/* Link, not a raw <a>: a bare href skips Next's basePath, which
-                  breaks this one CTA on a sub-path deployment. */}
-              <Link
-                href={CTA_HREF}
-                prefetch={false}
-                className="text-primary-ink underline underline-offset-4 hover:no-underline"
-              >
-                Book a demo
-              </Link>
-              .
-            </p>
+        <div className="grid gap-10 md:grid-cols-[0.75fr_1.25fr] md:gap-16">
+          <div className="md:sticky md:top-28 md:self-start">
+            <Display>Questions, answered.</Display>
+            <Lede className="mt-5 max-w-[38ch]">
+              Everything teams ask before moving off spreadsheets.
+            </Lede>
+            <CTALink href={CTA_HREF} className="mt-6">
+              Still curious? Book a demo
+            </CTALink>
           </div>
 
-          <ul className="divide-y divide-border border-y border-border">
+          <ul className="border-t border-border">
             {QA.map((item, i) => {
               const on = open === i;
               return (
-                <li key={item.q}>
+                <li key={item.q} className="border-b border-border">
                   <button
                     type="button"
                     onClick={() => setOpen(on ? null : i)}
                     aria-expanded={on}
                     aria-controls={`faq-answer-${i}`}
                     id={`faq-question-${i}`}
-                    className="flex w-full items-center justify-between gap-4 py-5 text-left"
+                    className="group flex w-full items-center justify-between gap-5 py-5 text-left transition-colors hover:text-foreground"
                   >
-                    <span className="text-[15px] font-medium text-foreground">{item.q}</span>
-                    <Plus
+                    <span
                       className={cn(
-                        "size-4 shrink-0 text-muted-foreground transition-transform duration-300",
-                        on && "rotate-45 text-primary",
+                        "text-[15px] font-medium transition-colors md:text-base",
+                        on ? "text-foreground" : "text-foreground/80 group-hover:text-foreground",
                       )}
-                    />
+                    >
+                      {item.q}
+                    </span>
+                    {/* Two rules crossing, not a rotating glyph: the vertical bar
+                        collapses into the horizontal one, so the control shows
+                        which way it's about to go. */}
+                    <span aria-hidden className="relative size-3.5 shrink-0">
+                      <span
+                        className={cn(
+                          "absolute top-1/2 left-0 h-px w-full -translate-y-1/2 transition-colors duration-300",
+                          on ? "bg-primary" : "bg-muted-foreground group-hover:bg-foreground",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "absolute top-0 left-1/2 h-full w-px -translate-x-1/2 transition-all duration-300",
+                          on
+                            ? "scale-y-0 bg-primary"
+                            : "scale-y-100 bg-muted-foreground group-hover:bg-foreground",
+                        )}
+                      />
+                    </span>
                   </button>
+
                   {/* `invisible` when closed, not just clipped: a 0fr grid row with
                       overflow-hidden still sits in the accessibility tree, so a
                       screen reader read every answer whatever was expanded. */}
@@ -65,10 +74,10 @@ export function Faq() {
                     aria-labelledby={`faq-question-${i}`}
                     className={cn(
                       "grid transition-all duration-300 ease-out",
-                      on ? "grid-rows-[1fr] pb-5 opacity-100" : "invisible grid-rows-[0fr] opacity-0",
+                      on ? "grid-rows-[1fr] pb-6 opacity-100" : "invisible grid-rows-[0fr] opacity-0",
                     )}
                   >
-                    <p className="overflow-hidden text-sm leading-relaxed text-muted-foreground">
+                    <p className="max-w-[68ch] overflow-hidden text-sm leading-relaxed text-muted-foreground text-pretty">
                       {item.a}
                     </p>
                   </div>

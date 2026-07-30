@@ -1,45 +1,53 @@
 import { CAPABILITIES } from "@/content/site";
-import { cn } from "@/lib/utils";
-import { BandLabel, Container, Section } from "./primitives";
+import { Container, Readout, Section } from "./primitives";
 
 /**
- * The instrument-panel band under the hero: hairline-divided cells reading out the
- * loop the product runs — source, reach, track, remember.
+ * The band under the hero: the loop the product runs — source, reach, track,
+ * remember — as one continuous rail rather than four columns of text.
  *
- * It used to count up four figures from a seeded demo database. Every organisation's
- * aggregates differ, so the band states the loop instead — same slot, same rhythm.
+ * It used to count up four figures from a seeded demo database. Every
+ * organisation's aggregates differ, so quoting any is a claim we can't stand
+ * behind; the band states the mechanism instead. Drawing the rail through the
+ * four nodes is the part that earns the space — the copy already says "loop",
+ * and four hairline-separated columns said "list".
  */
 export function Stats() {
   return (
-    <Section band aria-label="How Upstream works">
+    <Section rhythm="tight" aria-label="How Upstream works">
       <Container>
-        <BandLabel>One loop, one record</BandLabel>
+        <Readout className="block text-center">One loop, one record</Readout>
 
-        <dl className="mt-10 grid grid-cols-2 gap-y-10 sm:gap-x-8 lg:grid-cols-4">
+        <ol className="relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-x-8">
+          {/* The rail the nodes sit on. Drawn once behind them, so the four read
+              as stages of one movement instead of four separate facts. */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-[0.4rem] hidden h-px bg-gradient-to-r from-transparent via-border to-transparent lg:block"
+          />
+
           {CAPABILITIES.map((c, i) => (
-            /* dt first, dd after — a <dl> may only hold properly-ordered term/
-               description pairs. The label is the term, so DOM order already
-               reads "Source · search one shared pool…" to a screen reader. */
-            <div
-              key={c.label}
-              className={cn(
-                "flex flex-col items-center px-4 text-center lg:items-start lg:text-left",
-                // Hairline rules between cells — an instrument-panel readout.
-                i > 0 && "lg:border-l lg:border-border",
-              )}
-            >
-              <dt
-                className="font-display text-2xl leading-tight font-medium tracking-tight text-foreground sm:text-3xl"
-                style={{ letterSpacing: "-0.02em" }}
+            <li key={c.label} className="relative">
+              <span
+                aria-hidden
+                className="relative z-10 mb-6 hidden size-[0.8rem] items-center justify-center rounded-full border border-primary/40 bg-background lg:flex"
               >
+                <span className="size-1 rounded-full bg-primary" />
+              </span>
+              <h3 className="mkt-display text-2xl font-semibold text-foreground sm:text-[1.75rem]">
                 {c.label}
-              </dt>
-              <dd className="mt-3 max-w-[15rem] text-sm leading-relaxed text-muted-foreground text-pretty">
+              </h3>
+              <p className="mt-2.5 max-w-[30ch] text-sm leading-relaxed text-muted-foreground text-pretty">
                 {c.context}
-              </dd>
-            </div>
+              </p>
+              {/* The fourth feeds the first — that is the whole claim. */}
+              {i === CAPABILITIES.length - 1 && (
+                <Readout tone="signal" className="mt-4 hidden lg:block">
+                  ↻ back to source
+                </Readout>
+              )}
+            </li>
           ))}
-        </dl>
+        </ol>
       </Container>
     </Section>
   );

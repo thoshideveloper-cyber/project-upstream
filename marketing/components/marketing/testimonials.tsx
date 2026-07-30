@@ -8,7 +8,7 @@ import {
   type FeaturedReview,
   type Review,
 } from "@/content/site";
-import { BandLabel, Container, Section, SectionIntro } from "./primitives";
+import { Container, Panel, Readout, Section, SectionHead } from "./primitives";
 
 /** Cards per column before the marquee has enough height to be worth looping. */
 const MARQUEE_MIN = 3;
@@ -18,39 +18,58 @@ function initials(name: string) {
   return name.split(" ").map((p) => p[0]).slice(0, 2).join("");
 }
 
+/**
+ * Squircle, not a circle. Every avatar on every SaaS page is a circle; a rounded
+ * square costs nothing and stops the caption row looking like a stock component.
+ */
 function Avatar({ name }: { name: string }) {
   return (
-    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 font-mono text-[11px] font-medium text-primary-ink">
+    <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 font-mono text-[11px] font-medium text-primary-ink">
       {initials(name)}
     </span>
+  );
+}
+
+function Attribution({ q }: { q: Review }) {
+  return (
+    <figcaption className="mt-5 flex items-center gap-3">
+      <Avatar name={q.name} />
+      <span className="min-w-0">
+        <span className="block truncate text-sm font-medium text-foreground">{q.name}</span>
+        <span className="block truncate text-xs text-muted-foreground">
+          {q.role} · {q.org}
+        </span>
+      </span>
+    </figcaption>
   );
 }
 
 /** A review given the room to say something specific. */
 function FeaturedCard({ q }: { q: FeaturedReview }) {
   return (
-    <figure className="hover-lift relative flex flex-col rounded-2xl border border-border bg-card/40 p-6 md:p-7">
+    <Panel as="figure" className="relative md:p-7">
       <QuoteMark
         aria-hidden
-        className="absolute top-6 right-6 size-8 text-primary/15 md:top-7 md:right-7"
+        strokeWidth={1.5}
+        className="absolute top-6 right-6 size-7 text-primary/15 md:top-7 md:right-7"
       />
 
       {/* Optional, so a deployment can supply a plain quote and still get a
           correct card — persona/driver and the outcome line each stand alone. */}
       {(q.persona || q.driver) && (
-        <div className="flex items-center gap-2 font-mono text-[10px] tracking-[0.2em] uppercase">
-          {q.persona && <span className="text-primary-ink">{q.persona}</span>}
+        <div className="flex items-center gap-2">
+          {q.persona && <Readout tone="signal">{q.persona}</Readout>}
           {q.persona && q.driver && (
             <span aria-hidden className="text-muted-foreground/40">
               /
             </span>
           )}
-          {q.driver && <span className="text-muted-foreground">{q.driver}</span>}
+          {q.driver && <Readout>{q.driver}</Readout>}
         </div>
       )}
 
       <blockquote
-        className={`font-display text-xl leading-snug font-medium text-balance text-foreground ${
+        className={`mkt-subhead text-xl leading-snug font-semibold text-foreground ${
           q.persona || q.driver ? "mt-5" : ""
         }`}
       >
@@ -58,42 +77,25 @@ function FeaturedCard({ q }: { q: FeaturedReview }) {
       </blockquote>
 
       {q.outcome && (
-        <p className="mt-6 flex items-start gap-2.5 border-t border-border/60 pt-5 text-sm font-medium text-foreground/90">
-          <span aria-hidden className="mt-[0.15rem] font-mono text-xs text-primary">
-            →
-          </span>
+        <p className="mt-6 border-t border-border pt-5 text-sm font-medium text-foreground/90">
           {q.outcome}
         </p>
       )}
 
-      <figcaption className="mt-5 flex items-center gap-3">
-        <Avatar name={q.name} />
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-medium text-foreground">{q.name}</span>
-          <span className="block truncate text-xs text-muted-foreground">
-            {q.role} · {q.org}
-          </span>
-        </span>
-      </figcaption>
-    </figure>
+      <Attribution q={q} />
+    </Panel>
   );
 }
 
 function Card({ q }: { q: Review }) {
   return (
     /* Compact variant of the shell: these scroll past in a masked band, so the
-       standard p-6/p-7 would show fewer of them per screen. */
-    <figure className="rounded-2xl border border-border bg-card/40 p-5">
-      <blockquote className="text-sm leading-relaxed text-foreground/90">&ldquo;{q.quote}&rdquo;</blockquote>
-      <figcaption className="mt-4 flex items-center gap-3 border-t border-border/60 pt-4">
-        <Avatar name={q.name} />
-        <span className="min-w-0">
-          <span className="block truncate text-sm font-medium text-foreground">{q.name}</span>
-          <span className="block truncate text-xs text-muted-foreground">
-            {q.role} · {q.org}
-          </span>
-        </span>
-      </figcaption>
+       standard p-5/p-6 would show fewer of them per screen. */
+    <figure className="rounded-xl border border-border bg-card/40 p-5">
+      <blockquote className="text-sm leading-relaxed text-foreground/90">
+        &ldquo;{q.quote}&rdquo;
+      </blockquote>
+      <Attribution q={q} />
     </figure>
   );
 }
@@ -165,9 +167,9 @@ export function Testimonials() {
   return (
     <Section id="customers" motion>
       <Container>
-        <SectionIntro eyebrow="Customers" title="Teams that stopped losing the thread.">
+        <SectionHead variant="split" title="Teams that stopped losing the thread.">
           In their words, with their names on it.
-        </SectionIntro>
+        </SectionHead>
 
         {FEATURED_REVIEWS.length > 0 && (
           // Two cards make the row; a single one is centred instead of sitting
@@ -185,7 +187,7 @@ export function Testimonials() {
 
         {REVIEWS.length > 0 && (
           <>
-            <BandLabel className="mt-14">More from the teams using it</BandLabel>
+            <Readout className="mt-14 block text-center">More from the teams using it</Readout>
 
             {marquee ? (
               <div

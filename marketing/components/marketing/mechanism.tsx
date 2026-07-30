@@ -39,7 +39,7 @@ export function SheetsToSystem() {
     <figure className="mx-auto mt-10 max-w-4xl">
       <div
         ref={containerRef}
-        className="relative flex flex-col items-stretch gap-14 overflow-hidden rounded-2xl border border-border bg-card/40 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-10 lg:px-12"
+        className="relative flex flex-col items-stretch gap-14 overflow-hidden rounded-xl border border-border bg-card/40 px-5 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-10 lg:px-12"
       >
         {/* Rails sit behind the nodes: the cards below are positioned, so they paint over. */}
         <AnimatedBeams containerRef={containerRef} beams={beams} />
@@ -52,14 +52,14 @@ export function SheetsToSystem() {
               ref={sheetRefs[i]}
               className="relative flex flex-1 flex-col items-center gap-2 rounded-xl border border-border bg-background/80 px-2.5 py-4 text-center sm:flex-none sm:flex-row sm:items-center sm:gap-3.5 sm:px-4 sm:py-3.5 sm:text-left"
             >
-              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-foreground/[0.03]">
-                <FileSpreadsheet aria-hidden className="size-4 text-muted-foreground" />
+              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-foreground/[0.03]">
+                <FileSpreadsheet aria-hidden strokeWidth={1.75} className="size-4 text-muted-foreground" />
               </span>
               <span className="min-w-0">
-                <span className="block font-display text-[15px] leading-tight font-medium text-foreground">
+                <span className="mkt-subhead block text-[15px] leading-tight font-semibold text-foreground">
                   {s.name}
                 </span>
-                <span className="mt-1 hidden font-mono text-[10px] tracking-[0.15em] text-muted-foreground sm:block">
+                <span className="mt-1 hidden font-mono text-[10px] tracking-[0.14em] text-muted-foreground sm:block">
                   {s.file} · {s.holds}
                 </span>
               </span>
@@ -75,20 +75,20 @@ export function SheetsToSystem() {
           />
           <div
             ref={hubRef}
-            className="mkt-elev relative flex flex-col items-center gap-2 rounded-2xl border border-primary/30 bg-card px-8 py-6"
+            className="mkt-elev relative flex flex-col items-center gap-2 rounded-xl border border-primary/30 bg-card px-8 py-6"
           >
             <UpstreamMark size={30} className="text-foreground" />
-            <span className="font-display text-lg leading-none font-medium tracking-tight text-foreground">
+            <span className="mkt-subhead text-lg leading-none font-semibold text-foreground">
               Upstream
             </span>
-            <span className="font-mono text-[10px] tracking-[0.2em] text-primary-ink uppercase">
+            <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-primary-ink uppercase">
               One system
             </span>
           </div>
         </div>
       </div>
 
-      <figcaption className="mt-4 text-center font-mono text-[10px] tracking-[0.15em] text-muted-foreground">
+      <figcaption className="mt-4 text-center font-mono text-[10px] tracking-[0.14em] text-muted-foreground">
         Your sheets in, one connected record out — nothing re-keyed, nothing left behind.
       </figcaption>
     </figure>

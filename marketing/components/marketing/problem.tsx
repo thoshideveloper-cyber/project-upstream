@@ -1,13 +1,13 @@
 import { CalendarX2, Copy, DoorOpen, TrendingDown, type LucideIcon } from "lucide-react";
 
-import { Card, CardBeat, CardTitle, Container, IconChip, Section, SectionIntro } from "./primitives";
+import { Container, IconChip, Readout, Section, SectionHead, Subhead } from "./primitives";
 
 type Pain = {
   icon: LucideIcon;
   /** The status-quo failure — named concretely so the reader recognises their week. */
   pain: string;
   detail: string;
-  /** The relief line — the single amber beat that closes each card. */
+  /** The relief line — the single amber beat per row. */
   fix: string;
 };
 
@@ -42,28 +42,52 @@ const PAINS: Pain[] = [
   },
 ];
 
+/**
+ * A defect log, not a card grid.
+ *
+ * These four failures used to be four identical bordered rectangles in a 2×2 —
+ * the same shell the two sections after this one also used, which is how the
+ * middle of the page turned into one repeated card. A ruled ledger suits the
+ * content better anyway: each row states what breaks on the left and what
+ * replaces it on the right, and the reader can scan one column or the other.
+ */
 export function Problem() {
   return (
     <Section id="problem">
       <Container>
-        <SectionIntro eyebrow="The status quo" title="The one that slips is invisible — until it's gone.">
+        <SectionHead variant="split" title="The one that slips is invisible — until it's gone.">
           Spreadsheets, inboxes, and what people happen to remember. The cost isn&apos;t messy
           files — it&apos;s the opportunity you never saw leave.
-        </SectionIntro>
+        </SectionHead>
 
-        <div className="mt-12 grid gap-4 sm:grid-cols-2">
-          {PAINS.map(({ icon, pain, detail, fix }) => (
-            <Card key={pain}>
+        <ul className="mt-2">
+          {PAINS.map(({ icon, pain, detail, fix }, i) => (
+            <li
+              key={pain}
+              className="mkt-stagger grid items-start gap-x-5 gap-y-4 border-b border-border py-8 md:grid-cols-[auto_minmax(0,1.15fr)_minmax(0,1fr)] md:gap-x-10 md:py-9"
+              style={{ "--i": i } as React.CSSProperties}
+            >
               {/* Muted glyph: these are the failures, not the features. */}
-              <IconChip icon={icon} tone="muted" />
-              <CardTitle className="mt-5">{pain}</CardTitle>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
-                {detail}
-              </p>
-              <CardBeat>{fix}</CardBeat>
-            </Card>
+              <IconChip icon={icon} tone="muted" className="hidden md:inline-flex md:mt-0.5" />
+
+              <div>
+                <Subhead>{pain}</Subhead>
+                <p className="mt-2.5 max-w-[52ch] text-sm leading-relaxed text-muted-foreground text-pretty">
+                  {detail}
+                </p>
+              </div>
+
+              <div className="md:pt-0.5">
+                <Readout tone="signal" className="block">
+                  Instead
+                </Readout>
+                <p className="mt-2 max-w-[42ch] text-sm leading-relaxed font-medium text-foreground/90 text-pretty">
+                  {fix}
+                </p>
+              </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </Container>
     </Section>
   );
