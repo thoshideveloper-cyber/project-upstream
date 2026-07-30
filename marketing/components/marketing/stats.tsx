@@ -1,4 +1,4 @@
-import { CAPABILITIES } from "@/content/site";
+import { LOOP } from "@/content/site";
 import { Container, Readout, Section } from "./primitives";
 
 /**
@@ -15,7 +15,7 @@ export function Stats() {
   return (
     <Section rhythm="tight" aria-label="How Upstream works">
       <Container>
-        <Readout className="block text-center">One loop, one record</Readout>
+        <Readout className="block text-center">Source · reach · track · remember</Readout>
 
         <ol className="relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-x-8">
           {/* The rail the nodes sit on. Drawn once behind them, so the four read
@@ -25,7 +25,7 @@ export function Stats() {
             className="pointer-events-none absolute inset-x-0 top-[0.4rem] hidden h-px bg-gradient-to-r from-transparent via-border to-transparent lg:block"
           />
 
-          {CAPABILITIES.map((c, i) => (
+          {LOOP.map((c, i) => (
             <li key={c.label} className="relative">
               <span
                 aria-hidden
@@ -39,8 +39,8 @@ export function Stats() {
               <p className="mt-2.5 max-w-[30ch] text-sm leading-relaxed text-muted-foreground text-pretty">
                 {c.context}
               </p>
-              {/* The fourth feeds the first — that is the whole claim. */}
-              {i === CAPABILITIES.length - 1 && (
+              {/* The fourth feeds the first. That is the whole claim. */}
+              {i === LOOP.length - 1 && (
                 <Readout tone="signal" className="mt-4 hidden lg:block">
                   ↻ back to source
                 </Readout>

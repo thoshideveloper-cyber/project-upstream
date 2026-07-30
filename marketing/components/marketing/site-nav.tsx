@@ -12,10 +12,10 @@ import { cn } from "@/lib/utils";
 // "Customers" appears only when there is a customers section to jump to — the
 // section, its anchor and this link all come from the same flag.
 const LINKS = [
-  { label: "Product", href: "#product" },
+  { label: "The system", href: "#product" },
   { label: "Cadence", href: "#cadence" },
-  { label: "Capabilities", href: "#capabilities" },
-  { label: "Compare", href: "#compare" },
+  { label: "Firm memory", href: "#memory" },
+  { label: "Scope", href: "#scope" },
   { label: "Security", href: "#security" },
   ...(SHOW_REVIEWS_SECTION ? [{ label: "Customers", href: "#customers" }] : []),
   { label: "FAQ", href: "#faq" },

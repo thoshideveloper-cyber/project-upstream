@@ -14,12 +14,12 @@ import { Container, Readout } from "./primitives";
  * carry and previously didn't have at all.
  */
 const NAV = [
-  { label: "Product", href: "#product" },
+  { label: "The three sheets", href: "#product" },
   { label: "The follow-up clock", href: "#cadence" },
-  { label: "Capabilities", href: "#capabilities" },
+  { label: "Firm memory", href: "#memory" },
   { label: "Who it's for", href: "#teams" },
-  { label: "What changes", href: "#compare" },
-  { label: "How it works", href: "#how-it-works" },
+  { label: "What it does not do", href: "#scope" },
+  { label: "Getting live", href: "#how-it-works" },
   { label: "Security", href: "#security" },
   ...(SHOW_REVIEWS_SECTION ? [{ label: "Customers", href: "#customers" }] : []),
   { label: "FAQ", href: "#faq" },
@@ -47,8 +47,8 @@ export function SiteFooter() {
               <span className="mkt-subhead text-lg text-foreground">Upstream</span>
             </div>
             <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-muted-foreground">
-              One record for the whole team: who you&apos;re working, who you&apos;ve reached, and
-              what you found out last time.
+              The origination and outreach system for boutique M&amp;A desks. Three spreadsheets,
+              held by the firm instead of by whoever still works here.
             </p>
           </div>
 

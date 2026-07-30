@@ -54,9 +54,9 @@ export function Features() {
   return (
     <Section id="product" motion>
       <Container wide>
-        <SectionHead kicker="Three of the modules" title="The sheets you already run, connected.">
-          The list of who you&apos;re working, the schedule of who to reach, and the people you
-          actually know, joined up so the numbers finally agree.
+        <SectionHead title="Three spreadsheets. One source of truth.">
+          The fields come from the live template, not from a CRM vendor&apos;s idea of what a
+          deal desk needs. Same columns, same buckets, joined up so the three finally agree.
         </SectionHead>
 
         {/* The mechanism, before the claims: the sheets converging into one system. */}
@@ -124,7 +124,10 @@ export function Features() {
           className="mt-6 grid overflow-hidden rounded-xl border border-border bg-card/40 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]"
         >
           <div className="flex flex-col justify-center p-6 md:p-8">
-            <Subhead className="text-xl">{feature.title}</Subhead>
+            {/* Naming the file it replaces is the fastest way to tell a desk
+                what this tab is. They have the file open in another window. */}
+            <Readout className="block normal-case">Replaces {feature.replaces}</Readout>
+            <Subhead className="mt-3.5 text-xl">{feature.title}</Subhead>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground text-pretty">
               {feature.blurb}
             </p>

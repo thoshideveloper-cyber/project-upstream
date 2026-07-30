@@ -40,7 +40,7 @@ function Quote({ q }: { q: Review }) {
         <span className="min-w-0">
           <span className="block truncate text-sm font-medium text-foreground">{q.name}</span>
           <span className="block truncate text-xs text-muted-foreground">
-            {q.role} · {q.org}
+            {q.role} · {q.firm}
           </span>
         </span>
       </figcaption>
@@ -59,7 +59,7 @@ export function Testimonials() {
         </SectionHead>
         <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {REVIEWS.map((q) => (
-            <Quote key={`${q.name}-${q.org}`} q={q} />
+            <Quote key={`${q.name}-${q.firm}`} q={q} />
           ))}
         </div>
       </Container>

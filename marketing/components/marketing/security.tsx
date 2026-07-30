@@ -6,10 +6,10 @@ import { ShieldCheck } from "lucide-react";
 import { Container, Marker, Readout, Section, SectionHead } from "./primitives";
 
 const PROOF = [
-  "httpOnly, Secure cookies. No tokens ever touch the browser",
-  "Rotating refresh tokens, revocable server-side. Log out everywhere at once",
-  "Organisation-scoped. People see only the projects they are on",
-  "Soft-delete only. Records are archived, never destroyed",
+  "httpOnly, Secure cookies. No token is ever readable from the browser",
+  "Refresh tokens rotate, and revoke server-side. Log out everywhere at once",
+  "Firm-scoped at the query, so an analyst cannot address a mandate they are not on",
+  "Nothing is deleted. Records are archived, which is also why history survives",
   "Password hashes never leave the server",
 ];
 
@@ -113,9 +113,9 @@ export function Security() {
           <div>
             {/* The second of the page's two kickers, and it earns it: this
                 section names a category the reader is scanning for. */}
-            <SectionHead kicker="Security" title="Built for data you can't afford to leak.">
-              Who you&apos;re talking to is commercially sensitive. That record is locked down by
-              default, not bolted down later.
+            <SectionHead title="Who you are talking to is the whole secret.">
+              A live buyer list is the most commercially sensitive thing a desk holds. It was
+              locked down at the data model, not bolted on before a security review.
             </SectionHead>
             {/* One list marker on the page — the per-item icons here were a third
                 chip size and a second bullet language. */}

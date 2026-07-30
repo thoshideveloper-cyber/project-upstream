@@ -65,10 +65,11 @@ export function Reach() {
   return (
     <Section id="reach" motion>
       <Container>
-        <SectionHead variant="statement" title="One clock. Every market you work in." />
+        <SectionHead variant="statement" title="One clock, wherever the counterparty sits." />
         <p className="mt-6 max-w-[62ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-          Due-dates are computed server-side on one clock your whole team shares, so a date means
-          the same thing to everyone, wherever they are.
+          Buyers are rarely in the same timezone as the desk chasing them. Due-dates resolve on
+          one shared clock, so &ldquo;overdue&rdquo; means the same thing to the analyst in
+          Mumbai and the partner reading the queue from London.
         </p>
 
         <div className="relative mt-12 overflow-hidden rounded-xl border border-border bg-card/40 p-5 sm:p-8">
@@ -138,7 +139,7 @@ export function Reach() {
           </div>
 
           <Readout className="mt-4 block text-center">
-            One record · every timezone your team works across
+            Illustrative. The hub is wherever your desk is
           </Readout>
         </div>
       </Container>

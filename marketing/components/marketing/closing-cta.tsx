@@ -16,7 +16,7 @@ import {
  * The reassurance that makes clicking cheap — risk reversal, one line each. No
  * durations: how long a rollout takes depends on the team, so none is promised.
  */
-const REASSURANCE = ["A live walkthrough", "Your sheets, imported live", "No migration project"];
+const REASSURANCE = ["A live walkthrough", "We migrate your sheets", "One mandate first"];
 
 export function ClosingCta() {
   return (
@@ -34,11 +34,15 @@ export function ClosingCta() {
             }}
           />
           <div className="relative">
-            <Display className="mx-auto max-w-3xl">Get your team out of spreadsheets.</Display>
-            {/* One last loss-aversion beat, then the relief. */}
+            <Display className="mx-auto max-w-3xl">
+              Bring one mandate. Keep the spreadsheet open.
+            </Display>
+            {/* Risk reversal, not a slogan. The offer is deliberately small,
+                because the brief's adoption plan is design partners, not
+                self-serve, and a small first ask is how that starts. */}
             <p className="mx-auto mt-5 max-w-[54ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-              Right now a follow-up on your list is already late, and something the next project
-              needs to know is sitting in somebody&apos;s inbox. Put both on one record.
+              We will migrate one live mandate and run it beside the sheet it came from. If the
+              analyst on it still opens the sheet after a week, we have not earned the rest.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <CTAPrimary href={CTA_HREF} className="mkt-shimmer">

@@ -22,12 +22,12 @@ import { Container, CTAGhost, CTAPrimary, Display, Dot, Readout } from "./primit
  * the claim and the evidence, and the evidence is the stronger of the two.
  */
 const ROWS = [
-  { days: "12d", tone: "over", org: "Ardent Materials", meta: "Kestrel Group · Priya Raghavan", pill: "Interested", pillTone: "signal", flag: true },
-  { days: "5d", tone: "over", org: "Halvorsen Industrial", meta: "Halvorsen Group · Tomás Ferreira", pill: "Overdue", pillTone: "over", flag: false },
-  { days: "Today", tone: "due", org: "Bright Ridge Systems", meta: "Kestrel Group · Amara Okonkwo", pill: "Due today", pillTone: "due", flag: false },
-  { days: "+2d", tone: "ok", org: "Calder Freight", meta: "Calder Holdings · Wei Zhang", pill: "Contacted", pillTone: "quiet", flag: false },
-  { days: "+9d", tone: "ok", org: "Lindqvist Labs", meta: "Nordhaven Ventures · Dan Mercer", pill: "Contacted", pillTone: "quiet", flag: false },
-  { days: "+14d", tone: "ok", org: "Ostrow Chemical", meta: "Ostrow & Co · Fatima Al-Hassan", pill: "Sourced", pillTone: "quiet", flag: false },
+  { days: "12d", tone: "over", org: "Ardent Materials", meta: "Project Kestrel · Priya Raghavan", pill: "Interested", pillTone: "signal", flag: true },
+  { days: "5d", tone: "over", org: "Halvorsen Industrial", meta: "Project Kestrel · Tomás Ferreira", pill: "Overdue", pillTone: "over", flag: false },
+  { days: "Today", tone: "due", org: "Bright Ridge Systems", meta: "Project Kestrel · Amara Okonkwo", pill: "Due today", pillTone: "due", flag: false },
+  { days: "+2d", tone: "ok", org: "Calder Speciality", meta: "Project Nordhaven · Wei Zhang", pill: "Contacted", pillTone: "quiet", flag: false },
+  { days: "+9d", tone: "ok", org: "Lindqvist Labs", meta: "Project Nordhaven · Dan Mercer", pill: "Contacted", pillTone: "quiet", flag: false },
+  { days: "+14d", tone: "ok", org: "Ostrow Chemical", meta: "Project Nordhaven · Fatima Al-Hassan", pill: "Sourced", pillTone: "quiet", flag: false },
 ] as const;
 
 const STRIP = [
@@ -38,7 +38,7 @@ const STRIP = [
   { label: "Ahead", n: "29", tone: "signal" },
 ] as const;
 
-const PROOF = ["Append-only log", "Server-computed cadence", "Cross-project memory"];
+const PROOF = ["Append-only log", "Computed cadence", "Cross-mandate memory"];
 
 const toneText: Record<string, string> = {
   over: "text-destructive",
@@ -93,14 +93,19 @@ export function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:gap-14 xl:gap-16">
           {/* Claim */}
           <div>
-            <Display as="h1">
-              Find them. Reach them. Never lose what you learned.
+            <Readout tone="signal" className="block">
+              Origination and outreach, for M&amp;A desks
+            </Readout>
+
+            <Display as="h1" className="mt-5">
+              Every follow-up on schedule. Every relationship on record.
             </Display>
 
             <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-              One shared list of the organisations you&apos;re working. A follow-up clock the
-              server keeps, so nothing quietly goes cold. And a record of what your team learned
-              that stays put when someone leaves.
+              Boutique desks run origination on three spreadsheets and an inbox. Upstream is
+              those three sheets joined up: the master list, the follow-up cadence and the
+              contact history, held by the firm rather than by whoever happens to still work
+              here.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">

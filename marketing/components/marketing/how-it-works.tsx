@@ -9,22 +9,22 @@ type Step = {
 
 const STEPS: Step[] = [
   {
-    when: "The first session",
-    title: "Bring your sheets across",
+    when: "Week one",
+    title: "We move the sheets, not you",
     detail:
-      "A guided import maps your columns, previews the duplicates it found and applies the batch, reversibly. Same rows, same names, nothing to re-learn on Monday morning.",
+      "Onboarding is the migration. Your columns get mapped, the duplicates already sitting in the files get shown to you, and one live mandate goes in first so you can hold it against the spreadsheet it came from.",
   },
   {
-    when: "The first send",
-    title: "Reach the first name",
+    when: "The same week",
+    title: "One mandate runs on it",
     detail:
-      "Send it from your own mailbox and the touch records itself. That first message sets the anchor, and every follow-up date counts from it. Nothing is due before that email actually goes out.",
+      "Not the whole book. One mandate, in parallel with the sheet, until the analyst on it stops opening the sheet. That usually takes a few days and it is the only adoption test that means anything.",
   },
   {
-    when: "Every project after",
-    title: "The record starts working for you",
+    when: "The mandate after",
+    title: "The closed ones start paying",
     detail:
-      "The queue says who to chase and stops itself when they reply. Meanwhile every touch, contact and outcome joins the team's record, so the next project opens already knowing what this one learned.",
+      "Load the mandates you have already closed. That is where the contact intelligence is, and it is what makes the cross-mandate check useful immediately rather than a year from now.",
   },
 ];
 
@@ -34,9 +34,9 @@ export function HowItWorks() {
       <Container>
         {/* One of the two numbered sequences on the page, and the only one where
             the numbers carry information: these three happen in this order. */}
-        <SectionHead title="Running on it the same day.">
-          No migration project, no re-training, no new vocabulary. Import, reach out, and the
-          record starts compounding from the first send.
+        <SectionHead title="Days to live, not a quarter.">
+          Enterprise deal platforms quote implementation in months because they have to be
+          configured into a shape your firm recognises. This already is that shape.
         </SectionHead>
 
         <ol className="relative mt-14 grid gap-10 md:grid-cols-3 md:gap-8">
