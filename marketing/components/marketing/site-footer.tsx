@@ -65,6 +65,7 @@ export function SiteFooter() {
                   <li key={l.label}>
                     <Link
                       href={l.href}
+                      prefetch={false}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {l.label}

@@ -27,6 +27,16 @@
  */
 export const CTA_HREF = "/coming-soon";
 
+/**
+ * Prefix for plain `public/` asset paths.
+ *
+ * Next rewrites `next/link` hrefs for `basePath` automatically, but an
+ * `unoptimized` `next/image` src is passed through untouched — so on a sub-path
+ * deployment the product screenshots 404 unless they carry the prefix too. Empty
+ * for a normal root deployment.
+ */
+export const ASSET_PREFIX = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 /* ------------------------------------------------------------------ *
  * Social proof — real content only, empty until a deployment has it.
  * ------------------------------------------------------------------ */

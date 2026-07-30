@@ -297,6 +297,7 @@ export function CTAPrimary({
   return (
     <Link
       href={href}
+      prefetch={false}
       className={cn(
         cta,
         "bg-primary text-primary-foreground shadow-[0_8px_24px_-8px_oklch(0.72_0.16_58/0.6)]",
@@ -322,6 +323,7 @@ export function CTAGhost({
   return (
     <Link
       href={href}
+      prefetch={false}
       className={cn(
         cta,
         "border border-border bg-foreground/[0.02] text-foreground hover:border-primary/40 hover:bg-foreground/[0.05]",

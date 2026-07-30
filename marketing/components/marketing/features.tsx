@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { BarChart3, Building2, CalendarClock, type LucideIcon } from "lucide-react";
 
-import { MODULES } from "@/content/site";
+import { ASSET_PREFIX, MODULES } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { SheetsToSystem } from "./mechanism";
 import { CardTitle, CheckItem, Container, Section, SectionIntro } from "./primitives";
@@ -104,7 +104,7 @@ export function Features() {
             <div className="relative aspect-[16/10] w-full">
               <Image
                 key={feature.image}
-                src={feature.image}
+                src={`${ASSET_PREFIX}${feature.image}`}
                 alt={feature.tab}
                 fill
                 sizes="(max-width: 768px) 100vw, 640px"

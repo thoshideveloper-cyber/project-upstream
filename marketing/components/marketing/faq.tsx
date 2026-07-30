@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Plus } from "lucide-react";
 
 import { FAQ as QA, CTA_HREF } from "@/content/site";
@@ -21,9 +22,15 @@ export function Faq() {
               Everything teams ask before moving off spreadsheets. Still curious?{" "}
               {/* Underlined at rest: amber against muted body copy is a 1.65:1
                   difference, so colour alone never marked this as a link. */}
-              <a href={CTA_HREF} className="text-primary-ink underline underline-offset-4 hover:no-underline">
+              {/* Link, not a raw <a>: a bare href skips Next's basePath, which
+                  breaks this one CTA on a sub-path deployment. */}
+              <Link
+                href={CTA_HREF}
+                prefetch={false}
+                className="text-primary-ink underline underline-offset-4 hover:no-underline"
+              >
                 Book a demo
-              </a>
+              </Link>
               .
             </p>
           </div>

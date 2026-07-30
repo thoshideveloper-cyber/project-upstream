@@ -45,3 +45,6 @@ theme fixer/
 # ---- Local agent tooling (not application code) ----
 .claude/settings.local.json
 .claude/skills/
+
+# Next static export (published to the gh-pages branch)
+marketing/out/
