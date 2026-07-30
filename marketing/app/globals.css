@@ -1,0 +1,770 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
+  --font-heading: var(--font-display);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-ink: var(--primary-ink);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* ─── Daylight — warm-paper light theme (keeps amber accent) ────────────── */
+:root {
+  /* Warm paper background system */
+  --background:          oklch(0.975 0.004 85);  /* warm off-white, not a white room */
+  --card:                oklch(0.995 0.002 85);  /* near-white, lifts off the canvas  */
+  --popover:             oklch(1 0 0);
+  --secondary:           oklch(0.96 0.004 85);
+  --muted:               oklch(0.955 0.004 85);
+
+  /* Borders — translucent ink */
+  --border:              oklch(0 0 0 / 0.08);
+  --input:               oklch(0 0 0 / 0.12);
+  --ring:                oklch(0.66 0.15 56 / 0.5);
+
+  /* Amber accent — slightly deeper for contrast on white */
+  --primary:             oklch(0.66 0.15 56);
+  /* Ink ON the amber fill. Amber is a *light* colour: near-white label text on it
+     measured 3.16:1 here and 2.44:1 on obsidian — the primary CTA was the worst
+     contrast on the page. Dark warm ink keeps the fill bright and reads 5.4/6.7:1. */
+  --primary-foreground:  oklch(0.22 0.03 60);
+  /* Amber as *text*: the accent fill can't hold 4.5:1 at label sizes on paper,
+     so small amber copy uses this deeper ink instead (fills stay --primary). */
+  --primary-ink:         oklch(0.53 0.15 56);
+
+  /* Ink hierarchy */
+  --foreground:          oklch(0.24 0.012 265);  /* warm near-black ink */
+  --card-foreground:     oklch(0.24 0.012 265);
+  --popover-foreground:  oklch(0.24 0.012 265);
+  --secondary-foreground: oklch(0.32 0.012 265);
+  --muted-foreground:    oklch(0.44 0.014 265);  /* darkened for ≥4.5:1 on warm paper */
+  --accent:              oklch(0.72 0.16 58 / 0.12);
+  --accent-foreground:   oklch(0.30 0.012 265);
+
+  /* Semantic */
+  --destructive:         oklch(0.58 0.22 25);
+
+  /* Chart colors — same hues, tuned for light */
+  --chart-1:             oklch(0.66 0.15 56);
+  --chart-2:             oklch(0.60 0.16 152);
+  --chart-3:             oklch(0.55 0.18 270);
+  --chart-4:             oklch(0.58 0.15 310);
+  --chart-5:             oklch(0.58 0.22 25);
+
+  /* Sidebar */
+  --sidebar:                    oklch(0.955 0.005 85);
+  --sidebar-foreground:         oklch(0.24 0.012 265);
+  --sidebar-primary:            oklch(0.66 0.15 56);
+  --sidebar-primary-foreground: oklch(0.99 0.005 85);
+  --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
+  --sidebar-accent-foreground:  oklch(0.24 0.012 265);
+  --sidebar-border:             oklch(0 0 0 / 0.07);
+  --sidebar-ring:               oklch(0.66 0.15 56);
+
+  --radius: 0.5rem;
+}
+
+/* ─── Obsidian Amber — dark-first design system (default) ────────────────── */
+.dark {
+  /* Background depth system */
+  --background:          oklch(0.09 0.006 265);
+  --card:                oklch(0.12 0.007 265);
+  --popover:             oklch(0.15 0.007 265);
+  --secondary:           oklch(0.14 0.006 265);
+  --muted:               oklch(0.13 0.005 265);
+
+  /* Borders — translucent, not gray */
+  --border:              oklch(1 0 0 / 0.07);
+  --input:               oklch(1 0 0 / 0.09);
+  --ring:                oklch(0.72 0.16 58 / 0.5);
+
+  /* Amber accent — the only warm color */
+  --primary:             oklch(0.72 0.16 58);
+  --primary-foreground:  oklch(0.22 0.03 60);  /* see the Daylight note above */
+  /* On obsidian the accent already clears 4.5:1 as text, so ink == accent. */
+  --primary-ink:         oklch(0.72 0.16 58);
+
+  /* Text hierarchy */
+  --foreground:          oklch(0.95 0.006 80);
+  --card-foreground:     oklch(0.95 0.006 80);
+  --popover-foreground:  oklch(0.95 0.006 80);
+  --secondary-foreground: oklch(0.80 0.006 265);
+  --muted-foreground:    oklch(0.58 0.012 265);  /* lifted for ≥4.5:1 on obsidian + card */
+  --accent:              oklch(0.72 0.16 58 / 0.12);
+  --accent-foreground:   oklch(0.95 0.006 80);
+
+  /* Semantic */
+  --destructive:         oklch(0.62 0.22 25);
+
+  /* Chart colors — vivid, not gray */
+  --chart-1:             oklch(0.72 0.16 58);
+  --chart-2:             oklch(0.65 0.18 152);
+  --chart-3:             oklch(0.65 0.18 270);
+  --chart-4:             oklch(0.65 0.15 310);
+  --chart-5:             oklch(0.62 0.22 25);
+
+  /* Sidebar */
+  --sidebar:                    oklch(0.10 0.006 265);
+  --sidebar-foreground:         oklch(0.95 0.006 80);
+  --sidebar-primary:            oklch(0.72 0.16 58);
+  --sidebar-primary-foreground: oklch(0.98 0.005 80);
+  --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
+  --sidebar-accent-foreground:  oklch(0.95 0.006 80);
+  --sidebar-border:             oklch(1 0 0 / 0.06);
+  --sidebar-ring:               oklch(0.72 0.16 58);
+}
+
+/* ─── Base layer ────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  /* One focus ring for the whole site. The inherited default (`outline: auto 1px`
+     in amber at 25% alpha) measured invisible on both canvases across 24 of 32
+     tab stops, so keyboard users had no idea where they were. */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background-image: radial-gradient(
+      ellipse 100% 40% at 50% -5%,
+      oklch(0.72 0.16 58 / 0.05) 0%,
+      transparent 60%
+    );
+  }
+  html {
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+}
+
+/* ─── Login page background ─────────────────────────────────────────────── */
+.login-bg {
+  background-color: oklch(0.09 0.006 265);
+  background-image:
+    radial-gradient(
+      ellipse 55% 45% at 50% 52%,
+      oklch(0.72 0.16 58 / 0.07) 0%,
+      transparent 65%
+    ),
+    radial-gradient(circle, oklch(1 0 0 / 0.08) 1px, transparent 1px);
+  background-size: auto, 28px 28px;
+  background-position: center, center;
+}
+
+/* ─── Login glassmorphism card ───────────────────────────────────────────── */
+.login-card {
+  background: oklch(0.16 0.010 265 / 0.95);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid oklch(1 0 0 / 0.14);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
+    0 32px 64px oklch(0 0 0 / 0.55),
+    0 8px 16px oklch(0 0 0 / 0.30),
+    inset 0 1px 0 oklch(1 0 0 / 0.10);
+  animation: card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Overdue stat card amber signature ──────────────────────────────────── */
+.stat-card-overdue {
+  border-color: oklch(0.72 0.16 58 / 0.45) !important;
+  box-shadow:
+    0 0 0 1px oklch(0.72 0.16 58 / 0.15),
+    inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
+}
+
+.stat-card-overdue-active {
+  animation: amber-pulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Nav item active amber indicator ───────────────────────────────────── */
+.nav-item {
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  height: 60%;
+  width: 2px;
+  background: var(--primary);
+  border-radius: 0 2px 2px 0;
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-item.active::before {
+  transform: scaleY(1);
+}
+
+/* ─── Stat card entrance animation ──────────────────────────────────────── */
+.stat-card {
+  animation: stat-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* ─── Data row entrance animation ────────────────────────────────────────── */
+.data-row {
+  animation: row-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--row-i, 0) * 25ms);
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes stat-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.975);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes amber-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px oklch(0.72 0.16 58 / 0.30),
+      inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px oklch(0.72 0.16 58 / 0.15),
+      0 0 24px oklch(0.72 0.16 58 / 0.10),
+      inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
+  }
+}
+
+@keyframes row-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ─── Page (route) entrance ──────────────────────────────────────────────── */
+.page-enter {
+  animation: page-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes btn-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ─── Button shimmer on hover ────────────────────────────────────────────── */
+button[data-slot="button"].bg-primary:hover,
+button[data-slot="button"][class*="bg-primary"]:hover {
+  background: linear-gradient(
+    105deg,
+    oklch(0.72 0.16 58) 0%,
+    oklch(0.80 0.16 58) 45%,
+    oklch(0.72 0.16 58) 100%
+  );
+  background-size: 200% auto;
+  animation: btn-shimmer 1.8s linear infinite;
+}
+
+/* ─── Schedule cockpit ───────────────────────────────────────────────────── */
+/* Cheap virtualization: rows off-screen skip layout/paint until scrolled near. */
+.cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
+}
+
+/* Keyboard-focused queue row (j/k navigation) */
+.queue-row-focused {
+  background: oklch(0.72 0.16 58 / 0.07);
+  box-shadow: inset 2px 0 0 0 var(--primary);
+}
+
+/* Momentum counter tick */
+@keyframes count-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+.count-pop { animation: count-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Triage band segment — big numerals read like an instrument panel */
+.triage-seg {
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ─── Scroll reveal — panels power up as they enter view ─────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(6px);
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.reveal-shown {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* ─── Panel hover — subtle lift + amber edge glow ────────────────────────── */
+.hover-lift {
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: oklch(0.72 0.16 58 / 0.35);
+  box-shadow:
+    0 10px 30px oklch(0 0 0 / 0.28),
+    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
+    inset 0 1px 0 oklch(1 0 0 / 0.04);
+}
+
+/* ─── Project detail hero — amber corner glow behind the title ───────────── */
+.project-hero {
+  position: relative;
+  overflow: hidden;
+}
+.project-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 150% at 100% -20%,
+    oklch(0.72 0.16 58 / 0.13),
+    transparent 55%
+  );
+}
+
+/* ─── Response meter — engagement cards fill their responded-rate bar ─────── */
+.meter {
+  position: relative;
+  height: 5px;
+  width: 100%;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 10%, transparent);
+  overflow: hidden;
+}
+.meter > i {
+  display: block;
+  height: 100%;
+  width: var(--meter, 0%);
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--accent-color, var(--primary)) 78%, transparent),
+    var(--accent-color, var(--primary))
+  );
+  box-shadow: 0 0 8px color-mix(in oklch, var(--accent-color, var(--primary)) 40%, transparent);
+  transform-origin: left center;
+  animation: meter-grow 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--meter-delay, 0ms);
+}
+@keyframes meter-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ─── Grid company row — amber rail slides in on hover ───────────────────── */
+.grid-row {
+  box-shadow: inset 2px 0 0 0 transparent;
+  transition: background-color 0.16s ease, box-shadow 0.2s ease;
+}
+.grid-row:hover {
+  box-shadow: inset 2px 0 0 0 var(--primary);
+}
+
+/* ─── Sourcing cockpit — amber rail sweeps down as the panel powers up ────── */
+.cockpit-rail {
+  transform-origin: top;
+  animation: rail-grow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes rail-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+/* ─── Funnel board — tape hand-off flashes the targeted column once ───────── */
+.col-flash {
+  animation: col-flash 1.2s ease-out both;
+}
+@keyframes col-flash {
+  0%   { box-shadow: 0 0 0 2px oklch(0.72 0.16 58 / 0.65), 0 0 24px oklch(0.72 0.16 58 / 0.18); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ─── Floating bulk-action bar — rises from the bottom edge ───────────────── */
+.bar-rise {
+  animation: bar-rise 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes bar-rise {
+  from { opacity: 0; transform: translate(-50%, 18px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ─── Horizon rail — each cell's load underbar grows in from the left ─────── */
+.horizon-load {
+  transform-origin: left center;
+  animation: horizon-grow 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--load-delay, 0ms);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes horizon-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Row cleared — a satisfying collapse the instant a touch is logged */
+.row-clear {
+  animation: row-clear 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+  pointer-events: none;
+}
+@keyframes row-clear {
+  0%   { opacity: 1; max-height: 120px; background: oklch(0.65 0.18 152 / 0); }
+  18%  { opacity: 1; background: oklch(0.65 0.18 152 / 0.16); }
+  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; transform: translateX(14px); background: oklch(0.65 0.18 152 / 0); }
+}
+
+/* Focus Mode — the room dims to one company at a time */
+.focus-scrim {
+  animation: focus-scrim-in 0.28s ease both;
+}
+@keyframes focus-scrim-in {
+  from { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  to   { opacity: 1; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+}
+.focus-card {
+  animation: focus-card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes focus-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* Advancing to the next card in Focus Mode */
+.focus-advance {
+  animation: focus-advance 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes focus-advance {
+  0%   { opacity: 0; transform: translateX(24px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Compose sheet — slides in from the right like a drawn-out letter ────── */
+.sheet-pane[data-open] {
+  animation: sheet-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sheet-pane[data-closed] {
+  animation: sheet-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes sheet-in {
+  from { opacity: 0.4; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes sheet-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(48px); }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  /* Never leave scroll-reveal content stuck in its hidden pre-state. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .hover-lift:hover {
+    transform: none;
+  }
+  .mkt-marquee { animation: none !important; }
+  .mkt-spot { animation: none !important; }
+}
+
+/* ═══ Marketing landing ══════════════════════════════════════════════════════
+   The public site is a faithful extension of the app's Obsidian-Amber identity:
+   obsidian canvas, a dotted-ledger grid, amber signal, hairline rules. ═══════ */
+
+/* Dotted-ledger backdrop — the desk surface, echoing the login grid.
+   Dots track the foreground ink, so they read as light specks on obsidian and
+   faint graphite on warm paper — no auto-invert artifacts. */
+.mkt-grid {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--foreground) 6%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 30px 30px;
+  background-position: center;
+}
+
+/* Ambient amber spotlight behind the hero. Static by design: it used to breathe on
+   a 14s loop, which put a second rhythm above the fold against the live desk's
+   2.4s pulse (and kept a blurred 42rem layer compositing forever). The glow is
+   the atmosphere; the pulse is the signature. */
+.mkt-spot {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  background: radial-gradient(circle, oklch(0.72 0.16 58 / 0.20), transparent 68%);
+  filter: blur(24px);
+}
+/* Daylight: soften the glow so amber warms the paper instead of muddying it. */
+:root:not(.dark) .mkt-spot {
+  background: radial-gradient(circle, oklch(0.72 0.16 58 / 0.11), transparent 70%);
+  filter: blur(30px);
+}
+
+/* ─── Motion budget: looping animation only while its section is on screen ─────
+   Measured at the page bottom, nine loops were still compositing off-screen (the
+   hero pulse, three mechanism beams, three marquee columns, the CTA sheen). Each
+   section that owns a loop is a <MotionSection>, which flips data-motion as it
+   enters and leaves the viewport; everything below pauses in place when it's
+   nowhere near the reader. */
+[data-motion="off"] .mkt-live,
+[data-motion="off"] .mkt-beam-pulse,
+[data-motion="off"] .mkt-marquee,
+[data-motion="off"] .mkt-hub-pulse,
+[data-motion="off"] .mkt-shimmer::after {
+  animation-play-state: paused;
+}
+
+/* Signature elevation for the hero desk + product shots. A deep drop on obsidian;
+   a soft, believable paper shadow in Daylight (never a harsh black slab). */
+.mkt-elev {
+  box-shadow: 0 30px 60px -30px oklch(0.55 0.03 265 / 0.22);
+}
+.dark .mkt-elev {
+  box-shadow: 0 40px 80px -40px oklch(0 0 0 / 0.8);
+}
+@keyframes mkt-drift {
+  from { transform: translate3d(-4%, -3%, 0) scale(1);    opacity: 0.75; }
+  to   { transform: translate3d(5%, 4%, 0)  scale(1.12);  opacity: 1; }
+}
+
+/* One-shot sheen sweeping across the hero artifact on entrance. */
+.mkt-sheen { position: relative; overflow: hidden; }
+.mkt-sheen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, oklch(1 0 0 / 0.06) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: mkt-sweep 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s 1;
+}
+@keyframes mkt-sweep { to { transform: translateX(120%); } }
+
+/* Security card — ciphertext surfacing through a mask that follows the pointer.
+   The position arrives as custom properties set on the card (no React re-render
+   per mousemove); keyboard focus and tap fall back to the centred default. */
+.mkt-decrypt-layer {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-mask-image: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), black 10%, transparent 65%);
+  mask-image: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), black 10%, transparent 65%);
+}
+.mkt-decrypt[data-open] .mkt-decrypt-layer {
+  opacity: 1;
+}
+
+/* Vertical testimonial marquee — desks scrolling past. Pauses on hover. */
+.mkt-marquee { animation: mkt-up var(--dur, 40s) linear infinite; }
+.mkt-marquee-group:hover .mkt-marquee { animation-play-state: paused; }
+@keyframes mkt-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+
+/* World-map arcs draw themselves in. */
+.mkt-arc {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mkt-draw 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--arc-delay, 0ms);
+}
+@keyframes mkt-draw { to { stroke-dashoffset: 0; } }
+
+/* The Mumbai hub breathing under the arcs. CSS, not SVG <animate>: SMIL ignores
+   prefers-reduced-motion entirely, so the old markup kept pulsing for readers who
+   asked everything to hold still. */
+.mkt-hub-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mkt-hub 2.6s ease-in-out infinite;
+}
+@keyframes mkt-hub {
+  0%, 100% { transform: scale(0.7);  opacity: 0.22; }
+  50%      { transform: scale(1.35); opacity: 0.05; }
+}
+
+/* Live overdue dot — reuses the amber-pulse language from the app's stat cards. */
+.mkt-live { animation: amber-pulse 2.4s ease-in-out infinite; }
+
+/* ─── Mechanism beams — sheet rows travelling into the system ─────────────────
+   Paths are measured from the DOM (components/marketing/animated-beam.tsx) and
+   normalised with pathLength="1", so one dash length works at every breakpoint. */
+.mkt-beam-rail {
+  fill: none;
+  stroke: color-mix(in oklch, var(--foreground) 14%, transparent);
+  stroke-width: 1.25;
+}
+.mkt-beam-pulse {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.14 0.86;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 5px color-mix(in oklch, var(--primary) 50%, transparent));
+  animation: mkt-beam var(--beam-dur, 3.2s) linear infinite;
+  animation-delay: var(--beam-delay, 0ms);
+}
+@keyframes mkt-beam { to { stroke-dashoffset: 0; } }
+
+/* How-it-works rail — draws left-to-right once the section reveals. */
+.mkt-step-rail {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.reveal-shown .mkt-step-rail {
+  animation: mkt-rail-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
+}
+@keyframes mkt-rail-draw { to { transform: scaleX(1); } }
+
+/* Closing CTA — a slow sheen crosses the amber button: the page's last signal,
+   and the only looping motion below the fold. */
+.mkt-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.mkt-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, oklch(1 0 0 / 0.38) 50%, transparent 62%);
+  transform: translateX(-150%);
+  animation: mkt-sheen-sweep 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes mkt-sheen-sweep {
+  0%        { transform: translateX(-150%); }
+  45%, 100% { transform: translateX(150%); }
+}
+
+/* Reduced-motion fallbacks. Declared here, after the rules above, because a media
+   query adds no specificity — the earlier global block would otherwise lose. */
+@media (prefers-reduced-motion: reduce) {
+  /* Park the travelling packet: the rail stays a static amber trace, so
+     "three sheets → one system" still reads with no motion at all. */
+  .mkt-beam-pulse {
+    animation: none !important;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    stroke-width: 1.5;
+    filter: none;
+    opacity: 0.75;
+  }
+  /* <Reveal> skips its observer under reduced motion, so `.reveal-shown` never
+     lands and the draw-in never fires — the rail must start fully drawn. */
+  .mkt-step-rail { transform: none; }
+
+  /* The blanket `animation-duration: 0.01ms !important` above only helps one-shot
+     animations: an *infinite* loop at 0.01ms restarts every frame, forever. Kill
+     the looping decoratives outright — the live dot and the hub stay as static
+     amber marks, which is all they ever needed to say. */
+  .mkt-live,
+  .mkt-hub-pulse {
+    animation: none !important;
+  }
+  .mkt-hub-pulse { transform: none; opacity: 0.22; }
+
+  /* The CTA keeps its amber weight; only the sweep goes. */
+  .mkt-shimmer::after {
+    animation: none !important;
+    opacity: 0;
+  }
+}
