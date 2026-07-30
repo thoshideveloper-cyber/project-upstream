@@ -1,15 +1,23 @@
 import { LOOP } from "@/content/site";
+import { cn } from "@/lib/utils";
 import { Container, Readout, Section } from "./primitives";
 
 /**
- * The band under the hero: the loop the product runs — source, reach, track,
- * remember — as one continuous rail rather than four columns of text.
+ * The band under the hero: source, reach, track, remember.
  *
- * It used to count up four figures from a seeded demo database. Every
- * organisation's aggregates differ, so quoting any is a claim we can't stand
- * behind; the band states the mechanism instead. Drawing the rail through the
- * four nodes is the part that earns the space — the copy already says "loop",
- * and four hairline-separated columns said "list".
+ * Back to hairline-divided cells. A previous pass hung the four stages off a
+ * faint horizontal rail with dot nodes, which floated: the rail was a 7%-alpha
+ * gradient carrying four 12px dots, so at a glance the band read as four
+ * paragraphs that happened to be near each other. Vertical rules between cells
+ * do the same job with more authority, and they match the instrument-panel
+ * language the product's own stat rows use.
+ *
+ * The arrow between cells is what the rail was for, and it survives as a glyph
+ * sitting in the rule itself. The fourth cell says the loop closes, because a
+ * row of four columns otherwise reads as a list and this is a cycle.
+ *
+ * It used to count up four figures from a seeded demo database. Every firm's
+ * aggregates differ, so the band states the mechanism instead.
  */
 export function Stats() {
   return (
@@ -17,32 +25,37 @@ export function Stats() {
       <Container>
         <Readout className="block text-center">Source · reach · track · remember</Readout>
 
-        <ol className="relative mt-10 grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4 lg:gap-x-8">
-          {/* The rail the nodes sit on. Drawn once behind them, so the four read
-              as stages of one movement instead of four separate facts. */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-[0.4rem] hidden h-px bg-gradient-to-r from-transparent via-border to-transparent lg:block"
-          />
-
+        <ol className="mkt-cascade mt-10 grid grid-cols-1 gap-y-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
           {LOOP.map((c, i) => (
-            <li key={c.label} className="relative">
-              <span
-                aria-hidden
-                className="relative z-10 mb-6 hidden size-[0.8rem] items-center justify-center rounded-full border border-primary/40 bg-background lg:flex"
-              >
-                <span className="size-1 rounded-full bg-primary" />
-              </span>
-              <h3 className="mkt-display text-2xl font-semibold text-foreground sm:text-[1.75rem]">
-                {c.label}
-              </h3>
-              <p className="mt-2.5 max-w-[30ch] text-sm leading-relaxed text-muted-foreground text-pretty">
+            <li
+              key={c.label}
+              className={cn(
+                "relative px-0 sm:px-6 lg:px-7",
+                // The rule between stages. First cell in each row has none, so
+                // the band never opens or closes on a hanging hairline.
+                i > 0 && "sm:border-l sm:border-border",
+                i === 2 && "lg:border-l sm:border-l-0 lg:border-border",
+              )}
+              style={{ "--i": i } as React.CSSProperties}
+            >
+              {/* The flow marker, sitting in the rule it follows. */}
+              {i > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute -left-[7px] top-[0.55rem] hidden size-3.5 items-center justify-center rounded-full bg-background font-mono text-[10px] leading-none text-primary sm:flex"
+                >
+                  &rsaquo;
+                </span>
+              )}
+
+              <h3 className="mkt-display text-2xl text-foreground sm:text-[1.7rem]">{c.label}</h3>
+              <p className="mt-2.5 max-w-[32ch] text-sm leading-relaxed text-muted-foreground text-pretty">
                 {c.context}
               </p>
-              {/* The fourth feeds the first. That is the whole claim. */}
+
               {i === LOOP.length - 1 && (
-                <Readout tone="signal" className="mt-4 hidden lg:block">
-                  ↻ back to source
+                <Readout tone="signal" className="mt-3.5 block">
+                  ↻ and the next mandate starts here
                 </Readout>
               )}
             </li>

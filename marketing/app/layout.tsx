@@ -74,6 +74,12 @@ export default function RootLayout({
       className={`${funnel.variable} ${geist.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        {/* Dark first, and dark by default: THEME_INIT_SCRIPT treats anything
+            other than a stored "light" as dark. This meta tells the browser the
+            same thing one step earlier, so the pre-paint canvas and the
+            scrollbars are dark too rather than flashing white for a frame. */}
+        <meta name="color-scheme" content="dark light" />
+        <meta name="theme-color" content="#0b0b0d" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="bg-background text-foreground min-h-full" suppressHydrationWarning>

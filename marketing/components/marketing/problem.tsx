@@ -31,11 +31,11 @@ export function Problem() {
           hit often enough to go and build something.
         </SectionHead>
 
-        <ul className="mt-2">
+        <ul className="mkt-cascade mt-2">
           {FAILURES.map((f, i) => (
             <li
               key={f.pain}
-              className="mkt-stagger grid items-start gap-x-6 gap-y-3 border-b border-border py-8 md:grid-cols-[auto_minmax(0,20rem)_minmax(0,1fr)] md:gap-x-10 md:py-9"
+              className="grid items-start gap-x-6 gap-y-3 border-b border-border py-8 md:grid-cols-[auto_minmax(0,20rem)_minmax(0,1fr)] md:gap-x-10 md:py-9"
               style={{ "--i": i } as React.CSSProperties}
             >
               <IconChip icon={ICONS[f.icon]} tone="muted" className="hidden md:mt-1 md:inline-flex" />

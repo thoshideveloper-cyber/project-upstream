@@ -80,7 +80,7 @@ export function Hero() {
     <section
       ref={ref}
       onPointerMove={onMove}
-      className="relative overflow-hidden pt-28 pb-16 sm:pt-32 md:pt-40 md:pb-24"
+      className="relative overflow-clip pt-28 pb-16 sm:pt-32 md:pt-40 md:pb-24"
     >
       <div aria-hidden className="mkt-grid pointer-events-none absolute inset-0 opacity-60" />
       <div aria-hidden className="mkt-beacon" />
@@ -97,15 +97,18 @@ export function Hero() {
               Origination and outreach, for M&amp;A desks
             </Readout>
 
+            {/* Two beats, and each one is a moat: the cadence engine and the
+                append-only record. "Walks out the door" is the brief's own
+                phrase for what happens when an analyst resigns, which is the
+                thing a partner is actually afraid of. */}
             <Display as="h1" className="mt-5">
-              Every follow-up on schedule. Every relationship on record.
+              Nothing slips. Nothing walks out the door.
             </Display>
 
-            <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-              Boutique desks run origination on three spreadsheets and an inbox. Upstream is
-              those three sheets joined up: the master list, the follow-up cadence and the
-              contact history, held by the firm rather than by whoever happens to still work
-              here.
+            <p className="mt-6 max-w-[48ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
+              Boutique M&amp;A desks run origination on three spreadsheets and an inbox. Upstream
+              is those three sheets joined up: the master list, the follow-up clock and the
+              contact history, held by the firm instead of by whoever still works here.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -127,7 +130,7 @@ export function Hero() {
           </div>
 
           {/* Evidence — the outreach queue as it actually looks */}
-          <div className="mkt-sheen mkt-elev overflow-hidden rounded-xl border border-border bg-card/60 backdrop-blur-sm">
+          <div className="mkt-sheen mkt-elev overflow-clip rounded-xl border border-border bg-card/60 backdrop-blur-sm">
             <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
               <span className="flex items-center gap-2.5">
                 <span className="mkt-live size-1.5 rounded-full bg-primary" />
@@ -148,10 +151,11 @@ export function Hero() {
               ))}
             </div>
 
-            <ul className="divide-y divide-border">
-              {ROWS.map((r) => (
+            <ul className="mkt-cascade divide-y divide-border">
+              {ROWS.map((r, i) => (
                 <li
                   key={r.org}
+                  style={{ "--i": i } as React.CSSProperties}
                   className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-foreground/[0.025]"
                 >
                   <span

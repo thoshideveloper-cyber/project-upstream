@@ -107,8 +107,23 @@ function EncryptedCard() {
 
 export function Security() {
   return (
-    <Section id="security">
-      <Container>
+    <Section id="security" className="relative overflow-clip">
+      {/* The spectrum. A wide amber field that travels and bends its hue as the
+          section scrolls, so the light behind the ciphertext resolves the same
+          way the ciphertext does. Scroll-driven in CSS (see globals.css); on a
+          browser without scroll timelines it renders as a static amber wash,
+          which is what it was before. */}
+      <div
+        aria-hidden
+        /* No negative z-index. The section is `relative` with `z-index: auto`,
+           so it establishes no stacking context, and `-z-10` sent this behind
+           the opaque <body> background where it was invisible. Plain positioned
+           + DOM order puts it under the Container below, which is what was
+           wanted. */
+        className="mkt-spectrum pointer-events-none absolute -inset-x-32 -top-40 -bottom-40"
+      />
+
+      <Container className="relative">
         <div className="grid items-center gap-12 md:grid-cols-2 lg:gap-16">
           <div>
             {/* The second of the page's two kickers, and it earns it: this

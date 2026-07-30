@@ -22,7 +22,7 @@ export function Personas() {
           record has to satisfy both or the rollout stalls in week three.
         </SectionHead>
 
-        <div className="mt-14 grid gap-12 md:grid-cols-2 md:gap-0">
+        <div className="mkt-cascade mt-14 grid gap-12 md:grid-cols-2 md:gap-0">
           {PERSONAS.map((p, i) => (
             <div
               key={p.label}

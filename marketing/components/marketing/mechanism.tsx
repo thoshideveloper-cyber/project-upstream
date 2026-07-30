@@ -6,11 +6,15 @@ import { FileSpreadsheet } from "lucide-react";
 import { UpstreamMark } from "@/components/brand/logo";
 import { AnimatedBeams } from "./animated-beam";
 
-/** The sheets a team already runs — named as the files they actually are. */
+/**
+ * The three files a desk already runs, named the way the brief names them so
+ * they match the module tabs directly below this diagram. Anyone from a desk
+ * like this has all three open in another window right now.
+ */
 const SHEETS = [
-  { name: "The list", file: "records.xlsx", holds: "the organisations you're pursuing" },
-  { name: "The schedule", file: "follow_ups.xlsx", holds: "who to reach, and when" },
-  { name: "The contacts", file: "contacts.xlsx", holds: "the people you actually know" },
+  { name: "The master list", file: "Outreach template.xlsx", holds: "targets and buyers per mandate" },
+  { name: "The schedule", file: "Emailing schedule.xlsx", holds: "who to chase, and when" },
+  { name: "The contacts", file: "Contact list.xlsx", holds: "the people you actually know" },
 ];
 
 /**

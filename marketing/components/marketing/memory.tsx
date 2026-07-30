@@ -28,7 +28,7 @@ export function Memory() {
 
         <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-16">
           {/* The three beats, on a spine */}
-          <ol className="relative">
+          <ol className="mkt-cascade relative">
             <span
               aria-hidden
               className="absolute top-2 bottom-2 left-[3px] w-px bg-gradient-to-b from-primary/40 via-border to-transparent"
@@ -50,7 +50,7 @@ export function Memory() {
 
           {/* The moment itself */}
           <figure className="lg:sticky lg:top-28 lg:self-start">
-            <div className="mkt-elev overflow-hidden rounded-xl border border-border bg-card/60">
+            <div className="mkt-enter mkt-elev overflow-hidden rounded-xl border border-border bg-card/60">
               <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <Readout tone="ink">Adding to mandate</Readout>
                 <Readout>Project Kestrel</Readout>

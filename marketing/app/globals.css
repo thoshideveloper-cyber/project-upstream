@@ -356,16 +356,9 @@
   transform: translateY(0);
 }
 
-/* Per-item stagger inside a revealed list — the rows of a ledger arriving in
-   sequence rather than the whole block sliding as one slab. */
-.reveal-shown .mkt-stagger {
-  animation: mkt-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--i, 0) * 55ms);
-}
-@keyframes mkt-rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+/* Per-item stagger now lives in the scroll-driven block below (`.mkt-cascade`),
+   which does the same job off the compositor and scrubs backwards on scroll up.
+   The observer-based `.mkt-stagger` it replaced is gone. */
 
 /* One-shot sheen sweeping across the hero artifact on entrance. */
 .mkt-sheen { position: relative; overflow: hidden; }
@@ -379,6 +372,26 @@
   animation: mkt-sweep 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s 1;
 }
 @keyframes mkt-sweep { to { transform: translateX(120%); } }
+
+/**
+ * The security spectrum's paint. Themed here rather than inline, because the two
+ * canvases want very different amounts of it: on obsidian the field can carry
+ * real colour, while on warm paper the same values read as pink candy, which is
+ * the wrong register entirely for a page about a confidential buyer list.
+ * The scroll-driven motion lives in the @supports block further down.
+ */
+.mkt-spectrum {
+  background:
+    radial-gradient(46% 42% at 28% 38%, oklch(0.72 0.16 58 / 0.38), transparent 68%),
+    radial-gradient(40% 36% at 74% 64%, oklch(0.62 0.19 322 / 0.30), transparent 70%);
+  filter: blur(52px);
+}
+:root:not(.dark) .mkt-spectrum {
+  background:
+    radial-gradient(46% 42% at 28% 38%, oklch(0.72 0.16 58 / 0.14), transparent 70%),
+    radial-gradient(40% 36% at 74% 64%, oklch(0.62 0.19 322 / 0.07), transparent 72%);
+  filter: blur(62px);
+}
 
 /* Live overdue dot — the app's stat-card language, and the page's one heartbeat. */
 .mkt-live { animation: mkt-pulse 2.4s ease-in-out infinite; }
@@ -469,6 +482,82 @@
   45%, 100% { transform: translateX(150%); }
 }
 
+/* ═══ Scroll-driven motion ══════════════════════════════════════════════════
+   Real scroll timelines, not IntersectionObserver plus a class. The browser runs
+   these off the compositor, so they stay smooth while the main thread is busy
+   and they scrub *backwards* when you scroll up, which an observer never does.
+
+   Everything in here is inside a `@supports` gate and a reduced-motion gate. On
+   a browser without scroll timelines (Firefox today, older Safari) the elements
+   simply render in their finished state, because the un-animated CSS below IS
+   the end state. Nothing is hidden waiting for an animation that will not run.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* A panel arriving. Deliberately small: 14px and a hair of blur. */
+    .mkt-enter {
+      animation: mkt-enter-kf linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 26%;
+    }
+    @keyframes mkt-enter-kf {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* Items inside a list, offset by index so they cascade rather than land as
+       a slab. --i is set on the element by the component. */
+    .mkt-cascade > * {
+      animation: mkt-enter-kf linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 22%;
+    }
+
+    /* The product screenshot settling into its frame as the panel crosses the
+       fold. Scale only, so it never shifts layout. */
+    .mkt-settle {
+      animation: mkt-settle-kf linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+    @keyframes mkt-settle-kf {
+      from { transform: scale(1.06); }
+      to   { transform: scale(1); }
+    }
+
+    /* A rule drawing itself across as the section arrives. */
+    .mkt-draw {
+      animation: mkt-draw-kf linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 34%;
+    }
+    @keyframes mkt-draw-kf {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+
+    /**
+     * The security spectrum.
+     *
+     * The section is about ciphertext resolving into plaintext, so the light
+     * behind it resolves too: a wide amber-to-violet field that travels across
+     * and settles as you scroll the section, rather than sitting still being
+     * decorative. Hue rotation rather than swapping colours keeps it inside the
+     * page's one-accent rule; it is the same amber, bent.
+     */
+    .mkt-spectrum {
+      animation: mkt-spectrum-kf linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    @keyframes mkt-spectrum-kf {
+      0%   { transform: translate3d(-14%, 6%, 0) scale(1);    filter: hue-rotate(-26deg); opacity: 0.5; }
+      50%  { transform: translate3d(6%, -4%, 0)  scale(1.14); filter: hue-rotate(14deg);  opacity: 1; }
+      100% { transform: translate3d(16%, 4%, 0)  scale(1);    filter: hue-rotate(-8deg);  opacity: 0.55; }
+    }
+  }
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────────────────
    Declared last: a media query adds no specificity, so an earlier global block
    would lose to the rules above. */
@@ -479,7 +568,6 @@
   }
   /* Never leave scroll-reveal content stuck in its hidden pre-state. */
   .reveal { opacity: 1; transform: none; }
-  .mkt-stagger { animation: none !important; opacity: 1; transform: none; }
 
   /* Park the travelling packet: the rail stays a static amber trace, so
      "three sheets → one system" still reads with no motion at all. */

@@ -31,7 +31,7 @@ export function Scope() {
           it on a Tuesday.
         </p>
 
-        <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border md:grid-cols-2">
+        <div className="mkt-enter mt-12 grid gap-px overflow-clip rounded-xl border border-border bg-border md:grid-cols-2">
           <div className="flex flex-col bg-card/40 p-6 md:p-8">
             <Readout tone="signal" className="block">
               What it does
@@ -72,7 +72,7 @@ export function Scope() {
         <div className="mt-16">
           <Readout className="block">Where that puts it</Readout>
 
-          <ul className="mt-6">
+          <ul className="mkt-cascade mt-6">
             {LANES.map((l, i) => {
               const ours = i === LANES.length - 1;
               return (

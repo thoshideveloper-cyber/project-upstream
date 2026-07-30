@@ -121,7 +121,7 @@ export function Features() {
           role="tabpanel"
           aria-labelledby={`feature-tab-${feature.id}`}
           tabIndex={0}
-          className="mt-6 grid overflow-hidden rounded-xl border border-border bg-card/40 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]"
+          className="mt-6 grid overflow-clip rounded-xl border border-border bg-card/40 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]"
         >
           <div className="flex flex-col justify-center p-6 md:p-8">
             {/* Naming the file it replaces is the fastest way to tell a desk
@@ -148,14 +148,17 @@ export function Features() {
                 {feature.caption}
               </Readout>
             </div>
-            <div className="relative aspect-[16/10] w-full">
+            {/* The shots are cropped to the app's content region (the 240px left
+                rail is gone), so the table is legible at panel size instead of
+                being a thumbnail of a whole application. */}
+            <div className="relative aspect-[16/10] w-full overflow-clip">
               <Image
                 key={feature.image}
                 src={`${ASSET_PREFIX}${feature.image}`}
                 alt={`${feature.tab}: ${feature.blurb}`}
                 fill
                 sizes="(max-width: 1024px) 100vw, 800px"
-                className="object-cover object-left-top"
+                className="mkt-settle object-cover object-left-top"
                 /* Below the fold: `priority` was emitting a high-priority preload
                    that competed with the hero. The aspect box already reserves the
                    space, so there is nothing to shift. */

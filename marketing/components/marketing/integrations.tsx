@@ -19,7 +19,7 @@ export function Integrations() {
       <Container>
         <Readout className="block text-center">Works with what you already use</Readout>
 
-        <ul className="mt-8 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
+        <ul className="mkt-cascade mt-8 grid gap-px overflow-clip rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-5">
           {INTEGRATIONS.map((it) => (
             <li key={it.name} className="bg-background px-4 py-5 text-center">
               <p className="mkt-subhead text-[15px] text-foreground">{it.name}</p>
