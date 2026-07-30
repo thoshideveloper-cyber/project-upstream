@@ -56,7 +56,7 @@ export function Features() {
       <Container wide>
         <SectionHead kicker="Three of the modules" title="The sheets you already run, connected.">
           The list of who you&apos;re working, the schedule of who to reach, and the people you
-          actually know — joined up so the numbers finally agree.
+          actually know, joined up so the numbers finally agree.
         </SectionHead>
 
         {/* The mechanism, before the claims: the sheets converging into one system. */}
@@ -149,7 +149,7 @@ export function Features() {
               <Image
                 key={feature.image}
                 src={`${ASSET_PREFIX}${feature.image}`}
-                alt={`${feature.tab} — ${feature.blurb}`}
+                alt={`${feature.tab}: ${feature.blurb}`}
                 fill
                 sizes="(max-width: 1024px) 100vw, 800px"
                 className="object-cover object-left-top"

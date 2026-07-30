@@ -81,7 +81,9 @@ export function Display({
   return (
     <Tag
       className={cn(
-        "mkt-display font-semibold text-foreground",
+        // No weight utility here: `.mkt-display` reads a per-theme weight token,
+        // and a Tailwind font-* class would override it in one theme's favour.
+        "mkt-display text-foreground",
         // The h1 sits in a ~30rem column beside the queue panel, so its ceiling
         // is set by that measure, not by the viewport: at 4.6rem it ran to six
         // lines and stopped being a headline.
@@ -107,7 +109,7 @@ export function Subhead({
   as?: "h3" | "h4" | "p";
 }) {
   return (
-    <Tag className={cn("mkt-subhead text-lg leading-snug font-semibold text-foreground", className)}>
+    <Tag className={cn("mkt-subhead text-lg leading-snug text-foreground", className)}>
       {children}
     </Tag>
   );
@@ -338,17 +340,31 @@ export function IconChip({
 }
 
 /**
- * The one list marker: a short amber rule, like a tick on a gauge face. The
- * check-in-a-disc it replaces appeared about thirty times down the page and
- * turned every list into the same SaaS feature list.
+ * The one list marker: a 3px amber dot.
+ *
+ * It has now been two other things. A check-in-a-disc, which turned every list
+ * into the same SaaS feature list, and then a short amber rule, which at list
+ * density read as a page full of dashes. A small dot sits quietly at the start
+ * of a line and lets the sentence be the thing you look at, which is the entire
+ * job of a bullet.
  */
 export function Marker({ children }: { children: React.ReactNode }) {
   return (
-    <li className="flex items-start gap-3 text-sm leading-relaxed text-foreground/85">
-      <span aria-hidden className="mt-[0.62em] h-px w-2.5 shrink-0 bg-primary" />
+    // break-inside-avoid: the wide bento panels set their points in two CSS
+    // columns, and without it a two-line item splits across the column break.
+    <li className="flex items-start gap-2.5 break-inside-avoid text-sm leading-relaxed text-foreground/85">
+      <span aria-hidden className="mt-[0.58em] size-[3px] shrink-0 rounded-full bg-primary" />
       <span className="min-w-0">{children}</span>
     </li>
   );
+}
+
+/**
+ * The same dot, for the short horizontal proof lists in the hero and the closing
+ * panel. One marker language on the page, whichever direction the list runs.
+ */
+export function Dot() {
+  return <span aria-hidden className="size-[3px] shrink-0 rounded-full bg-primary" />;
 }
 
 /** A ruled-off closing line inside a panel — the single amber beat per panel. */

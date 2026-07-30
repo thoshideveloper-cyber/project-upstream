@@ -6,7 +6,7 @@ import { UpstreamMark } from "@/components/brand/logo";
 import { Container, CTAGhost, Display, Readout } from "@/components/marketing/primitives";
 
 export const metadata: Metadata = {
-  title: "Coming soon — Upstream",
+  title: "Coming soon · Upstream",
   description: "Upstream is opening access shortly.",
 };
 
@@ -44,7 +44,7 @@ export default function ComingSoonPage() {
 
         <p className="mx-auto mt-5 max-w-[46ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
           We&apos;re opening access to a small number of teams first. Nothing to sign up for
-          yet — check back shortly.
+          yet. Check back shortly.
         </p>
 
         <CTAGhost href="/" className="mt-10">

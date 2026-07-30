@@ -1,39 +1,51 @@
 import type { Metadata } from "next";
-import { Archivo, Azeret_Mono } from "next/font/google";
+import { Funnel_Display, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { THEME_INIT_SCRIPT } from "@/components/theme";
 
 /**
- * Two voices, contrasted on the width axis rather than serif-vs-sans.
+ * Three faces, three jobs.
  *
- * The page used to run Cormorant display over Outfit body — a display serif with
- * mono labels and hairline rules, which is the saturated editorial-magazine lane
- * and reads as a magazine *about* an instrument rather than the instrument. Upstream
- * is a working console: a shared registry, a computed clock, an append-only log.
+ * The previous pass ran Archivo across everything, with headings pushed to the
+ * wide end of its `wdth` axis at semibold. That works on obsidian, where light
+ * type on a dark ground optically *thins*, and fails in Daylight, where the same
+ * wide semibold lands on warm paper as a heavy slab. Presence was coming from
+ * weight, and weight is exactly the thing that doesn't survive a theme flip.
  *
- * Archivo is a grotesque with a real `wdth` axis, so headings run wide (signage,
- * a faceplate, a manifest header) and body runs normal from the same family — one
- * voice, committed contrast. Azeret Mono is the data voice: squared terminals and
- * mechanical rhythm, for readouts and counts, never for prose.
+ * So presence now comes from shape instead:
+ *   Funnel Display  headings. Slightly condensed with real character, so it
+ *                   carries a fold at 500-600 rather than needing 700.
+ *   Geist           body and UI. Drawn for screens and, unusually, tuned for
+ *                   both canvases — which is the problem being solved here.
+ *   Geist Mono      the data voice: readouts, counts, captions. A true companion
+ *                   to the body face rather than an unrelated mono bolted on.
+ *
+ * The residual light/dark weight difference is handled in globals.css, where the
+ * display weight is a per-theme token rather than one number for both.
  */
-const archivo = Archivo({
-  variable: "--font-sans",
+const funnel = Funnel_Display({
+  variable: "--font-display",
   subsets: ["latin"],
-  axes: ["wdth"],
   display: "swap",
 });
 
-const azeret = Azeret_Mono({
+const geist = Geist({
+  variable: "--font-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
 });
 
-const title = "Upstream — the record your outreach runs on";
+const title = "Upstream · the record your outreach runs on";
 const description =
-  "Upstream runs the whole loop on one record: find the organisations worth reaching, work the follow-ups on a computed cadence, and keep the relationship memory with the team instead of in someone's inbox.";
+  "Find the organisations worth reaching, work the follow-ups on a clock the server keeps, and hold on to what your team learned. One record, not three spreadsheets.";
 
 export const metadata: Metadata = {
   title,
@@ -59,7 +71,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${archivo.variable} ${azeret.variable} h-full antialiased`}
+      className={`${funnel.variable} ${geist.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

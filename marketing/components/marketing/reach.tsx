@@ -67,7 +67,7 @@ export function Reach() {
       <Container>
         <SectionHead variant="statement" title="One clock. Every market you work in." />
         <p className="mt-6 max-w-[62ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-          Due-dates are computed server-side on one clock your whole team shares — so a date means
+          Due-dates are computed server-side on one clock your whole team shares, so a date means
           the same thing to everyone, wherever they are.
         </p>
 

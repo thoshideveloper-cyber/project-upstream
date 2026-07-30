@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 import { CTA_HREF } from "@/content/site";
 import { cn } from "@/lib/utils";
-import { Container, CTAGhost, CTAPrimary, Display, Readout } from "./primitives";
+import { Container, CTAGhost, CTAPrimary, Display, Dot, Readout } from "./primitives";
 
 /**
  * The fold is the product, not a picture of it.
@@ -98,9 +98,9 @@ export function Hero() {
             </Display>
 
             <p className="mt-6 max-w-[46ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-              Upstream runs the whole loop on one record — a shared registry of the organisations
-              you&apos;re working, a cadence that keeps the follow-ups honest, and relationship
-              memory that stays with the team when the people move on.
+              One shared list of the organisations you&apos;re working. A follow-up clock the
+              server keeps, so nothing quietly goes cold. And a record of what your team learned
+              that stays put when someone leaves.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -111,10 +111,10 @@ export function Hero() {
               <CTAGhost href={CTA_HREF}>See the live demo</CTAGhost>
             </div>
 
-            <ul className="mt-9 flex flex-col gap-2 border-t border-border pt-5">
+            <ul className="mt-9 flex flex-wrap gap-x-6 gap-y-2.5 border-t border-border pt-5">
               {PROOF.map((p) => (
-                <li key={p} className="flex items-center gap-2.5">
-                  <span aria-hidden className="h-px w-3 shrink-0 bg-primary" />
+                <li key={p} className="flex items-center gap-2">
+                  <Dot />
                   <Readout>{p}</Readout>
                 </li>
               ))}
@@ -184,6 +184,8 @@ export function Hero() {
 
             <div className="flex items-center justify-between gap-4 border-t border-border px-4 py-3">
               <Readout>2 overdue · clear the backlog first</Readout>
+              {/* The footer states the queue's one instruction, then offers the
+                  one action. Nothing else on the panel is clickable-looking. */}
               <span className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 font-mono text-[10px] font-medium tracking-[0.14em] text-primary-ink uppercase">
                 Work the queue
                 <ArrowRight className="size-3" />

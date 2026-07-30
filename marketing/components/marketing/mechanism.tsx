@@ -89,7 +89,7 @@ export function SheetsToSystem() {
       </div>
 
       <figcaption className="mt-4 text-center font-mono text-[10px] tracking-[0.14em] text-muted-foreground">
-        Your sheets in, one connected record out — nothing re-keyed, nothing left behind.
+        Your sheets in, one connected record out. Nothing re-keyed, nothing left behind.
       </figcaption>
     </figure>
   );

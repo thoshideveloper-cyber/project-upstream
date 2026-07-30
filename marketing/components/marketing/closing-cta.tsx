@@ -1,7 +1,16 @@
 import { ArrowRight } from "lucide-react";
 
 import { CTA_HREF } from "@/content/site";
-import { Container, CTAGhost, CTALink, CTAPrimary, Display, Readout, Section } from "./primitives";
+import {
+  Container,
+  CTAGhost,
+  CTALink,
+  CTAPrimary,
+  Display,
+  Dot,
+  Readout,
+  Section,
+} from "./primitives";
 
 /**
  * The reassurance that makes clicking cheap — risk reversal, one line each. No
@@ -11,7 +20,9 @@ const REASSURANCE = ["A live walkthrough", "Your sheets, imported live", "No mig
 
 export function ClosingCta() {
   return (
-    <Section motion rule={false} rhythm="loose">
+    // id: ReadingChrome retires its floating CTA when this panel comes into
+    // view, so the duplicate never sits on top of the real one.
+    <Section id="closing" motion rule={false} rhythm="loose">
       <Container>
         <div className="relative overflow-hidden rounded-2xl border border-primary/20 px-5 py-16 text-center sm:px-8 md:py-20">
           <div aria-hidden className="mkt-grid pointer-events-none absolute inset-0 opacity-40" />
@@ -26,8 +37,8 @@ export function ClosingCta() {
             <Display className="mx-auto max-w-3xl">Get your team out of spreadsheets.</Display>
             {/* One last loss-aversion beat, then the relief. */}
             <p className="mx-auto mt-5 max-w-[54ch] text-[15px] leading-relaxed text-muted-foreground text-pretty md:text-base">
-              Somewhere on the list a follow-up is already late, and somewhere in an inbox is
-              something the next project needs to know. Put both on one record.
+              Right now a follow-up on your list is already late, and something the next project
+              needs to know is sitting in somebody&apos;s inbox. Put both on one record.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <CTAPrimary href={CTA_HREF} className="mkt-shimmer">
@@ -45,7 +56,7 @@ export function ClosingCta() {
             <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-2.5 border-t border-border pt-7">
               {REASSURANCE.map((r) => (
                 <li key={r} className="flex items-center gap-2">
-                  <span aria-hidden className="h-px w-3 bg-primary" />
+                  <Dot />
                   <Readout>{r}</Readout>
                 </li>
               ))}

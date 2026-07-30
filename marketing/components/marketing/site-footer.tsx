@@ -15,8 +15,10 @@ import { Container, Readout } from "./primitives";
  */
 const NAV = [
   { label: "Product", href: "#product" },
+  { label: "The follow-up clock", href: "#cadence" },
   { label: "Capabilities", href: "#capabilities" },
   { label: "Who it's for", href: "#teams" },
+  { label: "What changes", href: "#compare" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Security", href: "#security" },
   ...(SHOW_REVIEWS_SECTION ? [{ label: "Customers", href: "#customers" }] : []),
@@ -45,8 +47,8 @@ export function SiteFooter() {
               <span className="mkt-subhead text-lg text-foreground">Upstream</span>
             </div>
             <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-muted-foreground">
-              Relationship intelligence, institutionalised. One record for the whole team —
-              sourcing, outreach, and what you learned last time.
+              One record for the whole team: who you&apos;re working, who you&apos;ve reached, and
+              what you found out last time.
             </p>
           </div>
 

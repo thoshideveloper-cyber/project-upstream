@@ -64,8 +64,17 @@
 
 /* ─── Daylight — warm-paper light theme ─────────────────────────────────── */
 :root {
-  /* Display and body are one family; the contrast is on the width axis. */
-  --font-display: var(--font-sans);
+  /**
+   * Display weight is a per-theme token, not one number.
+   *
+   * Dark ink on light paper reads *heavier* than the same weight in light ink on
+   * a dark ground — the ground bleeds into the counters and thickens the stroke.
+   * Setting one weight for both is why the headings looked right on obsidian and
+   * like a slab in Daylight. Daylight runs a step lighter; obsidian a step
+   * heavier. Same face, same size, same perceived weight.
+   */
+  --display-weight: 500;
+  --display-track: -0.018em;
 
   --background:          oklch(0.975 0.004 85);
   --card:                oklch(0.995 0.002 85);
@@ -95,7 +104,9 @@
   --accent:              oklch(0.72 0.16 58 / 0.12);
   --accent-foreground:   oklch(0.30 0.012 265);
 
-  --destructive:         oklch(0.58 0.22 25);
+  /* Darkened from 0.58: the old red measured 4.47:1 on warm paper, which fails
+     at the 14px the cadence panel prints "Overdue by N days" at. */
+  --destructive:         oklch(0.545 0.22 25);
 
   --chart-1:             oklch(0.66 0.15 56);
   --chart-2:             oklch(0.60 0.16 152);
@@ -114,6 +125,10 @@
 
 /* ─── Obsidian Amber — dark-first, and the default ──────────────────────── */
 .dark {
+  /* See the Daylight note: light-on-dark needs the extra step to match. */
+  --display-weight: 600;
+  --display-track: -0.022em;
+
   --background:          oklch(0.09 0.006 265);
   --card:                oklch(0.12 0.007 265);
   --popover:             oklch(0.15 0.007 265);
@@ -133,7 +148,11 @@
   --card-foreground:     oklch(0.95 0.006 80);
   --popover-foreground:  oklch(0.95 0.006 80);
   --secondary-foreground: oklch(0.80 0.006 265);
-  --muted-foreground:    oklch(0.58 0.012 265);  /* lifted for ≥4.5:1 on obsidian + card */
+  /* Lifted again, from 0.58. The tokens were tuned against --background and
+     --card, but a panel painted `bg-card/40` composites to a value between the
+     two, and muted copy on *that* measured 4.49:1. This clears every surface the
+     page actually paints, rather than the two it was checked against. */
+  --muted-foreground:    oklch(0.605 0.012 265);
   --accent:              oklch(0.72 0.16 58 / 0.12);
   --accent-foreground:   oklch(0.95 0.006 80);
 
@@ -178,22 +197,22 @@
 }
 
 /* ═══ Type ══════════════════════════════════════════════════════════════════
-   Headings run wide from the same grotesque as the body — signage cut from the
-   same metal. -0.02em is as tight as display gets here; below about -0.04em the
-   wide forms start to touch and read as cramped rather than set. ═══════════ */
+   Funnel Display carries the folds; Geist carries everything you actually read.
+   Weight and tracking come from the theme tokens above, so a heading holds the
+   same optical weight on paper and on obsidian. ═══════════════════════════ */
 .mkt-display {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-variation-settings: "wdth" 112;
-  letter-spacing: -0.022em;
-  line-height: 1.02;
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-track);
+  line-height: 1.04;
   text-wrap: balance;
 }
-/* Sub-display: card and row headings. Slightly narrower, so the widest setting
-   stays reserved for the three or four headings that open a section. */
+/* Sub-display: panel and row headings. Same face, one notch less tracking, so
+   the widest setting stays reserved for the headings that open a section. */
 .mkt-subhead {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-variation-settings: "wdth" 106;
-  letter-spacing: -0.012em;
+  font-weight: var(--display-weight);
+  letter-spacing: calc(var(--display-track) * 0.5);
   text-wrap: balance;
 }
 

@@ -6,14 +6,14 @@ import { ShieldCheck } from "lucide-react";
 import { Container, Marker, Readout, Section, SectionHead } from "./primitives";
 
 const PROOF = [
-  "httpOnly, Secure cookies — no tokens ever touch the browser",
-  "Rotating refresh tokens, revocable server-side — log out everywhere",
-  "Organisation-scoped — people see only the projects they're on",
-  "Soft-delete only — records are archived, never destroyed",
+  "httpOnly, Secure cookies. No tokens ever touch the browser",
+  "Rotating refresh tokens, revocable server-side. Log out everywhere at once",
+  "Organisation-scoped. People see only the projects they are on",
+  "Soft-delete only. Records are archived, never destroyed",
   "Password hashes never leave the server",
 ];
 
-const CHARS = "0123456789ABCDEF·—/\\<>{}[]=+*";
+const CHARS = "0123456789ABCDEF·/\\<>{}[]=+*";
 const randomString = (len: number) =>
   Array.from({ length: len }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join("");
 

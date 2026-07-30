@@ -12,19 +12,19 @@ const STEPS: Step[] = [
     when: "The first session",
     title: "Bring your sheets across",
     detail:
-      "A guided import maps your columns, previews the duplicates it found and applies the batch — reversibly. Same rows, same names, nothing to re-learn on Monday morning.",
+      "A guided import maps your columns, previews the duplicates it found and applies the batch, reversibly. Same rows, same names, nothing to re-learn on Monday morning.",
   },
   {
     when: "The first send",
     title: "Reach the first name",
     detail:
-      "Send it from your own mailbox and the touch records itself. That first message sets the anchor, and every follow-up date is computed from it — never before it actually goes out.",
+      "Send it from your own mailbox and the touch records itself. That first message sets the anchor, and every follow-up date counts from it. Nothing is due before that email actually goes out.",
   },
   {
     when: "Every project after",
     title: "The record starts working for you",
     detail:
-      "The queue says who to chase and stops itself when they reply. Meanwhile every touch, contact and outcome joins the team's record — so the next project opens knowing what this one learned.",
+      "The queue says who to chase and stops itself when they reply. Meanwhile every touch, contact and outcome joins the team's record, so the next project opens already knowing what this one learned.",
   },
 ];
 

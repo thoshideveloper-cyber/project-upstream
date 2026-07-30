@@ -24,7 +24,7 @@ const PAINS: Pain[] = [
     pain: "A follow-up slips, unnoticed.",
     detail:
       "The date passes on a Tuesday and nobody has the schedule open. By the time anyone looks, the thread has gone cold.",
-    fix: "Cadence is computed and surfaced — overdue can't hide.",
+    fix: "The clock is computed and surfaced, so overdue can't hide.",
   },
   {
     icon: TrendingDown,
@@ -55,9 +55,9 @@ export function Problem() {
   return (
     <Section id="problem">
       <Container>
-        <SectionHead variant="split" title="The one that slips is invisible — until it's gone.">
+        <SectionHead variant="split" title="The one that slips is invisible until it's gone.">
           Spreadsheets, inboxes, and what people happen to remember. The cost isn&apos;t messy
-          files — it&apos;s the opportunity you never saw leave.
+          files. It&apos;s the opportunity you never saw leave.
         </SectionHead>
 
         <ul className="mt-2">

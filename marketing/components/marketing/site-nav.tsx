@@ -13,8 +13,9 @@ import { cn } from "@/lib/utils";
 // section, its anchor and this link all come from the same flag.
 const LINKS = [
   { label: "Product", href: "#product" },
+  { label: "Cadence", href: "#cadence" },
   { label: "Capabilities", href: "#capabilities" },
-  { label: "Teams", href: "#teams" },
+  { label: "Compare", href: "#compare" },
   { label: "Security", href: "#security" },
   ...(SHOW_REVIEWS_SECTION ? [{ label: "Customers", href: "#customers" }] : []),
   { label: "FAQ", href: "#faq" },
