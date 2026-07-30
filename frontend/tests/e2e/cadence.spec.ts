@@ -41,11 +41,16 @@ test.describe("Cadence critical path", () => {
     await page.goto("/companies");
     await page.getByRole("button", { name: "New company" }).click();
     await page.getByLabel(/Company name/).fill(name);
-    // Pick the first real mandate from the dropdown
-    await page.getByLabel(/Mandate/).selectOption({ index: 1 });
-    await page.getByRole("button", { name: "Create" }).click();
+    // The mandate picker is now an "Engagement" select, and the submit button
+    // reads "Add" (the dialog also offers "Add & log initial email").
+    await page.getByLabel(/Engagement/).selectOption({ index: 1 });
+    await page.getByTestId("add-company-submit").click();
 
-    // Redirected to the new company's detail page
+    // Adding no longer navigates — the dialog closes and the row joins the list, so
+    // find it and open its dossier.
+    await expect(page.getByRole("dialog")).toBeHidden({ timeout: 10_000 });
+    await page.getByPlaceholder("Search companies…").fill(name);
+    await page.getByRole("row").filter({ hasText: name }).first().click();
     await expect(page).toHaveURL(/\/companies\/\d+$/);
     await expect(page.getByRole("heading", { name })).toBeVisible();
     // Fresh company shows the needs-first-outreach cadence pill
@@ -53,9 +58,11 @@ test.describe("Cadence critical path", () => {
 
     const detailUrl = page.url();
 
-    // 2. It appears in the Schedule "Needs first outreach" queue
+    // 2. It appears in the Schedule "Needs first outreach" queue. The desk is a
+    // triaged, capped work queue rather than a full list, so search for the row.
     await page.goto("/schedule");
-    await expect(page.getByText(name).first()).toBeVisible();
+    await page.getByLabel("Search companies").fill(name);
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
 
     // 3. Log an INITIAL_EMAIL (backdated 10d so next-due lands within the 7-day window)
     await page.goto(detailUrl);
@@ -64,13 +71,18 @@ test.describe("Cadence critical path", () => {
     await page.getByLabel("Date").fill(isoDaysAgo(10));
     await page.getByRole("button", { name: "Save" }).click();
 
-    // Cadence is now active — the needs-initial pill is gone, a due pill is shown
+    // Cadence is now active — the needs-initial pill is gone and the clock is
+    // running. The initial email was backdated 10 days and the firm's default
+    // cadence is 7 days, so this company is already past due.
     await expect(page.getByText("Needs first outreach")).toHaveCount(0);
-    await expect(page.getByText(/due in \d+d/).first()).toBeVisible();
+    await expect(page.getByText(/^(Overdue|Due soon|Upcoming)$/).first()).toBeVisible({
+      timeout: 10_000,
+    });
 
     // It now shows in the due-this-week portion of the schedule (no longer needs-initial)
     await page.goto("/schedule");
-    await expect(page.getByText(name).first()).toBeVisible();
+    await page.getByLabel("Search companies").fill(name);
+    await expect(page.getByText(name).first()).toBeVisible({ timeout: 10_000 });
 
     // 4. Log a RESPONSE → status flips to Responded, cadence stops
     await page.goto(detailUrl);

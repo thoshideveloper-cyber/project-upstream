@@ -8,6 +8,8 @@ export interface ContactFilters {
   q?: string;
   company_id?: number;
   engagement?: string;
+  sentiment?: string;
+  poc_owner_id?: number;
   include_archived?: boolean;
 }
 
@@ -16,15 +18,18 @@ function buildQS(filters: ContactFilters): string {
   if (filters.q) p.set("q", filters.q);
   if (filters.company_id) p.set("company_id", String(filters.company_id));
   if (filters.engagement) p.set("engagement", filters.engagement);
+  if (filters.sentiment) p.set("sentiment", filters.sentiment);
+  if (filters.poc_owner_id) p.set("poc_owner_id", String(filters.poc_owner_id));
   if (filters.include_archived) p.set("include_archived", "true");
   return p.toString() ? `?${p.toString()}` : "";
 }
 
-export function useContacts(filters: ContactFilters = {}) {
+export function useContacts(filters: ContactFilters = {}, opts: { enabled?: boolean } = {}) {
   return useQuery<ContactListResponse>({
     queryKey: ["contacts", filters],
     queryFn: () => api.get<ContactListResponse>(`/contacts${buildQS(filters)}`),
     staleTime: 30_000,
+    enabled: opts.enabled ?? true,
   });
 }
 

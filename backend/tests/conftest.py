@@ -8,6 +8,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from app.core.config import settings
 from app.core.security import hash_password
 from app.db.base import Base
 from app.db.session import get_session
@@ -20,6 +21,13 @@ from app.models.enums import MandateStatus, MandateType, UserRole
 
 # StaticPool keeps a single connection so the in-memory DB persists across requests.
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+
+@pytest.fixture(autouse=True)
+def _force_dev_cookie_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Override prod cookie settings so HTTPX sends cookies over plain http://test."""
+    monkeypatch.setattr(settings, "cookie_secure", False)
+    monkeypatch.setattr(settings, "cookie_samesite", "lax")
 
 
 @pytest_asyncio.fixture

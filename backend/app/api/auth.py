@@ -84,6 +84,15 @@ async def signup(body: SignupRequest, response: Response, db: SessionDep):
     db.add(firm)
     await db.flush()
 
+    # Seed the firm's default counterparty-category vocabulary (§7.2) + funnel stages.
+    from app.services.classification import seed_firm_categories
+    from app.services.providers.registry import seed_firm_data_sources
+    from app.services.sourcing import seed_firm_stages
+
+    await seed_firm_categories(db, firm.id)
+    await seed_firm_stages(db, firm.id)
+    await seed_firm_data_sources(db, firm.id)
+
     user = User(
         firm_id=firm.id,
         email=body.email,

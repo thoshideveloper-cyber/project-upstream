@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, Date, DateTime, Enum as SAEnum, ForeignKey, Stri
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import ContactMode, Engagement
+from app.models.enums import ContactMode, Engagement, Sentiment
 
 if TYPE_CHECKING:
     from app.models.company import Company
@@ -39,6 +39,10 @@ class Contact(Base):
     )
     poc_owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     remark: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Typed sentiment cache of the latest touch (BUG-12); source of truth is the event.
+    sentiment: Mapped[Sentiment | None] = mapped_column(
+        SAEnum(Sentiment, native_enum=False), nullable=True
+    )
     comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     last_contact_date: Mapped[date | None] = mapped_column(Date, nullable=True)

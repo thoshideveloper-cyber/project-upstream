@@ -3,9 +3,14 @@
 Normalises company names and domains, then checks whether another company
 in the same firm (but a different mandate) looks like the same entity.
 
-Honest limits: exact normalised-name / domain matching will MISS subsidiaries,
-holding-company variants ("Tata" vs "Tata Sons"), and DBAs, and may over-match
-common words. It is an advisory aid, not entity resolution.
+Matching tiers:
+  - exact_domain   : registrable domain match (confidence = 1.0)
+  - exact_name     : normalised name equality  (confidence = 1.0)
+  - fuzzy_name     : rapidfuzz token_sort_ratio ≥ FUZZY_THRESHOLD
+                     (confidence = ratio / 100, always < 1.0)
+
+Advisory only — never blocks company creation.
+Schedules are fetched in a SINGLE batched query (no N+1).
 """
 
 from __future__ import annotations
@@ -13,6 +18,7 @@ from __future__ import annotations
 import re
 from urllib.parse import urlparse
 
+from rapidfuzz import fuzz
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,6 +34,14 @@ _SUFFIX_RE = re.compile(
 _PUNCT_RE = re.compile(r"[^\w\s]")
 _WS_RE = re.compile(r"\s+")
 
+# Fuzzy threshold: 80/100 for token_set_ratio (subset-aware).
+# token_set_ratio handles "Tata" ⊂ "Tata Sons" (→100) and typos like
+# "Microsft"~"Microsoft" (→89) while keeping unrelated names apart.
+_FUZZY_THRESHOLD = 80
+
+# Cap candidate scan so the function stays O(1) on large books.
+_CANDIDATE_CAP = 500
+
 
 def normalise_name(name: str) -> str:
     s = name.lower()
@@ -37,19 +51,33 @@ def normalise_name(name: str) -> str:
     return s
 
 
+# Common two-label public suffixes: for these, the registrable domain is the last
+# THREE labels (e.g. "eris.co.in"), not two — otherwise every ".co.in" company would
+# collapse to the same "co.in" key and falsely merge.
+_MULTI_TLDS = frozenset(
+    {
+        "co.in", "com.au", "co.uk", "org.uk", "co.jp", "com.br", "co.za",
+        "org.in", "net.in", "gov.in", "ac.in", "co.nz", "com.sg", "com.hk",
+    }
+)
+
+
 def extract_domain(url: str | None) -> str | None:
     if not url:
         return None
     try:
         parsed = urlparse(url if "://" in url else f"https://{url}")
         host = parsed.netloc or parsed.path
-        # Strip leading www.
-        host = re.sub(r"^www\.", "", host).lower()
-        # Keep only registrable domain (last two parts)
+        host = re.sub(r"^www\.", "", host).lower().strip("/")
+        # Drop any path/port that slipped through.
+        host = host.split("/")[0].split(":")[0]
         parts = host.split(".")
-        if len(parts) >= 2:
-            return ".".join(parts[-2:])
-        return host or None
+        if len(parts) <= 2:
+            return host or None
+        last_two = ".".join(parts[-2:])
+        if last_two in _MULTI_TLDS:
+            return ".".join(parts[-3:])
+        return last_two
     except Exception:
         return None
 
@@ -62,12 +90,18 @@ async def find_duplicates(
     website: str | None,
 ) -> list[dict]:
     """Return advisory warnings for companies in the same firm, different mandate,
-    that match by normalised name or website domain."""
+    that match by domain, normalised name, or fuzzy name.
 
+    Returns a list of dicts with keys:
+        company_id, company_name, mandate_id, status, initial_date,
+        confidence (0.0–1.0), match_type (exact_domain|exact_name|fuzzy_name)
+
+    All schedule data is fetched in ONE batched query (no N+1).
+    """
     norm_name = normalise_name(company_name)
     domain = extract_domain(website)
 
-    # Fetch all non-archived companies in the same firm, different mandate
+    # Fetch candidates — cap to avoid full-table scan on very large books
     result = await db.execute(
         select(Company)
         .where(
@@ -75,37 +109,72 @@ async def find_duplicates(
             Company.mandate_id != mandate_id,
             Company.archived_at.is_(None),
         )
+        .limit(_CANDIDATE_CAP)
     )
     candidates = result.scalars().all()
 
-    warnings: list[dict] = []
+    # Score each candidate; track seen IDs so one company never appears twice
+    matches: list[tuple[Company, float, str]] = []  # (company, confidence, match_type)
     seen_ids: set[int] = set()
 
     for c in candidates:
         if c.id in seen_ids:
             continue
-        matched = False
-        if norm_name and normalise_name(c.company_name) == norm_name:
-            matched = True
-        if not matched and domain and extract_domain(c.website) == domain:
-            matched = True
-        if not matched:
+
+        # Exact domain (highest precedence)
+        if domain and extract_domain(c.website) == domain:
+            matches.append((c, 1.0, "exact_domain"))
+            seen_ids.add(c.id)
             continue
 
-        # Load the schedule for last_outreach date
-        sched_result = await db.execute(
-            select(OutreachSchedule).where(OutreachSchedule.company_id == c.id)
-        )
-        sched = sched_result.scalar_one_or_none()
+        c_norm = normalise_name(c.company_name)
 
-        seen_ids.add(c.id)
+        # Exact normalised name
+        if norm_name and c_norm == norm_name:
+            matches.append((c, 1.0, "exact_name"))
+            seen_ids.add(c.id)
+            continue
+
+        # Fuzzy name (advisory, lower confidence).
+        # token_set_ratio is subset-aware so "Tata" matches "Tata Sons",
+        # and handles single-character typos via the underlying ratio.
+        if norm_name and c_norm:
+            score = fuzz.token_set_ratio(norm_name, c_norm)
+            if score >= _FUZZY_THRESHOLD:
+                matches.append((c, round(score / 100.0, 2), "fuzzy_name"))
+                seen_ids.add(c.id)
+
+    if not matches:
+        return []
+
+    # Batch-fetch schedules for ALL matched companies in ONE query
+    match_ids = [c.id for c, _, _ in matches]
+    sched_result = await db.execute(
+        select(OutreachSchedule).where(
+            OutreachSchedule.company_id.in_(match_ids),
+            OutreachSchedule.is_current.is_(True),
+        )
+    )
+    schedules: dict[int, OutreachSchedule] = {
+        s.company_id: s for s in sched_result.scalars().all()
+    }
+
+    warnings: list[dict] = []
+    for company, confidence, match_type in matches:
+        sched = schedules.get(company.id)
         warnings.append(
             {
-                "company_id": c.id,
-                "company_name": c.company_name,
-                "mandate_id": c.mandate_id,
-                "status": c.status,
-                "initial_date": sched.initial_date.isoformat() if sched and sched.initial_date else None,
+                "company_id": company.id,
+                "company_name": company.company_name,
+                "mandate_id": company.mandate_id,
+                "status": company.status,
+                "initial_date": (
+                    sched.initial_date.isoformat()
+                    if sched and sched.initial_date
+                    else None
+                ),
+                "confidence": confidence,
+                "match_type": match_type,
             }
         )
 

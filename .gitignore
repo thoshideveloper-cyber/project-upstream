@@ -40,3 +40,8 @@ Thumbs.db
 # Exclude duplicate project folder and large files
 sq/
 sq.zip
+theme fixer/
+
+# ---- Local agent tooling (not application code) ----
+.claude/settings.local.json
+.claude/skills/

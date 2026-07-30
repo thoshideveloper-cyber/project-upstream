@@ -19,6 +19,7 @@ from app.models.enums import CompanyStatus, ScheduleStatus
 from app.models.mandate import Mandate
 from app.models.mandate_assignment import MandateAssignment
 from app.models.outreach_schedule import OutreachSchedule
+from app.models.project import Project
 from app.models.user import User
 from app.schemas.mandate import MandateBase, MandateRead, MandateUpdate
 
@@ -135,17 +136,43 @@ async def list_mandates(
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_mandate(body: MandateBase, db: SessionDep, current_user: PartnerDep):
-    """Create a mandate (partner only). Auto-assigns the lead owner if given."""
+async def create_mandate(body: MandateBase, db: SessionDep, current_user: CurrentUser):
+    """Create an engagement. Analysts may open engagements on their own projects;
+    the creator is auto-assigned so the new engagement is visible to them.
+
+    An engagement must belong to a Project (the client). If ``project_id`` is given it
+    is validated to be a live project in the user's firm.
+    """
+    if body.project_id is not None:
+        project = (
+            await db.execute(
+                select(Project).where(
+                    Project.id == body.project_id,
+                    Project.firm_id == current_user.firm_id,
+                    Project.archived_at.is_(None),
+                )
+            )
+        ).scalar_one_or_none()
+        if project is None:
+            raise HTTPException(status_code=404, detail="Project not found")
+
     mandate = Mandate(firm_id=current_user.firm_id, **body.model_dump())
     db.add(mandate)
     await db.commit()
     await db.refresh(mandate)
 
-    # Auto-assign the lead owner so the mandate is visible to them
+    # Seed a sensible default set of sourcing layers for this engagement (§7.3).
+    from app.services.classification import seed_mandate_layers
+
+    await seed_mandate_layers(db, current_user.firm_id, mandate.id, mandate.type)
+
+    # Auto-assign the lead owner and the creator so the mandate is visible to both.
+    assignee_ids = {current_user.id}
     if mandate.lead_owner_id:
-        db.add(MandateAssignment(mandate_id=mandate.id, user_id=mandate.lead_owner_id))
-        await db.commit()
+        assignee_ids.add(mandate.lead_owner_id)
+    for user_id in assignee_ids:
+        db.add(MandateAssignment(mandate_id=mandate.id, user_id=user_id))
+    await db.commit()
 
     return MandateRead.model_validate(mandate).model_dump()
 

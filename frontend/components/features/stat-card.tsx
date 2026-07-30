@@ -16,6 +16,10 @@ interface StatCardProps {
   isPercent?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  /** Week-over-week change shown as a coloured arrow next to the value. */
+  delta?: number | null;
+  /** Whether an increase is "good" (green). Default true; set false for e.g. overdue. */
+  deltaGoodUp?: boolean;
 }
 
 export function StatCard({
@@ -27,6 +31,8 @@ export function StatCard({
   isPercent,
   className,
   style,
+  delta,
+  deltaGoodUp = true,
 }: StatCardProps) {
   const numericTarget = typeof value === "number" ? value : null;
   const counted = useCounter(numericTarget);
@@ -44,7 +50,7 @@ export function StatCard({
     <Card className={cn("stat-card gap-0 py-0", className)} style={style}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             {label}
           </span>
           {Icon ? <Icon className="text-muted-foreground size-4" /> : null}
@@ -52,11 +58,26 @@ export function StatCard({
         {isLoading ? (
           <Skeleton className="mt-2 h-9 w-20" />
         ) : (
-          <div
-            className="mt-2 text-3xl font-semibold tabular-nums"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
-            {displayValue}
+          <div className="mt-2 flex items-baseline gap-2">
+            <div
+              className="text-3xl font-semibold tabular-nums"
+              style={{ fontFamily: "var(--font-mono)" }}
+            >
+              {displayValue}
+            </div>
+            {delta != null && delta !== 0 && (
+              <span
+                className={cn(
+                  "text-xs font-medium tabular-nums",
+                  delta > 0 === deltaGoodUp
+                    ? "text-emerald-700 dark:text-emerald-400"
+                    : "text-destructive-ink",
+                )}
+              >
+                {delta > 0 ? "↑" : "↓"}
+                {Math.abs(delta)}
+              </span>
+            )}
           </div>
         )}
         {hint ? <p className="text-muted-foreground mt-1 text-xs">{hint}</p> : null}

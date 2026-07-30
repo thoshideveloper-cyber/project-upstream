@@ -11,18 +11,11 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { OutreachEvent } from "@/types";
-
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  INITIAL_EMAIL: "Initial email",
-  FOLLOW_UP: "Follow-up",
-  RESPONSE: "Response",
-  BOUNCE: "Bounce",
-  CALL: "Call",
-  LINKEDIN: "LinkedIn",
-  MEETING: "Meeting",
-  NOTE: "Note",
-};
+import { OutreachTimeline } from "@/components/features/outreach-timeline";
+import { LogOutreachDialog } from "@/components/features/log-outreach-dialog";
+import { useConfirm } from "@/components/features/confirm-dialog";
+import { useDelayed } from "@/hooks/use-delayed";
+import { toastUndo } from "@/lib/undo-toast";
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   if (value === null || value === undefined || value === "") return null;
@@ -31,29 +24,6 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-xs text-muted-foreground uppercase tracking-wide">{label}</dt>
       <dd className="mt-0.5 text-sm">{value}</dd>
     </div>
-  );
-}
-
-function TouchHistory({ events }: { events: OutreachEvent[] }) {
-  if (!events.length) {
-    return (
-      <p className="py-4 text-center text-sm text-muted-foreground">No outreach recorded yet.</p>
-    );
-  }
-
-  return (
-    <ol className="relative ml-3 border-l border-border">
-      {events.map((e) => (
-        <li key={e.id} className="mb-6 ml-4">
-          <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-border" />
-          <time className="text-xs text-muted-foreground">{e.occurred_on}</time>
-          <p className="text-sm font-medium">
-            {EVENT_TYPE_LABELS[e.event_type] ?? e.event_type}
-          </p>
-          {e.notes && <p className="text-xs text-muted-foreground mt-0.5">{e.notes}</p>}
-        </li>
-      ))}
-    </ol>
   );
 }
 
@@ -67,8 +37,11 @@ export default function ContactDetailPage({
   const { data: contact, isLoading, error } = useContact(Number(id));
   const archiveContact = useArchiveContact();
   const unarchiveContact = useUnarchiveContact();
+  const confirm = useConfirm();
+  const showSkeleton = useDelayed(isLoading);
 
   if (isLoading) {
+    if (!showSkeleton) return null;
     return (
       <div className="p-6">
         <div className="h-8 w-48 animate-pulse rounded-md bg-muted mb-4" />
@@ -86,7 +59,7 @@ export default function ContactDetailPage({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4">
       {/* Back + actions */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -105,10 +78,19 @@ export default function ContactDetailPage({
                 variant="outline"
                 size="sm"
                 onClick={async () => {
-                  if (!confirm("Archive this contact?")) return;
+                  const ok = await confirm({
+                    title: `Archive ${contact.contact_person}?`,
+                    description:
+                      "They drop out of the rolodex and the pickers. Their touch history is kept — restore any time, or undo straight after.",
+                    confirmLabel: "Archive",
+                    tone: "destructive",
+                  });
+                  if (!ok) return;
                   try {
                     await archiveContact.mutateAsync(contact.id);
-                    toast.success("Contact archived");
+                    toastUndo(`${contact.contact_person} archived`, () =>
+                      unarchiveContact.mutateAsync(contact.id),
+                    );
                     router.back();
                   } catch {
                     toast.error("Failed to archive contact");
@@ -146,7 +128,11 @@ export default function ContactDetailPage({
       {/* Header */}
       <PageHeader
         title={contact.contact_person}
-        description={[contact.designation, contact.email].filter(Boolean).join(" · ") || undefined}
+        description={
+          [contact.designation, contact.company_name, contact.email]
+            .filter(Boolean)
+            .join(" · ") || undefined
+        }
       />
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -169,7 +155,7 @@ export default function ContactDetailPage({
                       href={contact.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-primary hover:underline"
+                      className="flex items-center gap-1 text-primary-ink hover:underline"
                     >
                       <ExternalLink className="h-3 w-3" /> Profile
                     </a>
@@ -201,7 +187,28 @@ export default function ContactDetailPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <TouchHistory events={contact.events} />
+            {/* Person-scoped slice of the same append-only log the company shows. */}
+            {/* No `contacts` here: on this person's own page "with <them>" on
+                every row would be noise — attribution stays on the company view. */}
+            <OutreachTimeline
+              compact
+              events={contact.events}
+              emptyAction={
+                contact.archived_at ? undefined : (
+                  <LogOutreachDialog
+                    companyId={contact.company_id}
+                    companyName={contact.company_name ?? "this company"}
+                    defaultContactId={contact.id}
+                    defaultEventType="CALL"
+                    trigger={
+                      <Button size="sm" variant="outline">
+                        Log a touch
+                      </Button>
+                    }
+                  />
+                )
+              }
+            />
           </CardContent>
         </Card>
       </div>

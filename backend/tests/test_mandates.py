@@ -94,13 +94,21 @@ async def test_create_mandate_partner(client: AsyncClient, partner: User):
     assert m["firm_id"] == partner.firm_id
 
 
-async def test_create_mandate_analyst_403(client: AsyncClient, partner: User, analyst: User):
+async def test_create_mandate_analyst_auto_assigned(
+    client: AsyncClient, partner: User, analyst: User
+):
+    """Analysts can open engagements; the creator is auto-assigned so it's visible."""
     await _login(client, ANALYST)
     resp = await client.post(
         "/mandates",
         json={"client_name": "X", "name": "Y", "type": "BUY_SIDE"},
     )
-    assert resp.status_code == 403
+    assert resp.status_code == 201, resp.text
+    created_id = resp.json()["id"]
+
+    listing = await client.get("/mandates")
+    assert listing.status_code == 200
+    assert created_id in [m["id"] for m in listing.json()["items"]]
 
 
 async def test_update_mandate(client: AsyncClient, mandate: Mandate, partner: User):

@@ -5,6 +5,10 @@ import { Building2, Users as UsersIcon, Clock } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUsers } from "@/hooks/use-users";
 import { PageHeader } from "@/components/layout/page-header";
+import { CategoryManager } from "@/components/features/category-manager";
+import { EmailSendingCard, EmailTemplatesCard } from "@/components/features/email-sending-card";
+import { StageManager } from "@/components/features/stage-manager";
+import { DataSourceManager } from "@/components/features/data-source-manager";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -22,7 +26,7 @@ export default function SettingsPage() {
   const { data: users } = useUsers();
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4">
       <PageHeader title="Settings" description="Firm, team, and cadence configuration." />
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -63,6 +67,16 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <EmailSendingCard />
+
+      <EmailTemplatesCard />
+
+      <CategoryManager />
+
+      <StageManager />
+
+      <DataSourceManager />
 
       <Card>
         <CardHeader>

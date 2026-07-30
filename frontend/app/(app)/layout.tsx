@@ -2,6 +2,8 @@
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { CommandPalette } from "@/components/features/command-palette";
+import { ConfirmProvider } from "@/components/features/confirm-dialog";
 import { useAuth } from "@/hooks/use-auth";
 
 /**
@@ -29,12 +31,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
+    // ConfirmProvider wraps the shell so any route can `await confirm(...)`
+    // before a destructive action (replaces window.confirm).
+    <ConfirmProvider>
+      <div className="flex h-screen overflow-hidden">
+        <Sidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <Topbar />
+          {/* Scroll + padding live on template.tsx so each route gets an entrance
+              animation without a wrapping box breaking the grid's full-height layout. */}
+          <main className="min-h-0 flex-1">{children}</main>
+        </div>
+        {/* Global ⌘K command palette — jump-to + quick actions. */}
+        <CommandPalette />
       </div>
-    </div>
+    </ConfirmProvider>
   );
 }

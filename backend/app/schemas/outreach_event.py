@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import OutreachEventType
+from app.models.enums import ContactMode, OutreachEventType, Sentiment
 
 
 class OutreachEventCreate(BaseModel):
@@ -13,6 +13,8 @@ class OutreachEventCreate(BaseModel):
     contact_id: int | None = None
     regarding: str | None = None
     notes: str | None = None
+    mode: ContactMode | None = None
+    sentiment: Sentiment | None = None
 
 
 class OutreachEventRead(BaseModel):
@@ -27,5 +29,7 @@ class OutreachEventRead(BaseModel):
     occurred_on: date
     regarding: str | None
     notes: str | None
+    mode: ContactMode | None = None
+    sentiment: Sentiment | None = None
     owner_id: int
     created_at: datetime

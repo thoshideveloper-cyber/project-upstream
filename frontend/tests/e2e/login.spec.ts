@@ -18,7 +18,8 @@ const PASSWORD = "Passw0rd!";
 test.describe("Login flow", () => {
   test("partner can log in and land on dashboard", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: "Project Upstream" })).toBeVisible();
+    // Rebranded: the lockup reads "Upstream" (was "Project Upstream").
+    await expect(page.getByRole("heading", { name: "Upstream", exact: true })).toBeVisible();
 
     await page.getByLabel("Email").fill(PARTNER_EMAIL);
     await page.getByLabel("Password").fill(PASSWORD);
@@ -37,6 +38,17 @@ test.describe("Login flow", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page).toHaveURL("/dashboard");
+  });
+
+  test("the root sends a signed-in user into the shell", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(PARTNER_EMAIL);
+    await page.getByLabel("Password").fill(PASSWORD);
+    await page.getByRole("button", { name: "Sign in" }).click();
+    await expect(page).toHaveURL("/dashboard");
+
+    await page.goto("/");
+    await expect(page).toHaveURL(/\/dashboard$/);
   });
 
   test("wrong password shows error, stays on login", async ({ page }) => {

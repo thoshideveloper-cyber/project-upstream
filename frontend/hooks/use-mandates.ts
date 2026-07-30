@@ -45,7 +45,14 @@ export function useCreateMandate() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: Record<string, unknown>) => api.post<Mandate>("/mandates", data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["mandates"] }),
+    onSuccess: (mandate) => {
+      qc.invalidateQueries({ queryKey: ["mandates"] });
+      // Refresh the parent project's engagement list + the project index.
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      if (mandate?.project_id) {
+        qc.invalidateQueries({ queryKey: ["project", mandate.project_id] });
+      }
+    },
   });
 }
 
@@ -81,6 +88,9 @@ export function useAssignUser() {
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["mandate", vars.mandateId] });
       qc.invalidateQueries({ queryKey: ["mandates"] });
+      // Team shows on the deal room masthead + book rail and the project floor rows.
+      qc.invalidateQueries({ queryKey: ["project"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }
@@ -93,6 +103,8 @@ export function useUnassignUser() {
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["mandate", vars.mandateId] });
       qc.invalidateQueries({ queryKey: ["mandates"] });
+      qc.invalidateQueries({ queryKey: ["project"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 }

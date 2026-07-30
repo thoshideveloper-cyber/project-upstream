@@ -8,9 +8,12 @@ from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import select
 
 from app.core.deps import CurrentUser, SessionDep
+from app.models.company import Company
+from app.models.company_category import CompanyCategoryVocab
 from app.models.contact import Contact
-from app.models.enums import Engagement
+from app.models.enums import Engagement, Sentiment
 from app.models.outreach_event import OutreachEvent
+from app.models.user import User
 from app.schemas.contact import ContactCreate, ContactRead, ContactUpdate
 from app.schemas.outreach_event import OutreachEventRead
 
@@ -57,8 +60,12 @@ async def list_contacts(
     q: str | None = Query(default=None),
     company_id: int | None = Query(default=None),
     engagement: Engagement | None = Query(default=None),
+    sentiment: Sentiment | None = Query(default=None),
+    poc_owner_id: int | None = Query(default=None),
     include_archived: bool = Query(default=False),
 ):
+    """Firm-wide Contact List (§8-E) — the live Excel Contact List with client /
+    engagement / POC / sentiment tags, filterable."""
     stmt = select(Contact).where(Contact.firm_id == current_user.firm_id)
     if not include_archived:
         stmt = stmt.where(Contact.archived_at.is_(None))
@@ -68,14 +75,61 @@ async def list_contacts(
         stmt = stmt.where(Contact.company_id == company_id)
     if engagement:
         stmt = stmt.where(Contact.engagement == engagement)
+    if sentiment:
+        stmt = stmt.where(Contact.sentiment == sentiment)
+    if poc_owner_id:
+        stmt = stmt.where(Contact.poc_owner_id == poc_owner_id)
 
     stmt = stmt.order_by(Contact.contact_person)
-    result = await db.execute(stmt)
-    contacts = result.scalars().all()
-    return {
-        "items": [ContactRead.model_validate(c).model_dump() for c in contacts],
-        "total": len(contacts),
-    }
+    contacts = list((await db.execute(stmt)).scalars().all())
+
+    # Batch-resolve company (name + category) and POC owner display fields (no N+1).
+    company_ids = {c.company_id for c in contacts}
+    poc_ids = {c.poc_owner_id for c in contacts if c.poc_owner_id}
+    companies = (
+        {
+            co.id: co
+            for co in (
+                await db.execute(select(Company).where(Company.id.in_(company_ids)))
+            ).scalars().all()
+        }
+        if company_ids
+        else {}
+    )
+    cat_ids = {co.category_id for co in companies.values() if co.category_id}
+    cats = (
+        {
+            cat.id: cat.name
+            for cat in (
+                await db.execute(
+                    select(CompanyCategoryVocab).where(CompanyCategoryVocab.id.in_(cat_ids))
+                )
+            ).scalars().all()
+        }
+        if cat_ids
+        else {}
+    )
+    pocs = (
+        {
+            u.id: u.full_name
+            for u in (
+                await db.execute(select(User).where(User.id.in_(poc_ids)))
+            ).scalars().all()
+        }
+        if poc_ids
+        else {}
+    )
+
+    items = []
+    for c in contacts:
+        co = companies.get(c.company_id)
+        data = ContactRead.model_validate(c).model_dump()
+        data["company_name"] = co.company_name if co else None
+        data["category_name"] = cats.get(co.category_id) if co and co.category_id else None
+        data["poc_name"] = pocs.get(c.poc_owner_id) if c.poc_owner_id else None
+        items.append(data)
+
+    return {"items": items, "total": len(items)}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -106,6 +160,18 @@ async def create_contact(body: ContactCreate, db: SessionDep, current_user: Curr
 async def get_contact(contact_id: int, db: SessionDep, current_user: CurrentUser):
     contact = await _get_contact(contact_id, current_user.firm_id, db)
     data = ContactRead.model_validate(contact).model_dump()
+
+    # Which company this person sits at — same resolved field the list endpoint
+    # returns, so the detail page can name (and link) the company.
+    company = (
+        await db.execute(
+            select(Company).where(
+                Company.id == contact.company_id,
+                Company.firm_id == current_user.firm_id,
+            )
+        )
+    ).scalar_one_or_none()
+    data["company_name"] = company.company_name if company else None
 
     # Chronological touch history from outreach_events (L-03)
     events_result = await db.execute(

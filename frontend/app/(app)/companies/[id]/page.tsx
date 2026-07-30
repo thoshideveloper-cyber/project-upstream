@@ -15,12 +15,15 @@ import {
 import { toast } from "sonner";
 
 import { useCompany, useArchiveCompany, useUnarchiveCompany } from "@/hooks/use-companies";
-import { usePatchSchedule } from "@/hooks/use-schedule";
+import { useCycles, usePatchSchedule } from "@/hooks/use-schedule";
+import { OutreachTimeline } from "@/components/features/outreach-timeline";
+import { useConfirm } from "@/components/features/confirm-dialog";
+import { useDelayed } from "@/hooks/use-delayed";
+import { toastUndo } from "@/lib/undo-toast";
 import { useBenchmark } from "@/hooks/use-analytics";
 import { StatusBadge } from "@/components/features/status-badge";
 import { CadenceBadge, cadenceStateFromSchedule } from "@/components/features/status-badge";
 import { LogOutreachDialog } from "@/components/features/log-outreach-dialog";
-import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -31,7 +34,10 @@ import {
 } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ContactDialog } from "@/components/features/contact-dialog";
-import type { CompanyDetail, Contact, OutreachEvent } from "@/types";
+import { DISPLAY, LABEL, RECORD_TITLE, RECORD_TITLE_STYLE } from "@/lib/design";
+import { cn } from "@/lib/utils";
+import type { CompanyDetail, Contact } from "@/types";
+
 
 // ── Field display ────────────────────────────────────────────────────────────
 
@@ -45,37 +51,71 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-// ── Benchmark strip ──────────────────────────────────────────────────────────
+// ── Benchmark metric tiles ───────────────────────────────────────────────────
+
+function MetricTile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
+  return (
+    <div className="min-w-[136px] flex-1 rounded-xl border border-border bg-card px-4 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold leading-none tabular-nums" style={DISPLAY}>
+        {value}
+      </p>
+      {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
+    </div>
+  );
+}
 
 function BenchmarkStrip({ companyId }: { companyId: number }) {
   const { data: bm } = useBenchmark(companyId);
   if (!bm) return null;
 
   return (
-    <div className="flex flex-wrap gap-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
-      <span>
-        <span className="font-medium">{bm.this_company_touches}</span>
-        <span className="text-muted-foreground"> touches</span>
-        {bm.mandate_avg_touches_to_response != null && (
-          <span className="text-muted-foreground"> · mandate avg {bm.mandate_avg_touches_to_response}</span>
-        )}
-      </span>
+    <div className="flex flex-wrap gap-3">
+      <MetricTile
+        label="Touches"
+        value={bm.this_company_touches}
+        sub={bm.mandate_avg_touches_to_response != null ? `mandate avg ${bm.mandate_avg_touches_to_response}` : undefined}
+      />
       {bm.this_company_days_to_response != null && (
-        <span>
-          <span className="font-medium">responded in {bm.this_company_days_to_response}d</span>
-          {bm.mandate_avg_days_to_response != null && (
-            <span className="text-muted-foreground"> · avg {bm.mandate_avg_days_to_response}d</span>
-          )}
-        </span>
+        <MetricTile
+          label="Days to response"
+          value={`${bm.this_company_days_to_response}d`}
+          sub={bm.mandate_avg_days_to_response != null ? `mandate avg ${bm.mandate_avg_days_to_response}d` : undefined}
+        />
       )}
-      <span className="ml-auto text-muted-foreground">
-        Mandate response rate: {Math.round(bm.mandate_response_rate * 100)}%
-      </span>
+      <MetricTile
+        label="Mandate response rate"
+        value={`${Math.round(bm.mandate_response_rate * 100)}%`}
+        sub="across this engagement"
+      />
     </div>
   );
 }
 
 // ── Duplicate warning banner ─────────────────────────────────────────────────
+
+const MATCH_TYPE_LABEL: Record<string, string> = {
+  exact_name: "exact name",
+  exact_domain: "same domain",
+  fuzzy_name: "similar name",
+};
+
+function ConfidencePill({ confidence, matchType }: { confidence: number; matchType: string }) {
+  const pct = Math.round(confidence * 100);
+  const isExact = confidence >= 1.0;
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+        isExact
+          ? "bg-amber-200 text-amber-800 dark:bg-amber-800/40 dark:text-amber-200"
+          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+      }`}
+      title={`Match type: ${MATCH_TYPE_LABEL[matchType] ?? matchType}`}
+    >
+      {isExact ? MATCH_TYPE_LABEL[matchType] ?? matchType : `${MATCH_TYPE_LABEL[matchType] ?? matchType} · ${pct}%`}
+    </span>
+  );
+}
 
 function DuplicateBanner({ warnings }: { warnings: CompanyDetail["duplicate_warnings"] }) {
   if (!warnings.length) return null;
@@ -83,17 +123,28 @@ function DuplicateBanner({ warnings }: { warnings: CompanyDetail["duplicate_warn
     <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-950/20">
       <div className="flex items-start gap-2">
         <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
             Possible duplicate{warnings.length > 1 ? "s" : ""} across mandates
           </p>
-          <ul className="mt-1 space-y-0.5">
+          <ul className="mt-1.5 space-y-1">
             {warnings.map((w) => (
-              <li key={w.company_id} className="text-xs text-amber-700 dark:text-amber-300">
-                {w.company_name} (mandate {w.mandate_id}) — <StatusBadge status={w.status} />
+              <li key={w.company_id} className="flex flex-wrap items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+                <span className="font-medium">{w.company_name}</span>
+                <span className="text-amber-500/70">mandate {w.mandate_id}</span>
+                <StatusBadge status={w.status} />
+                {w.confidence !== undefined && (
+                  <ConfidencePill confidence={w.confidence} matchType={w.match_type} />
+                )}
+                {w.initial_date && (
+                  <span className="text-amber-500/70">first contact {w.initial_date}</span>
+                )}
               </li>
             ))}
           </ul>
+          <p className="mt-2 text-[10px] text-amber-600/70 dark:text-amber-400/60">
+            Advisory only — these matches may or may not be the same entity.
+          </p>
         </div>
       </div>
     </div>
@@ -150,36 +201,39 @@ function ContactsTab({ contacts, companyId }: { contacts: Contact[]; companyId: 
 
 // ── Timeline tab ─────────────────────────────────────────────────────────────
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  INITIAL_EMAIL: "Initial email",
-  FOLLOW_UP: "Follow-up",
-  RESPONSE: "Response",
-  BOUNCE: "Bounce",
-  CALL: "Call",
-  LINKEDIN: "LinkedIn",
-  MEETING: "Meeting",
-  NOTE: "Note",
-};
-
-function TimelineTab({ events }: { events: OutreachEvent[] }) {
-  if (!events.length)
-    return (
-      <p className="py-8 text-center text-sm text-muted-foreground">No outreach events yet.</p>
-    );
+/**
+ * The append-only outreach log as a cadence spine: the live next-due head, every
+ * logged touch with its offset from the immutable anchor, and the gaps between
+ * them. Cadence values come from the server; nothing is recomputed here.
+ */
+function TimelineTab({ company }: { company: CompanyDetail }) {
+  const { data: cyclesData } = useCycles(company.id);
+  const cycles = cyclesData?.items ?? [];
 
   return (
-    <ol className="relative ml-3 border-l border-border">
-      {events.map((e) => (
-        <li key={e.id} className="mb-6 ml-4">
-          <div className="absolute -left-1.5 mt-1.5 h-3 w-3 rounded-full bg-border" />
-          <time className="text-xs text-muted-foreground">{e.occurred_on}</time>
-          <p className="text-sm font-medium">
-            {EVENT_TYPE_LABELS[e.event_type] ?? e.event_type}
-          </p>
-          {e.notes && <p className="text-xs text-muted-foreground mt-0.5">{e.notes}</p>}
-        </li>
-      ))}
-    </ol>
+    <OutreachTimeline
+      events={company.events}
+      contacts={company.contacts}
+      cycles={cycles}
+      cadence={{
+        scheduleStatus: company.schedule_status,
+        nextDueDate: company.next_due_date,
+        daysRemaining: company.days_remaining,
+        isOverdue: company.is_overdue,
+        stoppedReason: company.schedule?.stopped_reason ?? null,
+      }}
+      emptyAction={
+        company.archived_at ? undefined : (
+          <LogOutreachDialog
+            companyId={company.id}
+            companyName={company.company_name}
+            defaultEventType={
+              company.schedule_status === "AWAITING_INITIAL" ? "INITIAL_EMAIL" : "FOLLOW_UP"
+            }
+          />
+        )
+      }
+    />
   );
 }
 
@@ -194,20 +248,70 @@ function OverviewTab({ company }: { company: CompanyDetail }) {
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
             <Field label="Type" value={company.type} />
             <Field label="Status" value={<StatusBadge status={company.status} />} />
+            <Field label="Category" value={company.category_name} />
+            <Field label="Sourcing layer" value={company.sourcing_layer_name ?? "Unsorted"} />
             <Field label="HQ" value={company.hq} />
             <Field label="Headcount" value={company.headcount?.toLocaleString()} />
             <Field label="Revenue (INR Cr)" value={company.revenue_inr_cr} />
             <Field label="Revenue source" value={company.revenue_source} />
             <Field label="Source" value={company.source} />
             <Field label="Source quality" value={company.source_quality} />
-            <Field label="Bucket" value={company.bucket} />
           </dl>
+          {company.profile_id && (
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Static facts are shared firm-wide (profile #{company.profile_id}) — edits here update
+              this company across every engagement.
+            </p>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle className="text-sm">Outreach schedule</CardTitle></CardHeader>
         <CardContent>
+          {/* Focal read: what happens next */}
+          {company.schedule_status === "AWAITING_INITIAL" ? (
+            <div className="mb-4 rounded-lg border border-indigo-500/25 bg-indigo-500/[0.06] px-3.5 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                Awaiting first email
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                The cadence clock starts the moment you log the initial email.
+              </p>
+            </div>
+          ) : company.next_due_date ? (
+            <div
+              className={cn(
+                "mb-4 rounded-lg border px-3.5 py-3",
+                company.is_overdue
+                  ? "border-destructive/25 bg-destructive/[0.06]"
+                  : "border-primary/25 bg-primary/[0.06]",
+              )}
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                Next follow-up
+              </p>
+              <p className="mt-1 flex flex-wrap items-baseline gap-x-2.5">
+                <span className="text-xl font-semibold tabular-nums" style={DISPLAY}>
+                  {company.next_due_date}
+                </span>
+                {company.days_remaining !== null && (
+                  <span
+                    className={cn(
+                      "text-sm font-medium",
+                      company.is_overdue ? "text-destructive-ink" : "text-primary-ink",
+                    )}
+                  >
+                    {company.is_overdue
+                      ? `${Math.abs(company.days_remaining)}d overdue`
+                      : company.days_remaining === 0
+                      ? "due today"
+                      : `in ${company.days_remaining}d`}
+                  </span>
+                )}
+              </p>
+            </div>
+          ) : null}
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
             <Field label="Schedule status" value={
               company.schedule_status ? (
@@ -220,10 +324,6 @@ function OverviewTab({ company }: { company: CompanyDetail }) {
               ) : null
             } />
             <Field label="Initial date" value={company.initial_date} />
-            <Field label="Next due" value={company.next_due_date} />
-            <Field label="Days remaining" value={
-              company.days_remaining !== null ? String(company.days_remaining) : undefined
-            } />
             {company.schedule?.regarding && (
               <Field label="Regarding" value={company.schedule.regarding} />
             )}
@@ -349,8 +449,11 @@ export default function CompanyDetailPage({
   const { data: company, isLoading, error } = useCompany(Number(id));
   const archive = useArchiveCompany();
   const unarchive = useUnarchiveCompany();
+  const confirm = useConfirm();
+  const showSkeleton = useDelayed(isLoading);
 
   if (isLoading) {
+    if (!showSkeleton) return null;
     return (
       <div className="p-6">
         <div className="h-8 w-48 animate-pulse rounded-md bg-muted mb-4" />
@@ -375,7 +478,7 @@ export default function CompanyDetailPage({
     : null;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-4">
       {/* Back + actions */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => router.back()}>
@@ -407,10 +510,19 @@ export default function CompanyDetailPage({
               variant="outline"
               size="sm"
               onClick={async () => {
-                if (!confirm("Archive this company? Data is kept, not destroyed.")) return;
+                const ok = await confirm({
+                  title: "Archive this company?",
+                  description:
+                    "It drops out of the Master List and the schedule. Nothing is destroyed — you can restore it from here, or undo straight after.",
+                  confirmLabel: "Archive",
+                  tone: "destructive",
+                });
+                if (!ok) return;
                 try {
                   await archive.mutateAsync(company.id);
-                  toast.success("Company archived");
+                  toastUndo(`${company.company_name} archived`, () =>
+                    unarchive.mutateAsync(company.id),
+                  );
                   router.back();
                 } catch {
                   toast.error("Failed to archive company");
@@ -424,61 +536,81 @@ export default function CompanyDetailPage({
         </div>
       </div>
 
-      {/* Header */}
-      <div className="flex flex-wrap items-start gap-3">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold truncate">{company.company_name}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {company.hq && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> {company.hq}
-              </span>
-            )}
-            {company.headcount && (
-              <span className="flex items-center gap-1">
-                <Users className="h-3 w-3" /> {company.headcount.toLocaleString()}
-              </span>
-            )}
-            {company.website && (
-              <a
-                href={company.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-foreground"
-              >
-                <Globe className="h-3 w-3" /> Website
-              </a>
-            )}
-            {company.linkedin && (
-              <a
-                href={company.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 hover:text-foreground"
-              >
-                <ExternalLink className="h-3 w-3" /> LinkedIn
-              </a>
-            )}
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 sm:p-6">
+        <div
+          className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-primary/[0.06] blur-2xl"
+          aria-hidden
+        />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge status={company.status} />
+              {cadenceState && (
+                <CadenceBadge
+                  state={cadenceState}
+                  label={
+                    company.is_overdue
+                      ? `${Math.abs(company.days_remaining!)}d overdue`
+                      : company.days_remaining !== null
+                      ? `due in ${company.days_remaining}d`
+                      : undefined
+                  }
+                />
+              )}
+            </div>
+            <h1 className={cn("mt-2.5 truncate", RECORD_TITLE)} style={RECORD_TITLE_STYLE}>
+              {company.company_name}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
+              {company.category_name && <span>{company.category_name}</span>}
+              {company.hq && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" /> {company.hq}
+                </span>
+              )}
+              {company.headcount && (
+                <span className="flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5" /> {company.headcount.toLocaleString()}
+                </span>
+              )}
+              {company.website && (
+                <a
+                  href={company.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 transition-colors hover:text-foreground"
+                >
+                  <Globe className="h-3.5 w-3.5" /> Website
+                </a>
+              )}
+              {company.linkedin && (
+                <a
+                  href={company.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 transition-colors hover:text-foreground"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> LinkedIn
+                </a>
+              )}
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <StatusBadge status={company.status} />
-          {cadenceState && (
-            <CadenceBadge
-              state={cadenceState}
-              label={
-                company.is_overdue
-                  ? `${Math.abs(company.days_remaining!)}d overdue`
-                  : company.days_remaining !== null
-                  ? `due in ${company.days_remaining}d`
-                  : undefined
-              }
-            />
+          {!company.archived_at && (
+            <div className="shrink-0">
+              <LogOutreachDialog
+                companyId={company.id}
+                companyName={company.company_name}
+                defaultEventType={
+                  company.schedule_status === "AWAITING_INITIAL" ? "INITIAL_EMAIL" : "FOLLOW_UP"
+                }
+              />
+            </div>
           )}
         </div>
       </div>
 
-      {/* Benchmark strip */}
+      {/* Benchmark metric tiles */}
       <BenchmarkStrip companyId={company.id} />
 
       {/* Duplicate warning */}
@@ -486,7 +618,7 @@ export default function CompanyDetailPage({
 
       {/* Tabs */}
       <Tabs defaultValue="overview">
-        <div className="flex items-center justify-between">
+        <div className="overflow-x-auto">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="cadence">Cadence</TabsTrigger>
@@ -497,17 +629,6 @@ export default function CompanyDetailPage({
               Timeline ({company.events.length})
             </TabsTrigger>
           </TabsList>
-          {!company.archived_at && (
-            <LogOutreachDialog
-              companyId={company.id}
-              companyName={company.company_name}
-              defaultEventType={
-                company.schedule_status === "AWAITING_INITIAL"
-                  ? "INITIAL_EMAIL"
-                  : "FOLLOW_UP"
-              }
-            />
-          )}
         </div>
 
         <TabsContent value="overview" className="mt-4">
@@ -523,7 +644,7 @@ export default function CompanyDetailPage({
         </TabsContent>
 
         <TabsContent value="timeline" className="mt-4">
-          <TimelineTab events={company.events} />
+          <TimelineTab company={company} />
         </TabsContent>
       </Tabs>
     </div>

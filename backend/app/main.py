@@ -10,9 +10,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.analytics import router as analytics_router
 from app.api.auth import router as auth_router
 from app.api.companies import router as companies_router
+from app.api.company_categories import router as company_categories_router
+from app.api.company_profiles import router as company_profiles_router
 from app.api.contacts import router as contacts_router
+from app.api.data_sources import router as data_sources_router
+from app.api.email import router as email_router
+from app.api.imports import router as imports_router
 from app.api.mandates import router as mandates_router
+from app.api.my_book import router as my_book_router
+from app.api.projects import router as projects_router
+from app.api.saved_searches import router as saved_searches_router
 from app.api.schedule import router as schedule_router
+from app.api.sourcing import router as sourcing_router
+from app.api.sourcing_candidates import router as sourcing_candidates_router
+from app.api.sourcing_layers import router as sourcing_layers_router
+from app.api.sourcing_stages import router as sourcing_stages_router
 from app.api.users import router as users_router
 from app.core.config import settings
 
@@ -32,6 +44,8 @@ else:
 # Safeguard: ensure localhost is always available for local development
 if "http://localhost:3000" not in origins:
     origins.append("http://localhost:3000")
+if "http://localhost:3002" not in origins:
+    origins.append("http://localhost:3002")
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,9 +58,21 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(mandates_router)
+app.include_router(projects_router)
 app.include_router(companies_router)
+app.include_router(company_categories_router)
+app.include_router(company_profiles_router)
+app.include_router(sourcing_layers_router)
+app.include_router(sourcing_stages_router)
+app.include_router(sourcing_candidates_router)
+app.include_router(sourcing_router)
+app.include_router(saved_searches_router)
+app.include_router(imports_router)
+app.include_router(my_book_router)
+app.include_router(data_sources_router)
 app.include_router(contacts_router)
 app.include_router(schedule_router)
+app.include_router(email_router)
 app.include_router(analytics_router)
 app.include_router(users_router)
 

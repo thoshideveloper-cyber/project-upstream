@@ -4,7 +4,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.models.enums import ContactMode, Engagement
+from app.models.enums import ContactMode, Engagement, Sentiment
 
 
 class ContactBase(BaseModel):
@@ -20,6 +20,7 @@ class ContactBase(BaseModel):
     mode: ContactMode | None = None
     poc_owner_id: int | None = None
     remark: str | None = None
+    sentiment: Sentiment | None = None
     comments: str | None = None
     is_primary: bool = False
 
@@ -40,6 +41,7 @@ class ContactUpdate(BaseModel):
     mode: ContactMode | None = None
     poc_owner_id: int | None = None
     remark: str | None = None
+    sentiment: Sentiment | None = None
     comments: str | None = None
     is_primary: bool | None = None
 

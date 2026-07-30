@@ -62,12 +62,12 @@ export function DataTable<T>({
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
-          <TableRow className="bg-card hover:bg-card border-b border-border/60">
+          <TableRow className="bg-card hover:bg-card border-b border-border">
             {columns.map((col) => (
               <TableHead
                 key={col.key}
                 className={cn(
-                  "text-[11px] font-semibold uppercase tracking-widest text-muted-foreground",
+                  "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground",
                   col.className,
                 )}
               >
@@ -82,7 +82,7 @@ export function DataTable<T>({
               key={getRowId(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(
-                "data-row border-b border-border/40 transition-colors hover:bg-primary/[0.04]",
+                "data-row border-b border-border transition-colors hover:bg-primary/[0.04]",
                 onRowClick && "cursor-pointer",
               )}
               style={{ "--row-i": index } as React.CSSProperties}

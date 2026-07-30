@@ -13,6 +13,7 @@ class MandateBase(BaseModel):
     name: str
     type: MandateType
     status: MandateStatus = MandateStatus.ACTIVE
+    project_id: int | None = None
     exchange_rate: Decimal | None = None
     exchange_rate_date: date | None = None
     lead_owner_id: int | None = None

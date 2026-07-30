@@ -8,7 +8,7 @@ from app.models.enums import ScheduleStatus, StoppedReason
 
 
 class OutreachScheduleBase(BaseModel):
-    cadence_interval_days: int = 14
+    cadence_interval_days: int = 7
     regarding: str | None = None
 
 
@@ -23,6 +23,9 @@ class OutreachScheduleRead(OutreachScheduleBase):
     id: int
     firm_id: int
     company_id: int
+    cycle_number: int
+    is_current: bool
+    contact_id: int | None
     status: ScheduleStatus
     initial_date: date | None
     stopped_reason: StoppedReason | None

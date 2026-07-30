@@ -28,6 +28,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-ink: var(--destructive-ink);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -35,6 +36,7 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-ink: var(--primary-ink);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -58,14 +60,24 @@
   --secondary:           oklch(0.96 0.004 85);
   --muted:               oklch(0.955 0.004 85);
 
-  /* Borders — translucent ink */
-  --border:              oklch(0 0 0 / 0.08);
+  /* Borders — translucent ink.
+     One hairline weight for the whole product. Panels used to spell their edge
+     six ways (border-border/40…/80 plus ring-foreground/10), all dilutions of a
+     token that is itself translucent. Everything now resolves here, so the value
+     is set once — slightly stronger than before to hold up as the only edge. */
+  --border:              oklch(0 0 0 / 0.10);
   --input:               oklch(0 0 0 / 0.12);
   --ring:                oklch(0.66 0.15 56 / 0.5);
 
   /* Amber accent — slightly deeper for contrast on white */
   --primary:             oklch(0.66 0.15 56);
-  --primary-foreground:  oklch(0.99 0.005 85);
+  /* Ink ON the amber fill. Amber is a *light* colour: near-white label text on it
+     measured 3.16:1 here and 2.45:1 on obsidian, making the primary button the
+     worst contrast in the app. Dark warm ink keeps the fill bright and reads 5.4/6.7:1. */
+  --primary-foreground:  oklch(0.22 0.03 60);
+  /* Amber as *text*: the accent fill is only 3.03:1 on paper at label sizes, so
+     small amber copy uses this deeper ink instead (fills/icons stay --primary). */
+  --primary-ink:         oklch(0.53 0.15 56);
 
   /* Ink hierarchy */
   --foreground:          oklch(0.24 0.012 265);  /* warm near-black ink */
@@ -78,6 +90,9 @@
 
   /* Semantic */
   --destructive:         oklch(0.58 0.22 25);
+  /* Red as *text*. The fill tone is tuned for filled buttons and tinted pills; as
+     small text on paper (or on its own 10% tint) it fell under 4.5:1. */
+  --destructive-ink:     oklch(0.48 0.20 25);
 
   /* Chart colors — same hues, tuned for light */
   --chart-1:             oklch(0.66 0.15 56);
@@ -93,7 +108,7 @@
   --sidebar-primary-foreground: oklch(0.99 0.005 85);
   --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
   --sidebar-accent-foreground:  oklch(0.24 0.012 265);
-  --sidebar-border:             oklch(0 0 0 / 0.07);
+  --sidebar-border:             oklch(0 0 0 / 0.10);
   --sidebar-ring:               oklch(0.66 0.15 56);
 
   --radius: 0.5rem;
@@ -108,26 +123,33 @@
   --secondary:           oklch(0.14 0.006 265);
   --muted:               oklch(0.13 0.005 265);
 
-  /* Borders — translucent, not gray */
-  --border:              oklch(1 0 0 / 0.07);
-  --input:               oklch(1 0 0 / 0.09);
+  /* Borders — translucent, not gray. See the Daylight note: one hairline weight,
+     set here, for every panel edge and divider in the product. */
+  --border:              oklch(1 0 0 / 0.09);
+  --input:               oklch(1 0 0 / 0.11);
   --ring:                oklch(0.72 0.16 58 / 0.5);
 
   /* Amber accent — the only warm color */
   --primary:             oklch(0.72 0.16 58);
-  --primary-foreground:  oklch(0.98 0.005 80);
+  --primary-foreground:  oklch(0.22 0.03 60);  /* see the Daylight note above */
+  /* On obsidian the accent already clears 4.5:1 as text, so ink == accent. */
+  --primary-ink:         oklch(0.72 0.16 58);
 
   /* Text hierarchy */
   --foreground:          oklch(0.95 0.006 80);
   --card-foreground:     oklch(0.95 0.006 80);
   --popover-foreground:  oklch(0.95 0.006 80);
   --secondary-foreground: oklch(0.80 0.006 265);
-  --muted-foreground:    oklch(0.52 0.012 265);
+  /* Lifted from 0.52, where this measured 3.76:1 on --background, 3.68 on --card
+     and 3.65 on --muted — every muted line in the dark theme failed 4.5:1. 0.61
+     clears it on all three surfaces, including muted-on-muted controls. */
+  --muted-foreground:    oklch(0.61 0.012 265);
   --accent:              oklch(0.72 0.16 58 / 0.12);
   --accent-foreground:   oklch(0.95 0.006 80);
 
   /* Semantic */
   --destructive:         oklch(0.62 0.22 25);
+  --destructive-ink:     oklch(0.72 0.19 25);  /* see the Daylight note above */
 
   /* Chart colors — vivid, not gray */
   --chart-1:             oklch(0.72 0.16 58);
@@ -143,7 +165,7 @@
   --sidebar-primary-foreground: oklch(0.98 0.005 80);
   --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
   --sidebar-accent-foreground:  oklch(0.95 0.006 80);
-  --sidebar-border:             oklch(1 0 0 / 0.06);
+  --sidebar-border:             oklch(1 0 0 / 0.09);
   --sidebar-ring:               oklch(0.72 0.16 58);
 }
 
@@ -291,6 +313,22 @@
   }
 }
 
+/* ─── Page (route) entrance ──────────────────────────────────────────────── */
+.page-enter {
+  animation: page-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes btn-shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
@@ -309,10 +347,226 @@ button[data-slot="button"][class*="bg-primary"]:hover {
   animation: btn-shimmer 1.8s linear infinite;
 }
 
+/* ─── Schedule cockpit ───────────────────────────────────────────────────── */
+/* Cheap virtualization: rows off-screen skip layout/paint until scrolled near. */
+.cv-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 52px;
+}
+
+/* Keyboard-focused queue row (j/k navigation) */
+.queue-row-focused {
+  background: oklch(0.72 0.16 58 / 0.07);
+  box-shadow: inset 2px 0 0 0 var(--primary);
+}
+
+/* Momentum counter tick */
+@keyframes count-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+.count-pop { animation: count-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Triage band segment — big numerals read like an instrument panel */
+.triage-seg {
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ─── Scroll reveal — panels power up as they enter view ─────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  filter: blur(6px);
+  will-change: opacity, transform, filter;
+  transition:
+    opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.reveal-shown {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+/* ─── Panel hover — subtle lift + amber edge glow ────────────────────────── */
+.hover-lift {
+  transition:
+    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  border-color: oklch(0.72 0.16 58 / 0.35);
+  box-shadow:
+    0 10px 30px oklch(0 0 0 / 0.28),
+    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
+    inset 0 1px 0 oklch(1 0 0 / 0.04);
+}
+
+/* ─── Project detail hero — amber corner glow behind the title ───────────── */
+.project-hero {
+  position: relative;
+  overflow: hidden;
+}
+.project-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    130% 150% at 100% -20%,
+    oklch(0.72 0.16 58 / 0.13),
+    transparent 55%
+  );
+}
+
+/* ─── Response meter — engagement cards fill their responded-rate bar ─────── */
+.meter {
+  position: relative;
+  height: 5px;
+  width: 100%;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 10%, transparent);
+  overflow: hidden;
+}
+.meter > i {
+  display: block;
+  height: 100%;
+  width: var(--meter, 0%);
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--accent-color, var(--primary)) 78%, transparent),
+    var(--accent-color, var(--primary))
+  );
+  box-shadow: 0 0 8px color-mix(in oklch, var(--accent-color, var(--primary)) 40%, transparent);
+  transform-origin: left center;
+  animation: meter-grow 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--meter-delay, 0ms);
+}
+@keyframes meter-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ─── Grid company row — amber rail slides in on hover ───────────────────── */
+.grid-row {
+  box-shadow: inset 2px 0 0 0 transparent;
+  transition: background-color 0.16s ease, box-shadow 0.2s ease;
+}
+.grid-row:hover {
+  box-shadow: inset 2px 0 0 0 var(--primary);
+}
+
+/* ─── Sourcing cockpit — amber rail sweeps down as the panel powers up ────── */
+.cockpit-rail {
+  transform-origin: top;
+  animation: rail-grow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes rail-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+/* ─── Funnel board — tape hand-off flashes the targeted column once ───────── */
+.col-flash {
+  animation: col-flash 1.2s ease-out both;
+}
+@keyframes col-flash {
+  0%   { box-shadow: 0 0 0 2px oklch(0.72 0.16 58 / 0.65), 0 0 24px oklch(0.72 0.16 58 / 0.18); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ─── Floating bulk-action bar — rises from the bottom edge ───────────────── */
+.bar-rise {
+  animation: bar-rise 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes bar-rise {
+  from { opacity: 0; transform: translate(-50%, 18px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ─── Horizon rail — each cell's load underbar grows in from the left ─────── */
+.horizon-load {
+  transform-origin: left center;
+  animation: horizon-grow 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--load-delay, 0ms);
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes horizon-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Row cleared — a satisfying collapse the instant a touch is logged */
+.row-clear {
+  animation: row-clear 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+  pointer-events: none;
+}
+@keyframes row-clear {
+  0%   { opacity: 1; max-height: 120px; background: oklch(0.65 0.18 152 / 0); }
+  18%  { opacity: 1; background: oklch(0.65 0.18 152 / 0.16); }
+  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; transform: translateX(14px); background: oklch(0.65 0.18 152 / 0); }
+}
+
+/* Focus Mode — the room dims to one company at a time */
+.focus-scrim {
+  animation: focus-scrim-in 0.28s ease both;
+}
+@keyframes focus-scrim-in {
+  from { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
+  to   { opacity: 1; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+}
+.focus-card {
+  animation: focus-card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes focus-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+/* Advancing to the next card in Focus Mode */
+.focus-advance {
+  animation: focus-advance 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes focus-advance {
+  0%   { opacity: 0; transform: translateX(24px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── Compose sheet — slides in from the right like a drawn-out letter ────── */
+.sheet-pane[data-open] {
+  animation: sheet-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sheet-pane[data-closed] {
+  animation: sheet-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+}
+@keyframes sheet-in {
+  from { opacity: 0.4; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes sheet-out {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(48px); }
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+  /* Never leave scroll-reveal content stuck in its hidden pre-state. */
+  .reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  .hover-lift:hover {
+    transform: none;
   }
 }

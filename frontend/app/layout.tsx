@@ -3,6 +3,7 @@ import { Cormorant, Outfit, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 import { Providers } from "@/components/providers";
+import { THEME_INIT_SCRIPT } from "@/components/theme";
 
 const cormorant = Cormorant({
   variable: "--font-display",
@@ -41,6 +42,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${cormorant.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
+      <head>
+        {/* Server-rendered so it executes before first paint (client-rendered
+            scripts never run and React 19 warns about them). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="bg-background text-foreground min-h-full" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

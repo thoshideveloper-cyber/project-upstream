@@ -7,7 +7,7 @@ from sqlalchemy import Date, Enum as SAEnum, ForeignKey, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
-from app.models.enums import OutreachEventType
+from app.models.enums import ContactMode, OutreachEventType, Sentiment
 
 if TYPE_CHECKING:
     from app.models.company import Company
@@ -37,6 +37,14 @@ class OutreachEvent(Base):
     occurred_on: Mapped[date] = mapped_column(Date, nullable=False)
     regarding: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Per-touch context (§8-B): the event is the source of truth; the contact caches
+    # its latest touch. mode = channel; sentiment = Positive/Negative/Neutral (BUG-12).
+    mode: Mapped[ContactMode | None] = mapped_column(
+        SAEnum(ContactMode, native_enum=False), nullable=True
+    )
+    sentiment: Mapped[Sentiment | None] = mapped_column(
+        SAEnum(Sentiment, native_enum=False), nullable=True
+    )
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now(), nullable=False)
 

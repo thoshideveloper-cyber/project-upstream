@@ -68,11 +68,15 @@ def _sched(
     initial_date: date,
     interval: int = 14,
     st: ScheduleStatus = ScheduleStatus.ACTIVE,
+    stopped_reason: StoppedReason | None = None,
+    cycle_number: int = 1,
 ):
     return SimpleNamespace(
         status=st,
         initial_date=initial_date,
         cadence_interval_days=interval,
+        stopped_reason=stopped_reason,
+        cycle_number=cycle_number,
     )
 
 
@@ -210,14 +214,14 @@ async def test_follow_up_advances_counter(
     initial_date = "2024-01-01"
     await _log_event(client, company["id"], "INITIAL_EMAIL", initial_date)
 
-    # Before any follow-up: due at +14
+    # Before any follow-up: due at +7 (default cadence is 7 days)
     sched_resp = await client.get(f"/companies/{company['id']}/schedule")
-    assert sched_resp.json()["next_due_date"] == "2024-01-15"
+    assert sched_resp.json()["next_due_date"] == "2024-01-08"
 
-    # After 1 follow-up: due at +28
-    await _log_event(client, company["id"], "FOLLOW_UP", "2024-01-15")
+    # After 1 follow-up: due at +14
+    await _log_event(client, company["id"], "FOLLOW_UP", "2024-01-08")
     sched_resp2 = await client.get(f"/companies/{company['id']}/schedule")
-    assert sched_resp2.json()["next_due_date"] == "2024-01-29"
+    assert sched_resp2.json()["next_due_date"] == "2024-01-15"
 
 
 # ── Work queue endpoints ──────────────────────────────────────────────────────
