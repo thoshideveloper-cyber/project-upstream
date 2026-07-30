@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { UpstreamMark } from "@/components/brand/logo";
-import { SHOW_REVIEWS_SECTION, SIGN_IN_URL } from "@/content/site";
+import { SHOW_REVIEWS_SECTION, CTA_HREF } from "@/content/site";
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   {
@@ -29,8 +29,8 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
     title: "Get started",
     links: [
       // Absolute: the product app is a separate deployment from this site.
-      { label: "Sign in", href: SIGN_IN_URL },
-      { label: "Book a demo", href: SIGN_IN_URL },
+      { label: "Sign in", href: CTA_HREF },
+      { label: "Book a demo", href: CTA_HREF },
     ],
   },
 ];

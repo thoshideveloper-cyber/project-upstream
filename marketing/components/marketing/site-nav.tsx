@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 
 import { UpstreamLogo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/marketing/theme-toggle";
-import { SHOW_REVIEWS_SECTION, SIGN_IN_URL } from "@/content/site";
+import { SHOW_REVIEWS_SECTION, CTA_HREF } from "@/content/site";
 import { cn } from "@/lib/utils";
 
 // "Customers" appears only when there is a customers section to jump to — the
@@ -69,13 +69,13 @@ export function SiteNav() {
           <div className="hidden items-center gap-2 lg:flex">
             <ThemeToggle className="mr-1" />
             <Link
-              href={SIGN_IN_URL}
+              href={CTA_HREF}
               className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Sign in
             </Link>
             <Link
-              href={SIGN_IN_URL}
+              href={CTA_HREF}
               className="inline-flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Book a demo
@@ -112,13 +112,13 @@ export function SiteNav() {
             ))}
             <div className="mt-2 flex gap-2">
               <Link
-                href={SIGN_IN_URL}
+                href={CTA_HREF}
                 className="inline-flex h-10 flex-1 items-center justify-center rounded-lg border border-border text-sm text-foreground"
               >
                 Sign in
               </Link>
               <Link
-                href={SIGN_IN_URL}
+                href={CTA_HREF}
                 className="inline-flex h-10 flex-1 items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground"
               >
                 Book a demo

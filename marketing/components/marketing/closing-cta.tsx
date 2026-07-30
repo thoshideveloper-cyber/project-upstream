@@ -1,6 +1,6 @@
 import { ArrowRight } from "lucide-react";
 
-import { SIGN_IN_URL } from "@/content/site";
+import { CTA_HREF } from "@/content/site";
 import { Container, CTAGhost, CTAPrimary, DisplayHeading, Section } from "./primitives";
 
 /**
@@ -30,11 +30,11 @@ export function ClosingCta() {
               something the next project needs to know. Put both on one record.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <CTAPrimary href={SIGN_IN_URL} className="mkt-shimmer">
+              <CTAPrimary href={CTA_HREF} className="mkt-shimmer">
                 Book a demo
                 <ArrowRight className="size-4" />
               </CTAPrimary>
-              <CTAGhost href={SIGN_IN_URL}>See the live demo</CTAGhost>
+              <CTAGhost href={CTA_HREF}>See the live demo</CTAGhost>
             </div>
 
             <ul className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.15em] text-muted-foreground uppercase">

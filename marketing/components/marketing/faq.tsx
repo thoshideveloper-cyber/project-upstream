@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 
-import { FAQ as QA, SIGN_IN_URL } from "@/content/site";
+import { FAQ as QA, CTA_HREF } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { Container, DisplayHeading, Eyebrow, Section } from "./primitives";
 
@@ -21,7 +21,7 @@ export function Faq() {
               Everything teams ask before moving off spreadsheets. Still curious?{" "}
               {/* Underlined at rest: amber against muted body copy is a 1.65:1
                   difference, so colour alone never marked this as a link. */}
-              <a href={SIGN_IN_URL} className="text-primary-ink underline underline-offset-4 hover:no-underline">
+              <a href={CTA_HREF} className="text-primary-ink underline underline-offset-4 hover:no-underline">
                 Book a demo
               </a>
               .

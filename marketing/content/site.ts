@@ -18,19 +18,14 @@
  * ------------------------------------------------------------------ */
 
 /**
- * The product app's origin. This site is deployed on its own domain and has no
- * `/login` route of its own, so a relative CTA 404s in production — every
- * "Book a demo" / "Sign in" link has to be absolute.
+ * Where every CTA on the page points.
  *
- * Set NEXT_PUBLIC_APP_URL per deployment (no trailing slash) to point the funnel
- * at your own install; the default is the current product deployment.
+ * The product app is a separate deployment and is not part of this release, so
+ * "Book a demo" / "Sign in" / "See the live demo" all land on the in-app
+ * coming-soon screen. Relative on purpose: it works on whatever domain this is
+ * deployed to. Point it at your install when the product ships.
  */
-export const APP_URL = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://frontend-navy-pi-11.vercel.app"
-).replace(/\/+$/, "");
-
-/** Single destination for every CTA on the page. */
-export const SIGN_IN_URL = `${APP_URL}/login`;
+export const CTA_HREF = "/coming-soon";
 
 /* ------------------------------------------------------------------ *
  * Social proof — real content only, empty until a deployment has it.

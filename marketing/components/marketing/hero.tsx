@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
 import { MotionSection } from "@/components/motion-section";
-import { SIGN_IN_URL } from "@/content/site";
+import { CTA_HREF } from "@/content/site";
 import { Container, CTAGhost, CTAPrimary, DisplayHeading, Eyebrow } from "./primitives";
 
 /**
@@ -72,11 +72,11 @@ export function Hero() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <CTAPrimary href={SIGN_IN_URL}>
+              <CTAPrimary href={CTA_HREF}>
                 Book a demo
                 <ArrowRight className="size-4" />
               </CTAPrimary>
-              <CTAGhost href={SIGN_IN_URL}>See the live demo</CTAGhost>
+              <CTAGhost href={CTA_HREF}>See the live demo</CTAGhost>
             </div>
 
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 font-mono text-[11px] tracking-[0.15em] text-muted-foreground uppercase">
