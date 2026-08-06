@@ -122,7 +122,7 @@ def upgrade() -> None:
                 "is_current",
                 sa.Boolean(),
                 nullable=False,
-                server_default=sa.text("1"),
+                server_default=sa.true(),
             )
         )
         batch_op.add_column(sa.Column("contact_id", sa.Integer(), nullable=True))
@@ -184,7 +184,7 @@ def upgrade() -> None:
             SET contact_id = (
                 SELECT c.id FROM contacts c
                 WHERE c.company_id = outreach_schedules.company_id
-                  AND c.is_primary = 1
+                  AND c.is_primary = true
                   AND c.archived_at IS NULL
                 LIMIT 1
             )
