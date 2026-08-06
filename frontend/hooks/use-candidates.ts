@@ -30,7 +30,8 @@ export interface BoardResponse {
 export type RevBand = "lt100" | "b100_500" | "b500_2000" | "gte2000";
 
 export interface PoolFilters {
-  mandate_id: number;
+  /** Omit to browse the firm's standing company database with no deal selected. */
+  mandate_id?: number;
   q?: string;
   hq?: string;
   category_id?: number;
@@ -49,7 +50,8 @@ export interface PoolFilters {
 
 export function buildPoolQS(filters: PoolFilters): string {
   const p = new URLSearchParams();
-  p.set("mandate_id", String(filters.mandate_id));
+  // No mandate → the deal-free database view; the server skips the candidate overlay.
+  if (filters.mandate_id) p.set("mandate_id", String(filters.mandate_id));
   if (filters.q) p.set("q", filters.q);
   if (filters.hq) p.set("hq", filters.hq);
   if (filters.category_id) p.set("category_id", String(filters.category_id));
@@ -67,12 +69,18 @@ export function buildPoolQS(filters: PoolFilters): string {
   return `?${p.toString()}`;
 }
 
-/** Firm-wide pool search with candidate overlay for the chosen mandate (§3.3). */
+/**
+ * Firm-wide pool search, with the candidate overlay for the chosen mandate (§3.3).
+ *
+ * The pool is the firm's standing company database and exists independently of any
+ * deal, so this runs with or without a mandate — without one you get plain inventory
+ * (searchable, filterable) and no per-deal stage or AI score.
+ */
 export function usePool(filters: PoolFilters, enabled = true) {
   return useQuery<SourcingPoolResponse>({
     queryKey: ["sourcing-pool", filters],
     queryFn: () => api.get<SourcingPoolResponse>(`/sourcing/candidates${buildPoolQS(filters)}`),
-    enabled: enabled && filters.mandate_id > 0,
+    enabled,
     staleTime: 20_000,
   });
 }

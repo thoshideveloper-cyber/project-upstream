@@ -168,6 +168,10 @@ class ImportSource(str, enum.Enum):
     CSV = "CSV"
     IB_DB = "IB_DB"
     PROVIDER = "PROVIDER"
+    # Client Excel workbook onboarding (WB-1) — writes the full CRM graph
+    # (profiles + per-mandate companies + contacts + backdated outreach events),
+    # not just the sourcing pool that CSV/IB_DB feed.
+    WORKBOOK = "WORKBOOK"
 
 
 class ImportStatus(str, enum.Enum):

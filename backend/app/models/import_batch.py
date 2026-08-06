@@ -23,10 +23,16 @@ if TYPE_CHECKING:
 
 
 class ImportBatch(Base):
-    """CSV / IB-DB ingest audit + idempotency envelope (SOURCING_LAYER_PLAN §2.1).
+    """CSV / IB-DB / workbook ingest audit + idempotency envelope (SOURCING_LAYER_PLAN §2.1).
 
     Every import is one auditable row. ``file_hash`` + per-row upsert keys make a
     re-import of the same file idempotent (upserts profiles, never duplicates).
+
+    ``source=WORKBOOK`` (WB-1) reuses this exact envelope for the client-Excel
+    onboarding path so the audit / error-review UX is the same one the CSV wizard
+    already has — only the *targets* differ (the full CRM graph, not just profiles).
+    For those batches ``mapping`` holds the partner's import plan (project + per-sheet
+    mandate assignment) and ``summary`` the applied outcome per entity kind.
     """
 
     __tablename__ = "import_batches"
@@ -40,6 +46,13 @@ class ImportBatch(Base):
     filename: Mapped[str | None] = mapped_column(String(500), nullable=True)
     file_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     mapping: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # WORKBOOK only — the project every sheet in this workbook lands under (§WB-1 step 1).
+    project_id: Mapped[int | None] = mapped_column(
+        ForeignKey("projects.id"), nullable=True, index=True
+    )
+    # WORKBOOK only — applied per-entity outcome, so the summary step renders from
+    # the persisted batch rather than a response the browser has to hold on to.
+    summary: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     row_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     updated_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

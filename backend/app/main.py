@@ -26,6 +26,7 @@ from app.api.sourcing_candidates import router as sourcing_candidates_router
 from app.api.sourcing_layers import router as sourcing_layers_router
 from app.api.sourcing_stages import router as sourcing_stages_router
 from app.api.users import router as users_router
+from app.api.workbook_imports import router as workbook_imports_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -67,6 +68,8 @@ app.include_router(sourcing_stages_router)
 app.include_router(sourcing_candidates_router)
 app.include_router(sourcing_router)
 app.include_router(saved_searches_router)
+# Workbook first: /imports/workbook/* must not be swallowed by /imports/{batch_id}.
+app.include_router(workbook_imports_router)
 app.include_router(imports_router)
 app.include_router(my_book_router)
 app.include_router(data_sources_router)

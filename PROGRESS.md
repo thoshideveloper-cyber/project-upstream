@@ -1647,3 +1647,389 @@ sweep, a focus walk and a reduced-motion pass (the same method as L5).
 - Archived contact rows still dim with `opacity-55`. axe doesn't see them (they only appear behind
   "show archived") and the meaning of the dimming is different from thin-sample recession, so it
   wants a deliberate design decision rather than a blind sweep.
+
+---
+
+## Track WB — WB-1: Workbook import — the client's real Excel becomes the app ✅ complete
+
+**Goal:** the app is populated from the client's three actual workbooks
+(`phase_2/Investors outreach.xlsx`, `PE related buyers.xlsx`, `Contact list.xlsx`), not from
+Faker. This is the real onboarding path; `seed.py` stays as the dev/test fixture.
+
+**The gap this closes.** `services/imports.py` (SL-2) already ingests a CSV — but only into
+`company_profiles`, i.e. the sourcing *pool*. The client's workbooks carry a whole engagement's
+history, so one row has to resolve to a profile **and** a per-mandate `companies` row, its inline
+contacts, its cadence, and a backdated chain of `outreach_events`. The CSV importer is untouched
+and still serves long-list enrichment.
+
+### Why the existing tables, widened — not a parallel set
+`import_batches` / `import_rows` already are the audit + idempotency envelope, and the CSV wizard's
+error-review UX is built on them. A second table set would have meant a second reviewer UI for the
+same job. So WB-1 **widens** them (`b2e4f6a8c0d1`, additive + reversible):
+- `import_batches.project_id` — the project every sheet lands under · `.summary` — the applied
+  per-entity outcome, so the summary step renders from the persisted batch.
+- `import_rows.sheet_name` (a workbook batch spans tabs) + `resolved_company_id` /
+  `resolved_contact_id` / `resolved_schedule_id` beside the existing `resolved_profile_id` —
+  one workbook row resolves to a whole slice of the graph, not just a profile.
+- `ImportSource.WORKBOOK` needs no DDL: the enum column is a plain VARCHAR (`native_enum=False`).
+
+### Parsing the real files, not a tidy table (`services/workbook_parse.py`)
+Nothing about these sheets is regular, so the parser does exactly three things and no interpretation:
+- [x] **Locates the header row** — every sheet has a *header block* above it (`"[Client] target/buyer
+      name"`, `"Exchange rate as on date = X"`, a running count). It sits at row **6** in
+      `Company list 1`, **5** in `PE names final`, **7** in `PE porfolio names final`, **5** in
+      `Contacts list`. Row 1 is never it.
+- [x] **Classifies each tab** — MASTER / SCHEDULE / CONTACTS / LONGLIST / IGNORE, from which column
+      dictionary its header row matches. The nav dividers (`Master sheets and emailers >>>`) and
+      pivots (`PE summary analysis`) fall out as IGNORE; `PE names` and `Remaining PE companies` are
+      recognised as research long-lists and are **opt-in only**, never swept into a master list.
+- [x] **Maps cells** using §2.2 / §2.3 / §2.4 verbatim, with the repeated `Bi-weekly follow up` ×4 and
+      the trailing `Done`/days block read *positionally* (they share one header).
+- [x] `Exchange rate as on date | 90.26` no longer eats the running count — the rate's value cell is
+      skipped when scanning for the count (that bug read `declared_count` as 90 instead of 60).
+
+### What the importer refuses to do (`services/workbook_import.py`)
+- **Never invents an anchor.** A row whose *Initial email* cell is a text token ("Priya Mam reach
+  out", "Contact not found" — 5 of GAIL's 70) logs **no events at all**; its schedule stays
+  AWAITING_INITIAL. Rule 3: the clock never ticks before the first email is sent.
+- **Never fakes precision.** A text-token Status ("Got response") has no date in Excel. The terminal
+  event is dated to the last known follow-up, else the anchor, and flagged `APPROXIMATE_DATE` (18
+  rows on the GAIL sheet) so an analyst can correct it.
+- **Never guesses a meaning it doesn't have.** "Vishnu reached out" is neither a response nor a
+  bounce, so it becomes a **NOTE** carrying the verbatim token, the cadence is left where the
+  evidence put it, and the row is flagged `UNCLASSIFIED_STATUS`.
+- **Never mutates history.** Events are appended; `initial_date` is written once, by
+  `activate_schedule`. A corrected re-upload with a different first-email date does not move it and
+  does not append a second INITIAL_EMAIL.
+
+### Rebuilding the real cadence
+Follow-ups come from the scheduler's own **`Done` cells** — not from the four computed dates, which
+are all present up front whether or not anything was sent. Trunorth (initial 12 Jan, four Done)
+lands as INITIAL_EMAIL + 4 FOLLOW_UPs on the sheet's exact dates and stops EXHAUSTED = cold, which
+is §2.3's "4 follow-ups then cold". Sharrp Ventures (`Done | Done | 10 | 24`) lands 2 follow-ups,
+stays ACTIVE, and `compute_cadence` puts next-due at 29 June — the sheet's own third bi-weekly date.
+Imported schedules use the Excel interval of **14 days**.
+
+### Project + engagement are a wizard step, not an inference
+One workbook = one client, and tab names don't encode the deal. So the partner picks/creates the
+**project**, then maps each tab to a **mandate**. One `Emailing schedule` can serve several master
+sheets (the PE workbook's does), so the suggested plan resolves each sheet's slice by **company-name
+overlap**, landing `PE names final → Regarding "PE"` and `PE porfolio names final → "Portfolio"`.
+For the Contact List, its `Reason` column *is* the client, so each distinct Reason maps to an
+engagement; unmapped Reasons **skip**, never guess.
+
+### Classification (§7.2 / §7.3)
+`PE → Private Equity`, `FO → Family Office`, `PMS`, `PE/PC → Private Credit`, `VC`, `Strategic`,
+`Investment bank` all land via an explicit alias table (fuzzy string metrics score "PE" against
+"Private Equity" terribly), with rapidfuzz only for lightly-renamed labels. `PE/VC` has no
+vocabulary entry of its own → nearest match + `CATEGORY_APPROXIMATE`. Anything unknown ("PE
+potfolio") → **Other + `CATEGORY_UNMAPPED`**, never silently dropped. `Bucket` becomes the
+engagement's sourcing layers in first-seen order — including GAIL's two rows where a stray `Yes`
+leaked into that column, imported faithfully and flagged `BUCKET_SUSPICIOUS` for the analyst.
+
+### Idempotency
+profile → domain then name (`upsert_profile`) · company → (mandate, profile) then (mandate,
+name_key) · contact → (company, email) then (company, person) · layer → (mandate, lower(name)) ·
+event → **(schedule, type, occurred_on, contact)**. The contact is in the event key on purpose: the
+Contact List has ten companies where two different people replied, and on the same day those two
+real touches would otherwise collapse into one.
+
+### Backend surface
+- [x] `services/workbook_parse.py`, `services/workbook_import.py` (new) · `openpyxl>=3.1` added
+      (no `.xlsx` reader existed — the CSV importer is text-only)
+- [x] `api/workbook_imports.py` (new) — `/imports/workbook/{inspect,preview,apply,targets,flags,{id}}`,
+      **partner-only**. Mounted before `imports_router` so `/imports/workbook/*` isn't swallowed by
+      `/imports/{batch_id}`. The file is uploaded once at *inspect* and every later step replays the
+      staged rows, so the browser never re-uploads — and can't swap the file underneath the preview.
+
+### Verification — against the real files, not fixtures
+- [x] **`tests/test_workbook_import.py` — 28 tests** loading all three actual workbooks: header-row
+      and tab classification, the named-row cross-check (**Mandala Capital**, read by hand off row 7:
+      HQ, rationale, relevant investments, Direct layer, Aditya Mody as primary contact,
+      INITIAL_EMAIL + RESPONSE both on 18 May), Trunorth's four-follow-up cadence math, Sharrp's
+      partial chain and next-due, the anchor-less row logging nothing, dry-run purity (all 8 tables
+      byte-identical after a preview), preview counts equalling what apply writes, re-apply as a
+      true no-op (130 → 0 created / 130 updated / 0 events), the immutable anchor under a corrected
+      file, one shared profile across two projects (200 company rows → 188 profiles), the Contact
+      List's context landing on the **event** with the contact row as the latest-touch cache, POC →
+      firm user, and firm-scoping.
+- [x] **`tests/test_workbook_import_api.py` — 8 tests** for the wizard over HTTP incl. the
+      partner-only gate and the applied-batch no-op.
+- [x] **`alembic upgrade → downgrade → upgrade`** green, asserted at the *column* level
+      (`test_wb1_upgrade_downgrade_upgrade`) since WB-1 widens tables rather than adding them.
+- [x] **Backend 307/307 ✅** (`pytest`) — 270 prior + 37 new (28 + 8 + 1).
+- [x] Frontend: `tsc --noEmit` clean · eslint clean on touched files · Vitest **7 new**
+      (`tests/workbook-import-plan.test.ts`) · **Playwright 2/2 ✅** driving the real GAIL workbook
+      through upload → map → preview → apply → deal room.
+- [x] **Confirmed in the running app**, not just in tests: 70 companies, 66 contacts, 143 events,
+      4 sourcing layers; Mandala Capital STOPPED/RESPONDED on 18 May; Sharrp ACTIVE with 2
+      follow-ups at a 14-day interval; Anicut Capital AWAITING_INITIAL with 0 events.
+
+### Frontend
+- [x] `app/(app)/import/page.tsx` (new, partner-only) — upload → project & engagements → review →
+      apply, modelled on the CSV wizard's step shape. The review step states counts per entity,
+      per-sheet engagement and cadence-match, and a flag roll-up with an expandable list of exactly
+      the rows the importer had to make a call on. Analysts get an explanation, not a disabled form.
+- [x] `hooks/use-workbook-import.ts` (new) — kept separate from `use-imports.ts` because the two
+      wizards write different things.
+- [x] `app/(app)/projects/page.tsx` — **"Import from Excel"** on the empty state (partner only); this
+      is effectively firm onboarding, so it belongs where a partner first finds nothing.
+
+### Flagged, not fixed
+- **`Holding company` (+ website), `Previous contact` and `Cheque size` have no field in the data
+  model.** They are parsed, preserved verbatim on `import_rows.raw`, and reported per sheet as
+  unmapped columns in the preview — explicitly *not* stuffed into `rationale` or the dead `bucket`
+  column. `Previous contact = Yes` additionally raises a `PREVIOUSLY_CONTACTED` warm flag. Giving
+  the portfolio→owner cross-link a real home is §2.2's own "❌ missing (secondary)" and wants its
+  own slice.
+- **Pre-existing SQLite migration defect (`c1d2e3f4a5b6`, Phase 8 Slice 1).** The initial schema's
+  *inline* `UNIQUE (company_id)` on `outreach_schedules` survives that migration's constraint swap
+  on SQLite, so a migrated SQLite DB carries both it and `uq_outreach_schedules_company_cycle` — and
+  `seed.py --reset` fails on the restarted-company fixture (`UNIQUE constraint failed`). PostgreSQL
+  names the constraint, so the drop works there, and the pytest suite builds from
+  `Base.metadata.create_all`, which is why nothing caught it. Unrelated to WB-1; needs its own
+  corrective migration.
+- **Pre-existing frontend test failure:** `tests/candidate-card.test.ts` expects `scoreTone(65)` to
+  contain `"lime"` but it now returns an emerald token. Fails on a clean checkout; untouched here.
+
+---
+
+## Track WB — WB-2: Empty canvas → real data, end to end, every feature ✅ complete
+
+**Goal:** stop testing against Faker. Walk the whole product from a genuinely empty firm,
+seed the sourcing database with real companies, bring the client's three workbooks in
+through the wizard, and then exercise **every** feature against that data.
+
+### The empty canvas is now a real starting point
+- [x] `app/seed/bootstrap.py` (new) — the opposite of `seed.py`: a firm, its category
+      vocabulary, its funnel stages and its users, and *nothing else*. This is what a real
+      firm starts with, and it is the precondition for judging an empty state honestly.
+- [x] `tests/e2e/audit.spec.ts` (new) — a diagnostic harness that walks all 16 routes as
+      **both roles**, recording console errors, failed requests, the heading, the visible
+      empty-state wording and a screenshot per route into `tests/e2e/.audit/<label>/`.
+      Fails only on real breakage; the report is the point.
+
+**Empty-canvas result: 29 route visits · 0 console errors · 0 failed requests.** Every
+page already had a real, specific empty state ("Desk clear. No outreach due in the next
+7 days.", "The rolodex is empty", "You're clear. Nothing's slipped and nothing's due.").
+
+### The gap that audit found: the company database was unreachable
+`/sourcing` refused to open without an engagement — `usePool` was hard-gated on
+`mandate_id > 0` and the page returned "No engagements to source for yet". But the pool
+**is** the firm's standing company database (`company_profiles`, firm-wide by design);
+it is worth searching on day one, before any deal exists. A brand-new firm therefore had
+no way to see or search its own inventory.
+
+- [x] `api/sourcing.py` — `mandate_id` on `/sourcing/candidates` is now **optional**.
+      Without one the candidate join is skipped entirely and rows come back as plain pool
+      inventory; with one, nothing changes. Score-sort degrades to name-sort rather than
+      ordering by a column that isn't joined.
+- [x] `app/(app)/sourcing/page.tsx` — a **"Company database"** mode: the full query deck,
+      search and facets, with the engagement switch replaced by a line that says what a
+      deal would add. The deal-only actions (Shortlist, Push, Score matches, the bulk bar,
+      row selection) are withheld — `Score matches` stays visible but **disabled with a
+      reason**, because a fit score is a score *against a thesis*.
+- [x] `hooks/use-candidates.ts` — `mandate_id` optional; `buildPoolQS` omits it.
+
+### A real sourcing database, not Faker
+- [x] `app/seed/pool_dataset.py` (new) — **164 real companies** in the firm's actual deal
+      space, name/HQ/website taken from public sources (cited in the module docstring:
+      Wikipedia's IT-consulting and private-equity lists, CRN MSP 500 2026 press coverage,
+      company profile pages). Two segments matching the two sides of the deal flow: IT
+      services / product engineering / managed services & security, and PE / growth / VC
+      (global, Asia-Pacific and India).
+      **Only verified fields are recorded.** `website` is filled in only where the official
+      domain is unambiguous — it is the primary dedup key, so a guessed domain is worse
+      than none. Headcount and revenue are left to the client's own researched figures.
+- [x] `app/seed/sourcing_pool.py` (new) — loads that dataset **plus** the client
+      workbooks' research long-lists (`PE names`, `Remaining PE companies` — the tabs the
+      importer deliberately leaves alone because they are staging, which is exactly what
+      the pool is for) **plus** every master-sheet company. All through `upsert_profile`,
+      so it is additive and idempotent: **338 profiles, and a second run adds 0.**
+
+### Bringing the client's book in
+All three workbooks went in through the real `/imports/workbook` wizard:
+
+| Workbook | Companies | Contacts | Events | Layers |
+|---|---|---|---|---|
+| Investors outreach (GAIL) | 70 | 66 | 143 | 4 |
+| PE related buyers (22by7 — 2 master sheets, 1 shared scheduler) | 130 | 134 | 496 | 9 |
+| Contact list (firm-wide, Reason → engagement) | 59 new / 45 matched | 70 new / 34 enriched | 98 | — |
+
+Landed: **2 projects · 3 engagements · 259 companies · 381 profiles · 270 contacts ·
+737 events · 13 sourcing layers**, with 49 live cadences, 205 stopped and 5 still
+Awaiting-initial — those 5 being exactly the GAIL rows whose Initial-email cell is a text
+token, visible on the pipeline board under *Not contacted* rather than invented into a
+cadence.
+
+### A preview/apply divergence the real data exposed
+The Contact List preview predicted **65 company creates / 39 updates**; the apply did
+**59 / 45**. Ten companies on that sheet have two people each — apply creates the company
+on the first row and updates it on the second, but the preview forgot what it had already
+decided and counted two creates. The split is what the partner approves, so it has to
+match.
+- [x] `_Resolver.would_create_company` — the preview-side counterpart of the apply's
+      insert, remembering pending creations within the run (the same shape as the existing
+      `would_create_layer`).
+- [x] `test_contact_list_preview_split_matches_what_apply_does` — a regression test on the
+      real file; the master-sheet parity test never hit this because one sheet has one row
+      per company.
+
+### Then every feature, against that data
+- [x] `tests/e2e/feature-sweep.spec.ts` (new) — **14 tests** that *use* the app rather
+      than just loading it: pool search by name / city / domain; the deal-free database
+      view and its withheld actions; shortlisting a pool company onto a deal and finding
+      it on the funnel board; all three Master List views; a company dossier's Overview /
+      Timeline / Contacts tabs and its cross-mandate duplicate notice; the outreach queue
+      and logging a touch; the rolodex and a person's touch context; both imported projects
+      and their engagements; analytics computed from the real event log; the settings
+      vocabulary the import used; the command palette finding an imported company; and an
+      assigned analyst seeing their own book.
+
+**Full Playwright suite: 41/41 green** — including the whole pre-existing suite (cadence,
+grid, pipeline board, projects, outreach timeline, command palette, login, smoke), which
+had only ever run against the Faker seed and now passes against real client data.
+
+### Performance — measured, not asserted
+The first audit showed 8–10s page loads, which looked alarming and was not the app:
+- **API: 0.22–0.44s** for every major endpoint (`/analytics/overview` 0.27s,
+  `/sourcing/candidates` 0.27s, `/my-book` 0.44s, `/schedule/due` 0.26s) against the full
+  259-company / 737-event dataset.
+- **Warm client navigation: 468–600ms** across dashboard, master, schedule, contacts,
+  sourcing and analytics — asserted under 6s in the sweep so the number stays honest.
+- The 8–10s figures were Next's **dev-server on-demand compilation** on first visit.
+
+### Fixed on the way
+- [x] `/companies` empty state said "Add the first company to **this mandate**" on a page
+      that spans every engagement — and said it on a firm with no mandates at all.
+- [x] **The workbook importer had no standing home.** `/import` was reachable from exactly
+      one place — the `/projects` **empty state** — which disappears the moment the first
+      project exists. But onboarding is not a one-off: a firm brings a workbook per client
+      and the contact list arrives separately, so every import after the first had no route
+      but typing the URL. Added `Import` to the sidebar under **Pipeline** (which also makes
+      it findable in the command palette, reading the same nav list) and a persistent
+      **Import from Excel** action in the `/projects` header beside *New project*.
+
+### WB-3 — the import is open to analysts, scoped instead of gated
+
+The wizard was partner-only on the reasoning that it "creates projects and engagements and
+writes across the whole graph". But `create_project` and `create_mandate` are both
+`CurrentUser` — **an analyst can already open a project and an engagement by hand**, so
+importing the book they keep in a spreadsheet is the same act performed faster. The gate
+was protecting nothing an analyst couldn't do through the UI; what it actually did was
+force every analyst's book through a partner.
+
+So the gate is replaced by the app's normal visibility rule — the role now changes *reach*,
+not permission:
+- [x] All six `/imports/workbook/*` routes: `PartnerDep` → `CurrentUser`.
+- [x] `/targets` is **scoped** — an analyst is offered their assigned engagements and the
+      projects holding them (plus projects they created, still empty), not a firm-wide
+      picker whose entries apply would then refuse. Mirrors `projects._visible_project_ids`.
+- [x] `_assert_plan_writable` on **preview and apply** — the target list is scoped but the
+      plan is posted back as JSON, so an analyst naming a colleague's `mandate_id`
+      directly is refused 403. Partners short-circuit. Newly created projects/engagements
+      are unconstrained, matching what the hand-built path already allows.
+- [x] **`resolve_mandate` now writes a `MandateAssignment` for the actor** — the real bug
+      under the gate. Visibility runs off `mandate_assignments`, not `lead_owner_id`, so
+      without it an analyst would import a whole book and then not be able to see it.
+      `create_mandate` has always auto-assigned its creator; an import is the same act.
+- [x] **Batch ownership** — a staged batch holds the verbatim rows of someone's client
+      workbook, and `_get_batch` was firm-scoped only. Now a non-partner reaches only
+      batches they uploaded, on read *and* on preview/apply, so an analyst can neither
+      read a partner's staged book nor apply it on their behalf.
+- [x] Frontend: the "Partners run the workbook import" lock screen is gone; nav entry and
+      both `/projects` buttons un-gated.
+
+Tests: `test_wizard_is_partner_only` replaced by
+`test_analyst_can_run_the_wizard_and_owns_what_they_import` (analyst walks inspect →
+preview → apply on the real GAIL workbook, and the created engagement is assigned to them)
+`test_analyst_cannot_import_into_a_book_they_are_not_on` (403 at preview *and* apply, with
+nothing written on the way to the refusal) and
+`test_analyst_cannot_touch_someone_elses_staged_batch` (404 on read, preview and apply).
+The Playwright analyst spec now asserts the uploader is reachable from the sidebar rather
+than that it is withheld.
+
+**Verification:** backend **310/310 ✅** · ruff + eslint clean on every touched file ·
+`tsc --noEmit` clean.
+
+---
+
+## Track WB — WB-4: the whole client book in one run, and what was actually broken
+
+### Three reported "bugs", two of which were a stale process
+
+Reported: analysts can't upload, partners can't either, and old companies are still
+everywhere after the reset. Reproduced against the running app rather than the code:
+
+- A backend was still listening on **:8010 running pre-WB-3 code** — analyst `targets`
+  and `inspect` returned **403** there (the old partner-only gate). That was the whole of
+  "analyst unable to upload".
+- That same process was bound to **`upstream_e2e.db`**, not the cleaned `upstream.db` —
+  the 332 "old companies".
+- The frontend was on **:3010** (a stale `next dev`), pointing at `localhost:8000`, where
+  **nothing was listening**. That was "can't upload even for partner".
+
+Nothing in the code was wrong. Confirmed by driving the real UI: with clean processes both
+roles reach the map step (`inspect` → **201**), and the `Import` nav entry is present for
+an analyst (`["Dashboard","Projects","Import","Sourcing",…]`).
+
+### `scripts/reset_to_pool.py` (new)
+Strips a dev DB back to *empty canvas + sourcing pool*: keeps the firm, its users, the 384
+`company_profiles`, and the category/stage/source vocabulary; wipes every trace of an
+import. This is the state a new client firm starts from — **the pool is the constant, the
+workbooks are the variable**. `companies` must be deleted *before* `sourcing_layers`
+(a company points at its layer), which the first draft got wrong and SQLite caught.
+
+### The real gap: a client's book is not one file
+`/import` took one workbook at a time, so three files meant three separate runs and the
+project re-chosen each time. Now:
+- [x] The dropzone takes **many** `.xlsx` at once; the queue is walked in order, and files
+      matching `/contact/i` are **sorted last** — the contact list has to land after the
+      engagements its `Reason` column maps onto, and a file picker's order is arbitrary.
+- [x] The project is decided on the **first** file and then **locked** (`locked-project`),
+      read from the server's `summary.project_id` rather than from what the form guessed.
+- [x] Per-file mapping is kept (each workbook has different tabs, scheduler and flags);
+      a `file-progress` strip says which workbook of how many, and the Apply button reads
+      *"Apply and continue to the next workbook"* until the last one.
+- [x] The done step aggregates across the run ("from 3 workbooks").
+
+### The bug the multi-file run exposed
+`useApplyWorkbook` **invalidated nothing**. Within one run that is fatal, not cosmetic:
+files 1–2 create the engagements, but the wizard's target list was fetched once at page
+load, so file 3's Reason dropdown offered only *"— skip these rows —"*. Every row silently
+skipped, `willWrite` fell to 0 and **Apply was disabled with no explanation**. Found by the
+E2E timing out on a disabled button, not by reading the code. Apply now invalidates
+`workbook-import/targets` plus `projects` / `companies` / `mandates`.
+
+### Verification — an analyst, all three real workbooks, one run
+`tests/e2e/workbook-import.spec.ts` gains *"an analyst takes the client's whole book"*:
+drops all three `phase_2/` files at once, names the client once, maps each file in turn,
+and asserts the project stays locked across them. Result on a pool-only DB:
+**272 companies · 283 contacts · 737 outreach events · 3 engagements**, 0 console errors,
+all three engagements assigned to the analyst, and `company_profiles` still **384** —
+untouched by the import, exactly as intended.
+
+- [x] Playwright `workbook-import.spec.ts` **3/3 ✅** · Vitest **156/157** (the 1 failure is
+      the pre-existing `scoreTone` case) · `tsc --noEmit` + eslint clean.
+
+### Flagged, not fixed
+- **`/master?view=firm` is not a valid view value** (`my-book` / `firm-wide` / `board`
+  are). An unknown value silently falls back to the role default rather than correcting
+  the URL, so a wrong link looks like it worked. Cosmetic, but it made two of these specs
+  pass for the wrong reason before it was spotted.
+- **The dev seed still can't run on a migrated SQLite database** — the pre-existing
+  `c1d2e3f4a5b6` constraint defect recorded under WB-1. The E2E database is built from
+  `bootstrap.py` (models, not migrations), which sidesteps it; a corrective migration is
+  still owed.
+- **`tests/candidate-card.test.ts`** still fails on a clean checkout (`scoreTone(65)`
+  expects `"lime"`, returns an emerald token). Untouched here.
+
+### Verification
+- [x] Backend **308/308 ✅** (`pytest`) — 307 + the new preview-parity regression.
+- [x] Playwright **41/41 ✅** against the real client data.
+- [x] Vitest **156/157** (the one failure is the pre-existing `scoreTone` case above).
+- [x] `tsc --noEmit` clean · ruff clean on every touched file · eslint clean on every
+      touched file (two pre-existing unused-import warnings in `sourcing/page.tsx` remain,
+      unchanged from `HEAD`).
+- [x] Route audit run twice — **empty canvas 29/29 clean, loaded canvas 29/29 clean**, both
+      roles, screenshots and JSON reports under `frontend/tests/e2e/.audit/`.

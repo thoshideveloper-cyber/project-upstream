@@ -18,7 +18,7 @@ from decimal import Decimal, InvalidOperation
 from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from sqlalchemy import and_, exists, func, or_, select
+from sqlalchemy import and_, exists, func, null, or_, select
 
 from app.core.config import settings
 from app.core.deps import CurrentUser, PartnerDep, SessionDep, visible_mandate_ids
@@ -181,7 +181,7 @@ async def _run_pool_search(
     db,
     current_user,
     *,
-    mandate_id: int,
+    mandate_id: int | None,
     q: str | None,
     hq: str | None,
     category_id: int | None,
@@ -197,7 +197,10 @@ async def _run_pool_search(
     rev_band: str | None = None,
     warm_only: bool = False,
 ) -> dict:
-    await _assert_mandate_visible(mandate_id, db, current_user)
+    # mandate_id is optional: without one this is the firm's standing company database
+    # (browse + search the pool itself), with no per-deal candidate overlay to compute.
+    if mandate_id is not None:
+        await _assert_mandate_visible(mandate_id, db, current_user)
     firm_id = current_user.firm_id
     conditions = _pool_conditions(
         firm_id,
@@ -214,20 +217,25 @@ async def _run_pool_search(
     )
 
     # Left-join the candidate for THIS mandate so we can overlay + sort by AI score.
-    join_on = and_(
-        SourcingCandidate.profile_id == CompanyProfile.id,
-        SourcingCandidate.mandate_id == mandate_id,
-        SourcingCandidate.archived_at.is_(None),
-    )
-    base = (
-        select(CompanyProfile, SourcingCandidate)
-        .outerjoin(SourcingCandidate, join_on)
-        .where(*conditions)
-    )
-    if has_score:
-        base = base.where(SourcingCandidate.fit_score.is_not(None))
+    # With no mandate the join is skipped entirely — there is no deal to be a candidate
+    # *for*, so every row comes back as plain pool inventory.
+    if mandate_id is None:
+        base = select(CompanyProfile, null().label("candidate")).where(*conditions)
+    else:
+        join_on = and_(
+            SourcingCandidate.profile_id == CompanyProfile.id,
+            SourcingCandidate.mandate_id == mandate_id,
+            SourcingCandidate.archived_at.is_(None),
+        )
+        base = (
+            select(CompanyProfile, SourcingCandidate)
+            .outerjoin(SourcingCandidate, join_on)
+            .where(*conditions)
+        )
+        if has_score:
+            base = base.where(SourcingCandidate.fit_score.is_not(None))
 
-    if sort == "score":
+    if sort == "score" and mandate_id is not None:
         base = base.order_by(
             SourcingCandidate.fit_score.desc().nullslast(), CompanyProfile.company_name
         )
@@ -258,7 +266,7 @@ async def _run_pool_search(
     items = []
     for profile, cand in rows:
         candidate = None
-        if cand is not None:
+        if cand is not None and mandate_id is not None:
             stage = stages.get(cand.stage_id)
             candidate = {
                 "id": cand.id,
@@ -629,7 +637,11 @@ async def kanban_board(
 async def search_candidates(
     db: SessionDep,
     current_user: CurrentUser,
-    mandate_id: int = Query(..., description="Mandate context for the candidate overlay"),
+    mandate_id: int | None = Query(
+        default=None,
+        description="Mandate context for the candidate overlay. Omit to browse the "
+        "firm's standing company database with no deal selected.",
+    ),
     q: str | None = Query(default=None),
     hq: str | None = Query(default=None),
     category_id: int | None = Query(default=None),

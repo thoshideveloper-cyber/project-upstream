@@ -487,7 +487,13 @@ export default function CompaniesPage() {
           <EmptyState
             icon={Building2}
             title="No companies"
-            description={hasFilters ? "Try adjusting your filters." : "Add the first company to this mandate."}
+            // This page spans every engagement, so there is no "this mandate" to add to
+            // — on a fresh firm the honest next step is bringing the book in at all.
+            description={
+              hasFilters
+                ? "Try adjusting your filters."
+                : "Nothing on your desk yet — add a company, or import a client workbook."
+            }
           />
         }
       />

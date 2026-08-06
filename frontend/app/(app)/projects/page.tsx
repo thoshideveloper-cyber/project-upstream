@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Archive,
   ChevronRight,
+  FileSpreadsheet,
   FolderOpen,
   MoreHorizontal,
   Plus,
@@ -525,6 +526,14 @@ export default function ProjectsPage() {
             <span className="hidden sm:inline">Show archived</span>
             <span className="sm:hidden">Archived</span>
           </button>
+          {/* A firm imports one workbook per client, so this stays available after
+              the first one — the empty-state button below is gone by then. */}
+          <Link href="/import">
+            <Button variant="outline" data-testid="import-from-excel-header">
+              <FileSpreadsheet className="mr-1 h-4 w-4" aria-hidden />
+              Import from Excel
+            </Button>
+          </Link>
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="mr-1 h-4 w-4" aria-hidden />
             New project
@@ -552,13 +561,22 @@ export default function ProjectsPage() {
             <div>
               <p className="text-sm font-medium">No projects on your desk yet.</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Create a project for a client — or a partner can assign you to one.
+                Start a project for a client — or bring a whole workbook over from Excel.
               </p>
             </div>
-            <Button size="sm" onClick={() => setCreateOpen(true)}>
-              <Plus className="mr-1 h-4 w-4" aria-hidden />
-              New project
-            </Button>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Button size="sm" onClick={() => setCreateOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" aria-hidden />
+                New project
+              </Button>
+              {/* Onboarding: the client's real workbook, history and all. */}
+              <Link href="/import">
+                <Button size="sm" variant="outline" data-testid="import-from-excel">
+                  <FileSpreadsheet className="mr-1 h-4 w-4" aria-hidden />
+                  Import from Excel
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">

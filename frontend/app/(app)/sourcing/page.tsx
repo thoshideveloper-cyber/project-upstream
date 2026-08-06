@@ -11,7 +11,6 @@ import {
   ChevronsUpDown,
   Database,
   Download,
-  FolderPlus,
   History,
   Import,
   LineChart,
@@ -34,7 +33,6 @@ import {
 import { CandidateRow } from "@/components/features/candidate-card";
 import { PushToDialog } from "@/components/features/push-to-dialog";
 import { SourcingKanban } from "@/components/features/sourcing-kanban";
-import { EmptyState } from "@/components/features/empty-state";
 import { api } from "@/lib/api";
 import { useMandates } from "@/hooks/use-mandates";
 import { useCategories } from "@/hooks/use-categories";
@@ -172,6 +170,41 @@ function LensGroup({ title, children }: { title: string; children: React.ReactNo
 // Fit scores, warm history, and pushes are all computed against this engagement;
 // it reads as the page title so the context is never in doubt.
 
+/**
+ * The command line when there is no engagement yet.
+ *
+ * The pool is the firm's own company database — it is worth searching on day one, before
+ * a single deal exists, which is why this screen no longer refuses to open. It says what
+ * a deal would add rather than pretending there is nothing here.
+ */
+function DatabaseModeHeader({ total, isPartner }: { total?: number; isPartner: boolean }) {
+  return (
+    <div className="min-w-0">
+      <h1 className={PAGE_TITLE} style={PAGE_TITLE_STYLE}>
+        Company database
+      </h1>
+      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+        <span data-testid="database-mode-note">
+          {total != null
+            ? `${total.toLocaleString("en-IN")} companies on file · no deal selected`
+            : "No deal selected"}
+        </span>
+        <span aria-hidden>·</span>
+        <span>
+          {isPartner
+            ? "Open an engagement to score these against a thesis and push them onto a book."
+            : "Ask a partner to assign you an engagement to score and push from here."}
+        </span>
+        {isPartner && (
+          <Link href="/projects" className="font-medium text-primary-ink hover:underline">
+            Projects
+          </Link>
+        )}
+      </p>
+    </div>
+  );
+}
+
 function EngagementSwitch({
   mandates,
   current,
@@ -288,6 +321,12 @@ export default function SourcingPage() {
   const mandateList = mandates?.items ?? [];
   const effectiveMandate = mandateId || mandateList[0]?.id || 0;
   const currentDeal = mandateList.find((m) => m.id === effectiveMandate);
+  /**
+   * The pool is the firm's standing company database, not a per-deal list — so with no
+   * engagement yet it still opens, searchable, in "database mode". What a deal *adds*
+   * is the overlay: funnel stages, AI scores, and pushing a company onto a book.
+   */
+  const databaseMode = effectiveMandate === 0;
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -305,7 +344,7 @@ export default function SourcingPage() {
   /** The current query, minus paging — reused by results, CSV export, and Score matches. */
   const criteria = useMemo(
     () => ({
-      mandate_id: effectiveMandate,
+      mandate_id: effectiveMandate || undefined,
       q: qDebounced || undefined,
       hq: c.hq || undefined,
       category_id: c.categoryId || undefined,
@@ -324,7 +363,7 @@ export default function SourcingPage() {
     [criteria, page],
   );
 
-  const pool = usePool(filters, effectiveMandate > 0 && view === "discover");
+  const pool = usePool(filters, view === "discover");
   const { data, isLoading, isFetching, isError } = pool;
   const { data: facets } = useSourcingFacets(effectiveMandate || undefined);
   const { data: coverage } = useFunnelAnalytics(effectiveMandate || undefined);
@@ -591,39 +630,19 @@ export default function SourcingPage() {
     );
   }
 
-  if (mandateList.length === 0) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className={PAGE_TITLE} style={PAGE_TITLE_STYLE}>
-          Sourcing
-        </h1>
-        <EmptyState
-          icon={FolderPlus}
-          title="No engagements to source for yet"
-          description={
-            user?.role === "PARTNER"
-              ? "Sourcing scores and pushes companies against a specific deal. Create a project and an engagement (sell-side, buy-side, or capital-raise) to begin."
-              : "You have no assigned engagements yet. Ask a partner to assign you to a deal, then come back to source companies for it."
-          }
-          action={
-            user?.role === "PARTNER" ? (
-              <Link href="/projects">
-                <Button size="sm">
-                  <FolderPlus className="mr-1.5 h-3.5 w-3.5" /> Go to Projects
-                </Button>
-              </Link>
-            ) : undefined
-          }
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-4">
       {/* ── Command line — deal context left; view switch + occasional tools right ── */}
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <EngagementSwitch mandates={mandateList} current={currentDeal} onSelect={selectEngagement} />
+        {databaseMode ? (
+          <DatabaseModeHeader total={poolTotal} isPartner={user?.role === "PARTNER"} />
+        ) : (
+          <EngagementSwitch
+            mandates={mandateList}
+            current={currentDeal}
+            onSelect={selectEngagement}
+          />
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <div
             role="tablist"
@@ -631,10 +650,12 @@ export default function SourcingPage() {
             className="inline-flex w-fit items-center rounded-lg bg-muted p-[3px] text-sm text-muted-foreground"
           >
             {(
-              [
-                { id: "discover", label: "Discover" },
-                { id: "funnel", label: "Funnel" },
-              ] as const
+              databaseMode
+                ? ([{ id: "discover", label: "Discover" }] as const)
+                : ([
+                    { id: "discover", label: "Discover" },
+                    { id: "funnel", label: "Funnel" },
+                  ] as const)
             ).map((t) => {
               const active = view === t.id;
               return (
@@ -857,12 +878,18 @@ export default function SourcingPage() {
                   >
                     <Download className="h-3.5 w-3.5" aria-hidden />
                   </a>
+                  {/* Scoring is *against a thesis*, so it needs a deal — in database
+                      mode the button says why rather than disappearing. */}
                   <Button
                     size="sm"
                     className="h-8"
                     onClick={scoreMatches}
-                    disabled={scoringMatches || total === 0}
-                    title={`AI-score every match (up to ${SCORE_CAP}) against this deal's thesis — they join Research / Long-list`}
+                    disabled={scoringMatches || total === 0 || databaseMode}
+                    title={
+                      databaseMode
+                        ? "Select an engagement to score companies against its thesis"
+                        : `AI-score every match (up to ${SCORE_CAP}) against this deal's thesis — they join Research / Long-list`
+                    }
                   >
                     {scoringMatches ? (
                       <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -1046,10 +1073,14 @@ export default function SourcingPage() {
                           <CandidateRow
                             item={item}
                             index={i}
-                            onShortlist={shortlist}
-                            onPush={setPushTarget}
+                            // Shortlist and Push both write onto a *deal*; with none
+                            // selected the row is a database record, not a candidate.
+                            onShortlist={databaseMode ? undefined : shortlist}
+                            onPush={databaseMode ? undefined : setPushTarget}
                             onFeedback={sendFeedback}
-                            selectable
+                            // Selection exists to drive the bulk deal actions, so it is
+                            // off when there is no deal to act on.
+                            selectable={!databaseMode}
                             selected={selected.has(item.profile_id)}
                             anySelected={selected.size > 0}
                             onToggleSelect={toggleSelect}
@@ -1100,8 +1131,8 @@ export default function SourcingPage() {
         )}
       </div>
 
-      {/* ── Bulk action bar ── */}
-      {selected.size > 0 && view === "discover" && (
+      {/* ── Bulk action bar — every action on it writes onto a deal ── */}
+      {selected.size > 0 && view === "discover" && !databaseMode && (
         <div
           className="bar-rise fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-primary/20 bg-card px-4 py-2 shadow-lg shadow-primary/5"
           role="status"

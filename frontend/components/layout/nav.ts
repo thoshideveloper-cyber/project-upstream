@@ -2,6 +2,7 @@ import {
   BarChart3,
   Building2,
   CalendarClock,
+  FileSpreadsheet,
   FolderOpen,
   LayoutDashboard,
   LineChart,
@@ -39,6 +40,12 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Pipeline",
     items: [
       { label: "Projects", href: "/projects", icon: FolderOpen },
+      // Onboarding is not a one-off: a firm brings a workbook per client and the
+      // contact list arrives separately, so the importer needs a standing home rather
+      // than only the projects empty state, which disappears after the first import.
+      // It sits in Pipeline, not Admin — for an analyst this is how their own book
+      // gets in, and the reach of any one import is scoped server-side.
+      { label: "Import", href: "/import", icon: FileSpreadsheet },
       { label: "Sourcing", href: "/sourcing", icon: Target },
       { label: "Master List", href: "/master", icon: Building2 },
     ],
