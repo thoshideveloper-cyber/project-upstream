@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
 import { CTA_HREF } from "@/content/site";
+import { Lit } from "./lit";
 import {
   Container,
   CTAGhost,
@@ -24,7 +25,10 @@ export function ClosingCta() {
     // view, so the duplicate never sits on top of the real one.
     <Section id="closing" motion rule={false} rhythm="loose">
       <Container>
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 px-5 py-16 text-center sm:px-8 md:py-20">
+        <Lit
+          as="div"
+          className="relative overflow-hidden rounded-2xl border border-primary/20 px-5 py-16 text-center sm:px-8 md:py-20"
+        >
           <div aria-hidden className="mkt-grid pointer-events-none absolute inset-0 opacity-40" />
           <div
             aria-hidden
@@ -66,7 +70,7 @@ export function ClosingCta() {
               ))}
             </ul>
           </div>
-        </div>
+        </Lit>
       </Container>
     </Section>
   );

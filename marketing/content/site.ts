@@ -11,40 +11,24 @@
  *   Outreach tracker the cadence engine (fixed anchor, computed follow-ups)
  *   Contact list     person-level relationship memory, plus analytics
  *
- * Brief §5.1 is emphatic about what it is NOT: not an enterprise CRM, not mass
- * email, not valuation or NDA tooling, not midstream deal execution. That
- * narrowness is the positioning, so the page says it out loud (see SCOPE).
+ * ── Second cut ─────────────────────────────────────────────────────────────
+ * The first rewrite got every claim down to one home. This one asks a harder
+ * question of each home: does the page still need it. Modules, personas,
+ * scope and a migration guide all traced back to real brief sections, and all
+ * of them were a second telling of hero, problem, cadence or memory in a
+ * spec-sheet register. They are gone from the page; MOAT, FAILURES and FAQ
+ * are what is left, because they are the only three that were saying
+ * something nothing else on the page says.
  *
- * Brief §6.4 names cross-mandate logic as "the defensibility layer" and the
- * source of long-term lock-in. On the page that is the MOAT section, and it is
- * the only place duplicate detection and shared contact memory are explained.
- *
- * ── The claim ledger ───────────────────────────────────────────────────────
- * Every claim gets exactly ONE home. An audit before this rewrite found the
- * duplicate-outreach claim stated five separate times, "archived, never
- * destroyed" three times, and the stop-on-reply rule three times. Nothing was
- * wrong with any single instance; together they made twelve sections feel like
- * six sections said twice, which is what makes a page read as generated.
- *
- *   the loop, named            LOOP band
- *   the four failures          PROBLEM  (pain only, never the mechanism)
- *   what it plugs into         INTEGRATIONS
- *   what each module is        MODULES
- *   anchor / interval / stop   CADENCE demo
- *   duplicates + shared memory MOAT
- *   analyst vs partner         PERSONAS
- *   what we don't build        SCOPE
- *   migration                  HOW IT WORKS
- *   auth, tenancy, deletes     SECURITY
- *   one clock, many markets    REACH
- *
- * If you add copy, find its home above. If it has none, it probably belongs in
- * a section that already exists.
+ *   the four failures          PROBLEM   (pain only, human, never the fix)
+ *   anchor / interval / stop   CADENCE   (a working calculator, not a claim)
+ *   duplicates + shared memory MOAT      (the one differentiator, given room)
+ *   auth, tenancy, deletes     SECURITY  (already its own fold)
+ *   what's left unanswered     FAQ       (five, not eight)
  *
  * ── House style ────────────────────────────────────────────────────────────
- * 1. **No em dashes.** They were the connective tissue of every other sentence
- *    here, and they are the clearest tell that copy was generated rather than
- *    written. Full stop, comma, or colon. Usually the sentence wanted to be two.
+ * 1. **No em dashes.** Full stop, comma, or colon. Usually the sentence wanted
+ *    to be two.
  * 2. **Say the concrete thing.** The brief is vivid where the page was vague:
  *    "an embarrassment that damages credibility with the market" beats "a poor
  *    experience". Steal the brief's specificity.
@@ -101,39 +85,6 @@ export const SHOW_REVIEWS_SECTION = HAS_REVIEWS;
 export const SHOW_LOGO_SECTION = HAS_LOGOS;
 
 /* ------------------------------------------------------------------ *
- * The loop — the band under the hero.
- * ------------------------------------------------------------------ */
-
-export type LoopStage = { label: string; context: string };
-
-/**
- * Source → reach → track → remember. The brief's own phrase for the closed loop
- * (§7): "this closes the loop: source → outreach → track → remember".
- *
- * No figures, deliberately. The band used to count up aggregates from a seeded
- * demo database; every firm's numbers differ, so quoting any is a claim we
- * cannot stand behind.
- */
-export const LOOP: LoopStage[] = [
-  {
-    label: "Source",
-    context: "Build the target and buyer list for a mandate, against its thesis",
-  },
-  {
-    label: "Reach",
-    context: "Send from your own mailbox. The touch writes itself to the record",
-  },
-  {
-    label: "Track",
-    context: "Follow-ups compute themselves from the day the first email went out",
-  },
-  {
-    label: "Remember",
-    context: "The contact history outlives the mandate, and the analyst who ran it",
-  },
-];
-
-/* ------------------------------------------------------------------ *
  * The four failures. Brief §2.1, near enough verbatim.
  * ------------------------------------------------------------------ */
 
@@ -185,84 +136,6 @@ export const FAILURES: Failure[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * What it plugs into.
- * ------------------------------------------------------------------ */
-
-/** Checkable facts, in the slot a young page would fill with borrowed logos. */
-export const INTEGRATIONS: { name: string; detail: string }[] = [
-  { name: "Gmail", detail: "Send as you, from your address" },
-  { name: "Outlook", detail: "The same, on Microsoft 365" },
-  { name: ".xlsx / .csv", detail: "Your existing sheets, mapped and previewed" },
-  { name: "Your templates", detail: "Variables fill from the record" },
-  { name: "Any timezone", detail: "One clock, computed on the server" },
-];
-
-/* ------------------------------------------------------------------ *
- * The three modules. Brief §6.1–§6.3.
- * ------------------------------------------------------------------ */
-
-export type Module = {
-  id: string;
-  tab: string;
-  /** The spreadsheet this module replaces, named as the desk names it. */
-  replaces: string;
-  title: string;
-  blurb: string;
-  bullets: string[];
-  /** Must be a real screenshot of the product. Do not add a tab without one. */
-  image: string;
-  caption: string;
-};
-
-export const MODULES: Module[] = [
-  {
-    id: "registry",
-    tab: "Master list",
-    replaces: "Outreach template.xlsx",
-    title: "Every target and buyer on the mandate, in one row each.",
-    blurb: "The same fields your template already has, with the mandate attached to them.",
-    bullets: [
-      "Company, HQ, revenue, headcount, type and rationale",
-      "Linked to its mandate and to the people inside it",
-      "Bucketed the way your desk already buckets",
-      "Adding a company opens its outreach schedule automatically",
-    ],
-    image: "/product/master.png",
-    caption: "upstream · master list",
-  },
-  {
-    id: "outreach",
-    tab: "Outreach tracker",
-    replaces: "Emailing schedule.xlsx",
-    title: "The queue tells you who to chase today.",
-    blurb: "Overdue first, because the backlog is the part that costs you deals.",
-    bullets: [
-      "Overdue, due today, upcoming, in that order",
-      "Every touch is an event with a timestamp, not a column you overwrite",
-      "Send it from your own mailbox and it logs itself",
-      "Partner escalation surfaces without anyone filing a status update",
-    ],
-    image: "/product/schedule.png",
-    caption: "upstream · outreach tracker",
-  },
-  {
-    id: "analytics",
-    tab: "Contacts and analytics",
-    replaces: "Contact list.xlsx",
-    title: "Who responds, and who on your desk is getting through.",
-    blurb: "Built on the event log, so the numbers cannot disagree with the record.",
-    bullets: [
-      "Person-level records with designation, mode and engagement",
-      "Response rate by sector and by bucket",
-      "Per-analyst volume, response and conversion",
-      "Contacted, responded, interested, progressed, as one funnel",
-    ],
-    image: "/product/analytics.png",
-    caption: "upstream · contacts and analytics",
-  },
-];
-
-/* ------------------------------------------------------------------ *
  * The moat. Brief §6.4, which calls this "the defensibility layer".
  * ------------------------------------------------------------------ */
 
@@ -294,103 +167,8 @@ export const MOAT: { title: string; detail: string }[] = [
 ];
 
 /* ------------------------------------------------------------------ *
- * Deliberately narrow. Brief §5.1 and §8, plus the roadmap from §9.2.
- * ------------------------------------------------------------------ */
-
-/**
- * What the product does, what it refuses to do, and where the refusals go later.
- *
- * This section replaces a grid of six identical capability cards. The brief's
- * §5.1 is a two-column "we ARE / we are NOT" table and §8 is an explicit
- * out-of-scope list, and saying both out loud is far more persuasive than a
- * sixth card claiming a sixth capability. A buyer evaluating software has been
- * told everything is possible by everyone; a page that names its own limits is
- * the one they believe.
- */
-export const DOES: string[] = [
-  "Origination and outreach for a live mandate",
-  "Three spreadsheets, joined into one firm-wide record",
-  "A follow-up cadence that computes itself",
-  "Contact memory that outlives the mandate and the analyst",
-];
-
-export const DOES_NOT: { item: string; when: string }[] = [
-  { item: "Mass email and automated sending", when: "Not planned. Sending is one at a time, on purpose" },
-  { item: "Valuation models, teasers, NDA generation", when: "Not planned" },
-  { item: "NDA tracking, bid management, diligence", when: "Midstream. After the desk is running on this" },
-  { item: "Competing with enterprise deal platforms", when: "Not the wedge. See below" },
-];
-
-/**
- * Where Upstream sits, by category rather than by company name.
- *
- * The brief names DealCloud, Affinity, Navatar, Grata, Sourcescrub and Inven
- * with prices and rollout times. Naming them on a public page turns internal
- * research into a public claim about someone else's product, so the lanes are
- * described by what they are instead. Anyone who has sat through the demos will
- * recognise all three immediately.
- */
-export const LANES: { lane: string; what: string; gap: string }[] = [
-  {
-    lane: "Enterprise deal platforms",
-    what: "Configurable relationship and deal management, built for large PE and IB.",
-    gap: "Six figures a year and a quarter to roll out. Priced and paced for a firm ten times your size.",
-  },
-  {
-    lane: "Sourcing databases",
-    what: "Company search, firmographics and signals. Genuinely good at finding names.",
-    gap: "They hand you a list. They do not run the outreach or remember what came of it.",
-  },
-  {
-    lane: "Upstream",
-    what: "The outreach workflow itself, built from the sheets a boutique desk already runs.",
-    gap: "Narrow on purpose. It does the one job that costs you deals when it goes wrong.",
-  },
-];
-
-/* ------------------------------------------------------------------ *
- * The two people. Brief §3, which is a table of exactly this.
- * ------------------------------------------------------------------ */
-
-export type Persona = {
-  label: string;
-  who: string;
-  title: string;
-  blurb: string;
-  points: string[];
-};
-
-export const PERSONAS: Persona[] = [
-  {
-    label: "The daily user",
-    who: "Analyst / Associate",
-    title: "Faster than the spreadsheet, or it does not get used.",
-    blurb:
-      "This one is not sentimental. If it costs an analyst more keystrokes than the sheet did, the sheet wins and the rollout is over.",
-    points: [
-      "One queue, worst first, no filtering required",
-      "Log a touch, draft a mail or push a date from the row",
-      "Several people on one mandate without a merge conflict",
-      "The fields your template already has, in the order you had them",
-    ],
-  },
-  {
-    label: "The economic buyer",
-    who: "Partner / Managing Director",
-    title: "Nothing slipping, and nothing embarrassing.",
-    blurb:
-      "The partner is not going to open this daily. They need it to answer the two questions they currently answer by walking over and asking.",
-    points: [
-      "Every live mandate's health, without requesting a status update",
-      "Duplicate outreach stopped before it reaches the market",
-      "Contacted through to interested, as one funnel per mandate",
-      "The firm keeps the relationships when the analyst does not",
-    ],
-  },
-];
-
-/* ------------------------------------------------------------------ *
- * FAQ. Objections only. Nothing here restates a section above.
+ * FAQ. What's left unanswered once the page above has been read.
+ * Nothing here restates hero, problem, cadence, memory or security.
  * ------------------------------------------------------------------ */
 
 export type QA = { q: string; a: string };
@@ -402,7 +180,7 @@ export const FAQ: QA[] = [
   },
   {
     q: "How long until we are actually running on it?",
-    a: "Days, not a quarter, because there is nothing to configure into a shape you recognise. It already is that shape. The week-one sequence is on this page above.",
+    a: "Days, not a quarter, because there is nothing to configure into a shape you recognise. It already is that shape: the same fields, the same buckets, the same clock, just held by the firm instead of a file.",
   },
   {
     q: "What happens to the mandates we have already closed?",
@@ -413,19 +191,7 @@ export const FAQ: QA[] = [
     a: "It sends from your mailbox, one message at a time, when you press send. There is no relay, no shared sending domain and no bulk send. Your deliverability stays yours, and a target never receives something that reads like a campaign.",
   },
   {
-    q: "Can an analyst see mandates they are not on?",
-    a: "No. Scoping happens at the query, not by hiding buttons. Partners see the whole book plus analytics and escalation.",
-  },
-  {
     q: "What if we outgrow it?",
-    a: "Upstream covers origination and outreach deliberately, and stops there. Midstream execution is the next stage, not a checkbox we have quietly shipped. If you need bid management today, we are the wrong tool today.",
-  },
-  {
-    q: "Who owns the data, and can we get it out?",
-    a: "You do, and yes. Export is not a retention lever. Records are archived rather than deleted, so the export includes the full history rather than the current state of a row.",
-  },
-  {
-    q: "Is it secure enough for live mandate data?",
-    a: "Auth uses httpOnly, Secure cookies, so no token is ever readable from the browser. Refresh tokens rotate and can be revoked server-side. We do not claim certifications we have not been through.",
+    a: "Upstream covers origination and outreach deliberately, and stops there. Midstream execution (bid management, diligence) is the next stage, not a checkbox we have quietly shipped. If you need that today, we are the wrong tool today.",
   },
 ];

@@ -1,7 +1,7 @@
 import { CalendarX2, Copy, DoorOpen, TrendingDown, type LucideIcon } from "lucide-react";
 
 import { FAILURES, type Failure } from "@/content/site";
-import { Container, IconChip, Section, SectionHead, Subhead } from "./primitives";
+import { Container, IconChip, Panel, Section, SectionHead, Subhead } from "./primitives";
 
 const ICONS: Record<Failure["icon"], LucideIcon> = {
   copy: Copy,
@@ -13,14 +13,15 @@ const ICONS: Record<Failure["icon"], LucideIcon> = {
 /**
  * The four failures, and nothing else.
  *
- * These rows used to carry an "Instead" column explaining how Upstream fixed
- * each one, which meant every mechanism on the page was introduced here and then
- * explained properly two sections later. That is most of why the page read as
- * repetitive: the same six claims, stated in four places each.
+ * These used to be an "Instead" table explaining how Upstream fixed each one,
+ * which meant every mechanism on the page was introduced here and explained
+ * properly two sections later. A card states the pain, then points at the
+ * section that owns the answer. The reader gets a working table of contents
+ * for the argument, and each claim gets explained exactly once.
  *
- * Now the row states the pain, and points at the section that owns the answer.
- * The reader gets a working table of contents for the argument, and each claim
- * gets explained exactly once.
+ * Four cards on a 2-up grid, not a stacked list: it is the one place on the
+ * page where the reader should feel the weight of all four at once, side by
+ * side, rather than scrolling past them one at a time.
  */
 export function Problem() {
   return (
@@ -31,38 +32,30 @@ export function Problem() {
           hit often enough to go and build something.
         </SectionHead>
 
-        <ul className="mkt-cascade mt-2">
+        <ul className="mkt-cascade mt-10 grid gap-4 sm:grid-cols-2">
           {FAILURES.map((f, i) => (
-            <li
-              key={f.pain}
-              className="grid items-start gap-x-6 gap-y-3 border-b border-border py-8 md:grid-cols-[auto_minmax(0,20rem)_minmax(0,1fr)] md:gap-x-10 md:py-9"
-              style={{ "--i": i } as React.CSSProperties}
-            >
-              <IconChip icon={ICONS[f.icon]} tone="muted" className="hidden md:mt-1 md:inline-flex" />
-
-              <Subhead className="text-lg md:text-xl">{f.pain}</Subhead>
-
-              <div>
-                <p className="max-w-[58ch] text-sm leading-relaxed text-muted-foreground text-pretty">
-                  {f.detail}
-                </p>
-                {/* Points at the section that answers it, rather than answering
-                    it here and again there. */}
-                <a
-                  href={f.answer.href}
-                  className="group mt-3.5 inline-flex items-center gap-2 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+            <Panel key={f.pain} as="li" style={{ "--i": i } as React.CSSProperties} className="gap-4">
+              <IconChip icon={ICONS[f.icon]} tone="muted" />
+              <Subhead className="mt-1 text-lg">{f.pain}</Subhead>
+              <p className="mt-1 flex-1 text-sm leading-relaxed text-muted-foreground text-pretty">
+                {f.detail}
+              </p>
+              {/* Points at the section that answers it, rather than answering
+                  it here and again there. */}
+              <a
+                href={f.answer.href}
+                className="group mt-4 inline-flex items-center gap-2 border-t border-border pt-4 text-sm font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                <span aria-hidden className="size-[3px] rounded-full bg-primary" />
+                {f.answer.label}
+                <span
+                  aria-hidden
+                  className="text-primary transition-transform duration-200 group-hover:translate-x-0.5"
                 >
-                  <span aria-hidden className="size-[3px] rounded-full bg-primary" />
-                  {f.answer.label}
-                  <span
-                    aria-hidden
-                    className="text-primary transition-transform duration-200 group-hover:translate-x-0.5"
-                  >
-                    &rarr;
-                  </span>
-                </a>
-              </div>
-            </li>
+                  &rarr;
+                </span>
+              </a>
+            </Panel>
           ))}
         </ul>
       </Container>

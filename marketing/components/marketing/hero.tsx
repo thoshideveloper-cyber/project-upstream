@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 import { CTA_HREF } from "@/content/site";
 import { cn } from "@/lib/utils";
+import { Lit } from "./lit";
 import { Container, CTAGhost, CTAPrimary, Display, Dot, Readout } from "./primitives";
 
 /**
@@ -130,7 +131,10 @@ export function Hero() {
           </div>
 
           {/* Evidence — the outreach queue as it actually looks */}
-          <div className="mkt-sheen mkt-elev overflow-clip rounded-xl border border-border bg-card/60 backdrop-blur-sm">
+          <Lit
+            as="div"
+            className="mkt-sheen mkt-elev overflow-clip rounded-xl border border-border bg-card/60 backdrop-blur-sm"
+          >
             <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
               <span className="flex items-center gap-2.5">
                 <span className="mkt-live size-1.5 rounded-full bg-primary" />
@@ -200,7 +204,7 @@ export function Hero() {
                 <ArrowRight className="size-3" />
               </span>
             </div>
-          </div>
+          </Lit>
         </div>
       </Container>
     </section>

@@ -14,12 +14,8 @@ import { Container, Readout } from "./primitives";
  * carry and previously didn't have at all.
  */
 const NAV = [
-  { label: "The three sheets", href: "#product" },
   { label: "The follow-up clock", href: "#cadence" },
   { label: "Firm memory", href: "#memory" },
-  { label: "Who it's for", href: "#teams" },
-  { label: "What it does not do", href: "#scope" },
-  { label: "Getting live", href: "#how-it-works" },
   { label: "Security", href: "#security" },
   ...(SHOW_REVIEWS_SECTION ? [{ label: "Customers", href: "#customers" }] : []),
   { label: "FAQ", href: "#faq" },

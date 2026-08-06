@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { cn } from "@/lib/utils";
+import { Lit } from "./lit";
 import { Container, Readout, Section, SectionHead, Subhead } from "./primitives";
 
 /**
@@ -107,7 +108,7 @@ export function CadenceDemo() {
           word. Move the controls. This is the same arithmetic the server runs.
         </SectionHead>
 
-        <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <Lit className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
           {/* Controls */}
           <div className="bg-card/40 p-6 md:p-7">
             <fieldset className="border-0 p-0">
@@ -286,7 +287,7 @@ export function CadenceDemo() {
               next_due = first_email + (logged + 1) × {interval} days
             </p>
           </div>
-        </div>
+        </Lit>
       </Container>
     </Section>
   );

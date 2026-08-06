@@ -1,4 +1,5 @@
 import { MOAT } from "@/content/site";
+import { Lit } from "./lit";
 import { Container, Readout, Section, SectionHead, Subhead } from "./primitives";
 
 /**
@@ -50,7 +51,7 @@ export function Memory() {
 
           {/* The moment itself */}
           <figure className="lg:sticky lg:top-28 lg:self-start">
-            <div className="mkt-enter mkt-elev overflow-hidden rounded-xl border border-border bg-card/60">
+            <Lit as="div" className="mkt-enter mkt-elev overflow-hidden rounded-xl border border-border bg-card/60">
               <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
                 <Readout tone="ink">Adding to mandate</Readout>
                 <Readout>Project Kestrel</Readout>
@@ -93,7 +94,7 @@ export function Memory() {
                   Advisory, not a block
                 </span>
               </div>
-            </div>
+            </Lit>
 
             <figcaption className="mt-3.5 text-xs leading-relaxed text-muted-foreground text-pretty">
               The check runs before the email, not after the buyer mentions it. Names and dates

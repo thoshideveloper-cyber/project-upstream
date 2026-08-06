@@ -9,13 +9,11 @@ import { ThemeToggle } from "@/components/marketing/theme-toggle";
 import { SHOW_REVIEWS_SECTION, CTA_HREF } from "@/content/site";
 import { cn } from "@/lib/utils";
 
-// "Customers" appears only when there is a customers section to jump to — the
-// section, its anchor and this link all come from the same flag.
+// "Customers" appears only when there is a customers section to jump to.
+// The section, its anchor and this link all come from the same flag.
 const LINKS = [
-  { label: "The system", href: "#product" },
   { label: "Cadence", href: "#cadence" },
   { label: "Firm memory", href: "#memory" },
-  { label: "Scope", href: "#scope" },
   { label: "Security", href: "#security" },
   ...(SHOW_REVIEWS_SECTION ? [{ label: "Customers", href: "#customers" }] : []),
   { label: "FAQ", href: "#faq" },
