@@ -1,20 +1,26 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Upstream — public site.
 
-   The register is an operations console, not a magazine about one: obsidian
-   canvas, one amber signal, hairline rules, readouts in mono. Everything below
-   is either a token the sections read, or a mechanic the sections can't express
-   in utility classes (pointer-tracked light, drawn rails, masked reveals).
+   THE REGISTER OF RECORD.
 
-   This file used to carry ~380 lines of the product app's CSS (login card, stat
-   cards, queue rows, sheet panes, focus mode) copied across at split time and
-   referenced by nothing on this site. It's gone.
+   The product is a book of business: a register of names, a clock running
+   against each one, and a log that only ever gets longer. So the page is set
+   like a financial document rather than like software marketing. Ruled columns
+   instead of a dot grid. A serif of record for the voice, which is also what
+   the product app sets its page titles in, so the marketing site and the app
+   finally sound like one thing. Mono for anything the machine computed. One
+   amber signal, used the way the product uses it: look here.
+
+   Everything below is either a token the sections read, or a mechanic the
+   sections cannot express in utility classes. Entrance choreography is NOT
+   here any more: it moved to Motion (`components/motion/*`), because running a
+   CSS scroll-timeline system and a JS system side by side meant two sources of
+   truth for the same 14 pixels, and the CSS half silently did nothing in every
+   browser without `animation-timeline: view()`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme inline {
@@ -23,40 +29,28 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
   --font-display: var(--font-display);
-  --font-heading: var(--font-display);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
-  --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
+  --color-destructive-ink: var(--destructive-ink);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-primary-ink: var(--primary-ink);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
+  --color-signal: var(--signal);
+  --color-positive: var(--positive);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
 
   /* Semantic stacking order. Arbitrary z-indexes (the old nav sat at a bare 50
      next to a skip-link at 60) are how two overlays end up fighting. */
   --z-grain: 1;
-  --z-sticky: 40;
+  --z-rail: 40;
   --z-nav: 50;
   --z-overlay: 60;
   --z-skip: 70;
@@ -67,158 +61,171 @@
   /**
    * Display weight is a per-theme token, not one number.
    *
-   * Dark ink on light paper reads *heavier* than the same weight in light ink on
-   * a dark ground — the ground bleeds into the counters and thickens the stroke.
-   * Setting one weight for both is why the headings looked right on obsidian and
-   * like a slab in Daylight. Daylight runs a step lighter; obsidian a step
-   * heavier. Same face, same size, same perceived weight.
+   * Dark ink on light paper reads *heavier* than the same weight in light ink
+   * on a dark ground: the ground bleeds into the counters and thickens the
+   * stroke. Setting one weight for both is why an earlier pass looked right on
+   * obsidian and landed like a slab in Daylight. Same face, same size, same
+   * perceived weight, two numbers. Never put a Tailwind `font-*` utility on
+   * `.mkt-display`; it overrides the token in one theme's favour.
    */
-  --display-weight: 500;
-  --display-track: -0.018em;
+  --display-weight: 400;
+  --display-track: -0.021em;
 
-  --background:          oklch(0.975 0.004 85);
-  --card:                oklch(0.995 0.002 85);
-  --popover:             oklch(1 0 0);
-  --secondary:           oklch(0.96 0.004 85);
+  --background:          oklch(0.976 0.004 85);
+  --card:                oklch(0.994 0.002 85);
   --muted:               oklch(0.955 0.004 85);
 
-  --border:              oklch(0 0 0 / 0.08);
-  --input:               oklch(0 0 0 / 0.12);
+  --border:              oklch(0 0 0 / 0.09);
   --ring:                oklch(0.66 0.15 56 / 0.5);
 
-  /* Amber accent — slightly deeper for contrast on white. */
+  /* Amber accent, slightly deeper for contrast on paper. */
   --primary:             oklch(0.66 0.15 56);
-  /* Ink ON the amber fill. Amber is a *light* colour: near-white label text on it
-     measured 3.16:1 here and 2.44:1 on obsidian — the primary CTA was the worst
-     contrast on the page. Dark warm ink keeps the fill bright and reads 5.4/6.7:1. */
+  /* Ink ON the amber fill. Amber is a *light* colour: near-white label text on
+     it measured 3.16:1 here and 2.44:1 on obsidian, which made the primary CTA
+     the worst contrast on the page. Dark warm ink keeps the fill bright and
+     reads 5.4/6.7:1. */
   --primary-foreground:  oklch(0.22 0.03 60);
-  /* Amber as *text*: the accent fill can't hold 4.5:1 at label sizes on paper,
-     so small amber copy uses this deeper ink instead (fills stay --primary). */
+  /* Amber as *text*: the fill cannot hold 4.5:1 at label sizes on paper, so
+     small amber copy uses this deeper ink instead. Fills stay --primary. */
   --primary-ink:         oklch(0.53 0.15 56);
 
-  --foreground:          oklch(0.24 0.012 265);
-  --card-foreground:     oklch(0.24 0.012 265);
-  --popover-foreground:  oklch(0.24 0.012 265);
-  --secondary-foreground: oklch(0.32 0.012 265);
-  --muted-foreground:    oklch(0.44 0.014 265);  /* darkened for ≥4.5:1 on warm paper */
-  --accent:              oklch(0.72 0.16 58 / 0.12);
-  --accent-foreground:   oklch(0.30 0.012 265);
+  --foreground:          oklch(0.22 0.012 265);
+  /* Darkened for ≥4.5:1 on warm paper, and checked against `bg-card/40`
+     composites rather than only against the two base surfaces. */
+  --muted-foreground:    oklch(0.44 0.014 265);
 
   /* Darkened from 0.58: the old red measured 4.47:1 on warm paper, which fails
-     at the 14px the cadence panel prints "Overdue by N days" at. */
+     at the 14px the queue prints "Overdue by N days" at. */
   --destructive:         oklch(0.545 0.22 25);
+  /* Red as *text on a red tint*. The same problem `--primary-ink` solves: a
+     "Declined" pill paints `bg-destructive/10` over `bg-card/60` over warm
+     paper, and --destructive on that composite measured below 4.5:1 at the
+     10px the pill sets. Fills stay --destructive; small red labels use this. */
+  --destructive-ink:     oklch(0.455 0.19 25);
+  /* The two non-amber status colours, borrowed from the product's own language:
+     blue = interested, green = responded. Named, so they stop being hard-coded
+     oklch() literals repeated across four components at two lightnesses. */
+  --signal:              oklch(0.50 0.18 268);
+  --positive:            oklch(0.50 0.15 152);
 
-  --chart-1:             oklch(0.66 0.15 56);
-  --chart-2:             oklch(0.60 0.16 152);
-  --chart-3:             oklch(0.55 0.18 270);
-  --chart-4:             oklch(0.58 0.15 310);
-  --chart-5:             oklch(0.58 0.22 25);
-
-  /* Blue is the one non-amber signal on the page (an interested reply, a node
-     ahead of schedule). Named, so it stops being a hard-coded oklch() literal
-     repeated across four components with two different lightnesses. */
-  --signal:              oklch(0.52 0.18 270);
-
-  --radius: 0.5rem;
-  --grain-opacity: 0.03;
+  --grain-opacity: 0.028;
+  --rule-opacity: 0.055;
 }
 
 /* ─── Obsidian Amber — dark-first, and the default ──────────────────────── */
 .dark {
-  /* See the Daylight note: light-on-dark needs the extra step to match. */
-  --display-weight: 600;
-  --display-track: -0.022em;
+  /* See the Daylight note: light ink on dark optically thins. */
+  --display-weight: 450;
+  --display-track: -0.024em;
 
-  --background:          oklch(0.09 0.006 265);
-  --card:                oklch(0.12 0.007 265);
-  --popover:             oklch(0.15 0.007 265);
-  --secondary:           oklch(0.14 0.006 265);
-  --muted:               oklch(0.13 0.005 265);
+  --background:          oklch(0.085 0.005 265);
+  --card:                oklch(0.118 0.007 265);
+  --muted:               oklch(0.132 0.005 265);
 
-  --border:              oklch(1 0 0 / 0.07);
-  --input:               oklch(1 0 0 / 0.09);
+  --border:              oklch(1 0 0 / 0.08);
   --ring:                oklch(0.72 0.16 58 / 0.5);
 
   --primary:             oklch(0.72 0.16 58);
-  --primary-foreground:  oklch(0.22 0.03 60);  /* see the Daylight note above */
+  --primary-foreground:  oklch(0.20 0.03 60);
   /* On obsidian the accent already clears 4.5:1 as text, so ink == accent. */
-  --primary-ink:         oklch(0.72 0.16 58);
+  --primary-ink:         oklch(0.755 0.15 60);
 
-  --foreground:          oklch(0.95 0.006 80);
-  --card-foreground:     oklch(0.95 0.006 80);
-  --popover-foreground:  oklch(0.95 0.006 80);
-  --secondary-foreground: oklch(0.80 0.006 265);
-  /* Lifted again, from 0.58. The tokens were tuned against --background and
-     --card, but a panel painted `bg-card/40` composites to a value between the
-     two, and muted copy on *that* measured 4.49:1. This clears every surface the
-     page actually paints, rather than the two it was checked against. */
-  --muted-foreground:    oklch(0.605 0.012 265);
-  --accent:              oklch(0.72 0.16 58 / 0.12);
-  --accent-foreground:   oklch(0.95 0.006 80);
+  --foreground:          oklch(0.955 0.006 80);
+  --muted-foreground:    oklch(0.62 0.012 265);
 
-  --destructive:         oklch(0.62 0.22 25);
-
-  --chart-1:             oklch(0.72 0.16 58);
-  --chart-2:             oklch(0.65 0.18 152);
-  --chart-3:             oklch(0.65 0.18 270);
-  --chart-4:             oklch(0.65 0.15 310);
-  --chart-5:             oklch(0.62 0.22 25);
-
-  --signal:              oklch(0.70 0.16 270);
+  --destructive:         oklch(0.64 0.21 25);
+  /* On obsidian the red already clears 4.5:1 as text, so ink == destructive. */
+  --destructive-ink:     oklch(0.68 0.20 25);
+  --signal:              oklch(0.70 0.16 268);
+  --positive:            oklch(0.70 0.15 152);
 
   --grain-opacity: 0.05;
+  --rule-opacity: 0.075;
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────── */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
   }
-  /* One focus ring for the whole site. The inherited default (`outline: auto 1px`
-     in amber at 25% alpha) measured invisible on both canvases across 24 of 32
-     tab stops, so keyboard users had no idea where they were. */
+  /**
+   * One focus ring for the whole site. The inherited default (`outline: auto
+   * 1px` in amber at 25% alpha) measured invisible on both canvases across 24
+   * of 32 tab stops, so keyboard users had no idea where they were.
+   */
   :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* Chrome draws an <input type="date"> focus ring inside its own shadow tree,
+     so the rule above never lands on the host element and the control measured
+     as having no visible focus at all. `:focus` rather than `:focus-visible`,
+     because a date field is only ever focused deliberately. */
+  input:focus {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
   }
   html {
     font-family: var(--font-sans), system-ui, sans-serif;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
   }
   body {
-    @apply bg-background text-foreground;
+    background: var(--background);
+    color: var(--foreground);
   }
   /* Readouts are numbers first: counts must not jitter as they change, and the
      mono is doing instrument duty, not decoration. */
   .font-mono { font-variant-numeric: tabular-nums; }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 28%, transparent);
+    color: var(--foreground);
+  }
 }
 
 /* ═══ Type ══════════════════════════════════════════════════════════════════
-   Funnel Display carries the folds; Geist carries everything you actually read.
-   Weight and tracking come from the theme tokens above, so a heading holds the
-   same optical weight on paper and on obsidian. ═══════════════════════════ */
+   Newsreader carries the argument; Geist carries everything you operate; Geist
+   Mono carries everything the server computed. The serif is not decoration: a
+   term sheet, an engagement letter and the product's own page titles are all
+   set in one, and this page is claiming to be a record.
+   ═══════════════════════════════════════════════════════════════════════════ */
 .mkt-display {
-  font-family: var(--font-display), system-ui, sans-serif;
+  font-family: var(--font-display), Georgia, serif;
   font-weight: var(--display-weight);
   letter-spacing: var(--display-track);
-  line-height: 1.04;
+  line-height: 0.99;
+  text-wrap: balance;
+  font-optical-sizing: auto;
+}
+/* Sub-display: panel and row headings. Shorter measure, so it needs less
+   negative tracking and a little more leading than the folds above it. */
+.mkt-subhead {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: var(--display-weight);
+  letter-spacing: calc(var(--display-track) * 0.45);
+  line-height: 1.18;
   text-wrap: balance;
 }
-/* Sub-display: panel and row headings. Same face, one notch less tracking, so
-   the widest setting stays reserved for the headings that open a section. */
-.mkt-subhead {
-  font-family: var(--font-display), system-ui, sans-serif;
-  font-weight: var(--display-weight);
-  letter-spacing: calc(var(--display-track) * 0.5);
-  text-wrap: balance;
+/* The turn inside a heading. The italic is the page's one flourish, and it is
+   always doing the same job: the second half of a two-beat line. */
+.mkt-turn {
+  font-style: italic;
+  font-weight: calc(var(--display-weight) - 25);
+  color: var(--muted-foreground);
 }
 
 /* ═══ Surfaces ══════════════════════════════════════════════════════════════ */
 
-/* Film grain. Fixed, so it doesn't parallax against the content it sits over. */
+/**
+ * Film grain over the whole page. Obsidian at this size is a very large flat
+ * field; a fixed noise plate keeps it from reading as vector emptiness without
+ * costing a request (it is an inline SVG data URI). Fixed, so it does not
+ * parallax against the content it sits over.
+ */
 .mkt-grain {
   position: fixed;
   inset: 0;
@@ -228,75 +235,61 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Dotted-ledger backdrop — the desk surface. Dots track the foreground ink, so
-   they read as light specks on obsidian and faint graphite on warm paper. */
-.mkt-grid {
-  background-image: radial-gradient(
-    circle,
-    color-mix(in oklch, var(--foreground) 6%, transparent) 1px,
-    transparent 1px
+/**
+ * Ruled columns — the desk surface.
+ *
+ * This replaces the dot grid, which is the single most common backdrop on the
+ * internet and said nothing about this product. Vertical hairlines are ledger
+ * paper: they imply columns, entries and a running total, which is what the
+ * page is about. Rules track the foreground ink, so they read as faint light on
+ * obsidian and as graphite on warm paper.
+ */
+.mkt-rules {
+  background-image: repeating-linear-gradient(
+    to right,
+    color-mix(in oklch, var(--foreground) calc(var(--rule-opacity) * 100%), transparent) 0 1px,
+    transparent 1px var(--rule-gap, 5.5rem)
   );
-  background-size: 30px 30px;
-  background-position: center;
-}
-
-/* Ambient amber wash behind the hero. Static by design: it used to breathe on a
-   14s loop, which put a second rhythm above the fold against the live desk's
-   2.4s pulse. The glow is the atmosphere; the pulse is the signature. */
-.mkt-spot {
-  position: absolute;
-  pointer-events: none;
-  border-radius: 999px;
-  background: radial-gradient(circle, oklch(0.72 0.16 58 / 0.20), transparent 68%);
-  filter: blur(24px);
-}
-:root:not(.dark) .mkt-spot {
-  background: radial-gradient(circle, oklch(0.72 0.16 58 / 0.11), transparent 70%);
-  filter: blur(30px);
 }
 
 /**
  * Hero beacon — a soft amber light that follows the pointer across the fold.
  *
- * The static blob it replaces sat at a fixed 52% and never acknowledged the
- * reader. This one is the same colour and the same restraint, but the fold is
- * now a surface with a light source on it rather than a picture of one. It
- * settles at the default centre for touch and for anyone who never moves a
- * pointer, so nothing depends on hover.
+ * Settles at a default position for touch and for anyone who never moves a
+ * pointer, so nothing depends on hover. Coordinates arrive as custom properties
+ * written straight to the node, so a mousemove never costs a React render.
  */
 .mkt-beacon {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: radial-gradient(
-    38rem circle at var(--sx, 58%) var(--sy, 12%),
-    oklch(0.72 0.16 58 / 0.16),
+    42rem circle at var(--sx, 62%) var(--sy, 26%),
+    oklch(0.72 0.16 58 / 0.15),
     transparent 62%
   );
-  transition: background 0.5s ease-out;
+  transition: background 0.55s ease-out;
 }
 :root:not(.dark) .mkt-beacon {
   background: radial-gradient(
-    38rem circle at var(--sx, 58%) var(--sy, 12%),
+    42rem circle at var(--sx, 62%) var(--sy, 26%),
     oklch(0.72 0.16 58 / 0.10),
     transparent 64%
   );
 }
 
-/* Signature elevation for the hero desk + product shots. A deep drop on obsidian;
-   a soft, believable paper shadow in Daylight (never a harsh black slab). */
-.mkt-elev { box-shadow: 0 30px 60px -30px oklch(0.55 0.03 265 / 0.22); }
-.dark .mkt-elev { box-shadow: 0 40px 80px -40px oklch(0 0 0 / 0.8); }
+/* Signature elevation for the queue panel and the product shots. A deep drop on
+   obsidian; a soft, believable paper shadow in Daylight, never a black slab. */
+.mkt-elev { box-shadow: 0 26px 56px -30px oklch(0.55 0.03 265 / 0.26); }
+.dark .mkt-elev { box-shadow: 0 44px 88px -44px oklch(0 0 0 / 0.86); }
 
 /**
  * Pointer-tracked edge light.
  *
- * Replaces the old `.hover-lift`, which paired a 1px border with a 30px-blur drop
- * shadow and translated the whole panel 3px on hover — the same reflex on every
- * card of every grid, which is what made three consecutive sections read as one
- * repeated rectangle. Here the panel doesn't move: light crosses its edge where
- * the pointer is. Coordinates arrive as custom properties written straight to the
- * node, so nothing re-renders per mousemove.
+ * Replaces a `hover-lift` (1px border + 30px-blur drop shadow + a 3px translate)
+ * that fired on every card of every grid, which is what made three consecutive
+ * sections read as one repeated rectangle, and is the ghost-card tell besides.
+ * Here the panel does not move: light crosses its edge where the pointer is.
  */
 .mkt-lit { position: relative; isolation: isolate; }
 .mkt-lit::before {
@@ -307,12 +300,12 @@
   border-radius: inherit;
   padding: 1px;
   background: radial-gradient(
-    260px circle at var(--px, 50%) var(--py, 0%),
-    color-mix(in oklch, var(--primary) 60%, transparent),
+    280px circle at var(--px, 50%) var(--py, 0%),
+    color-mix(in oklch, var(--primary) 62%, transparent),
     transparent 70%
   );
   /* Border-only gradient: paint the padding box, then punch the content box out
-     of it. Both prefixes — Firefox reads `mask`, Safari still wants `xor`. */
+     of it. Both prefixes; Firefox reads `mask`, Safari still wants `xor`. */
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -327,271 +320,45 @@
 .mkt-lit:hover::before,
 .mkt-lit:focus-within::before { opacity: 1; }
 
-/* ═══ Motion ════════════════════════════════════════════════════════════════
-   Looping animation only while its section is on screen. Measured at the page
-   bottom, nine loops were still compositing off-screen; each section that owns
-   one is a <MotionSection>, which flips data-motion as it enters and leaves. */
-[data-motion="off"] .mkt-live,
-[data-motion="off"] .mkt-beam-pulse,
-[data-motion="off"] .mkt-marquee,
-[data-motion="off"] .mkt-hub-pulse,
-[data-motion="off"] .mkt-shimmer::after {
-  animation-play-state: paused;
-}
-
-/* Scroll reveal. Applied per section by <Reveal>, not to every section by
-   reflex — the entrance is the same one, so using it nine times in a row is how
-   a page starts to feel like a slideshow. */
-.reveal {
-  opacity: 0;
-  transform: translateY(20px);
-  will-change: opacity, transform;
-  transition:
-    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-.reveal.reveal-shown {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Per-item stagger now lives in the scroll-driven block below (`.mkt-cascade`),
-   which does the same job off the compositor and scrubs backwards on scroll up.
-   The observer-based `.mkt-stagger` it replaced is gone. */
-
-/* One-shot sheen sweeping across the hero artifact on entrance. */
-.mkt-sheen { position: relative; overflow: hidden; }
-.mkt-sheen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(115deg, transparent 30%, oklch(1 0 0 / 0.06) 48%, transparent 66%);
-  transform: translateX(-120%);
-  animation: mkt-sweep 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s 1;
-}
-@keyframes mkt-sweep { to { transform: translateX(120%); } }
-
 /**
- * The security spectrum's paint. Themed here rather than inline, because the two
- * canvases want very different amounts of it: on obsidian the field can carry
- * real colour, while on warm paper the same values read as pink candy, which is
- * the wrong register entirely for a page about a confidential buyer list.
- * The scroll-driven motion lives in the @supports block further down.
+ * Redaction. The security fold shows a real buyer list with the names struck
+ * out, because that is what a confidential list looks like when it leaks
+ * correctly. The bar is amber-tinted ink rather than flat black so it reads as
+ * deliberate on both canvases, and the text under it is genuinely absent from
+ * the DOM (see secret.tsx) rather than hidden behind a rectangle.
  */
-.mkt-spectrum {
+.mkt-redact {
   background:
-    radial-gradient(46% 42% at 28% 38%, oklch(0.72 0.16 58 / 0.38), transparent 68%),
-    radial-gradient(40% 36% at 74% 64%, oklch(0.62 0.19 322 / 0.30), transparent 70%);
-  filter: blur(52px);
-}
-:root:not(.dark) .mkt-spectrum {
-  background:
-    radial-gradient(46% 42% at 28% 38%, oklch(0.72 0.16 58 / 0.14), transparent 70%),
-    radial-gradient(40% 36% at 74% 64%, oklch(0.62 0.19 322 / 0.07), transparent 72%);
-  filter: blur(62px);
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in oklch, var(--foreground) 13%, transparent) 0 3px,
+      color-mix(in oklch, var(--foreground) 7%, transparent) 3px 6px
+    );
+  border-radius: 2px;
 }
 
-/* Live overdue dot — the app's stat-card language, and the page's one heartbeat. */
-.mkt-live { animation: mkt-pulse 2.4s ease-in-out infinite; }
+/* The live dot: the product's own stat-card language, and the page's one
+   heartbeat. Everything else that loops was cut. */
+.mkt-live { animation: mkt-pulse 2.6s ease-in-out infinite; }
 @keyframes mkt-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 oklch(0.72 0.16 58 / 0.45); }
-  60%      { box-shadow: 0 0 0 6px oklch(0.72 0.16 58 / 0); }
-}
-
-/* Security card — ciphertext surfacing through a mask that follows the pointer.
-   Keyboard focus and tap fall back to the centred default. */
-.mkt-decrypt-layer {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  -webkit-mask-image: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), black 10%, transparent 65%);
-  mask-image: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), black 10%, transparent 65%);
-}
-.mkt-decrypt[data-open] .mkt-decrypt-layer { opacity: 1; }
-
-/* Vertical testimonial marquee — desks scrolling past. Pauses on hover. */
-.mkt-marquee { animation: mkt-up var(--dur, 40s) linear infinite; }
-.mkt-marquee-group:hover .mkt-marquee { animation-play-state: paused; }
-@keyframes mkt-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
-
-/* World-map arcs draw themselves in. */
-.mkt-arc {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: mkt-draw 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: var(--arc-delay, 0ms);
-}
-@keyframes mkt-draw { to { stroke-dashoffset: 0; } }
-
-/* The hub breathing under the arcs. CSS, not SVG <animate>: SMIL ignores
-   prefers-reduced-motion entirely, so the old markup kept pulsing for readers
-   who asked everything to hold still. */
-.mkt-hub-pulse {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: mkt-hub 2.6s ease-in-out infinite;
-}
-@keyframes mkt-hub {
-  0%, 100% { transform: scale(0.7);  opacity: 0.22; }
-  50%      { transform: scale(1.35); opacity: 0.05; }
-}
-
-/* ─── Mechanism beams — sheet rows travelling into the system ─────────────────
-   Paths are measured from the DOM (components/marketing/animated-beam.tsx) and
-   normalised with pathLength="1", so one dash length works at every breakpoint. */
-.mkt-beam-rail {
-  fill: none;
-  stroke: color-mix(in oklch, var(--foreground) 14%, transparent);
-  stroke-width: 1.25;
-}
-.mkt-beam-pulse {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-dasharray: 0.14 0.86;
-  stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 5px color-mix(in oklch, var(--primary) 50%, transparent));
-  animation: mkt-beam var(--beam-dur, 3.2s) linear infinite;
-  animation-delay: var(--beam-delay, 0ms);
-}
-@keyframes mkt-beam { to { stroke-dashoffset: 0; } }
-
-/* How-it-works rail — draws left-to-right once the section reveals. */
-.mkt-step-rail { transform: scaleX(0); transform-origin: left center; }
-.reveal-shown .mkt-step-rail {
-  animation: mkt-rail-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
-}
-@keyframes mkt-rail-draw { to { transform: scaleX(1); } }
-
-/* Closing CTA — a slow sheen crosses the amber button: the page's last signal,
-   and the only looping motion below the fold. */
-.mkt-shimmer { position: relative; overflow: hidden; isolation: isolate; }
-.mkt-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(105deg, transparent 38%, oklch(1 0 0 / 0.38) 50%, transparent 62%);
-  transform: translateX(-150%);
-  animation: mkt-sheen-sweep 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-@keyframes mkt-sheen-sweep {
-  0%        { transform: translateX(-150%); }
-  45%, 100% { transform: translateX(150%); }
-}
-
-/* ═══ Scroll-driven motion ══════════════════════════════════════════════════
-   Real scroll timelines, not IntersectionObserver plus a class. The browser runs
-   these off the compositor, so they stay smooth while the main thread is busy
-   and they scrub *backwards* when you scroll up, which an observer never does.
-
-   Everything in here is inside a `@supports` gate and a reduced-motion gate. On
-   a browser without scroll timelines (Firefox today, older Safari) the elements
-   simply render in their finished state, because the un-animated CSS below IS
-   the end state. Nothing is hidden waiting for an animation that will not run.
-   ═══════════════════════════════════════════════════════════════════════════ */
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    /* A panel arriving. Deliberately small: 14px and a hair of blur. */
-    .mkt-enter {
-      animation: mkt-enter-kf linear both;
-      animation-timeline: view();
-      animation-range: entry 5% cover 26%;
-    }
-    @keyframes mkt-enter-kf {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    /* Items inside a list, offset by index so they cascade rather than land as
-       a slab. --i is set on the element by the component. */
-    .mkt-cascade > * {
-      animation: mkt-enter-kf linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 22%;
-    }
-
-    /* The product screenshot settling into its frame as the panel crosses the
-       fold. Scale only, so it never shifts layout. */
-    .mkt-settle {
-      animation: mkt-settle-kf linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 45%;
-    }
-    @keyframes mkt-settle-kf {
-      from { transform: scale(1.06); }
-      to   { transform: scale(1); }
-    }
-
-    /* A rule drawing itself across as the section arrives. */
-    .mkt-draw {
-      animation: mkt-draw-kf linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 34%;
-    }
-    @keyframes mkt-draw-kf {
-      from { transform: scaleX(0); }
-      to   { transform: scaleX(1); }
-    }
-
-    /**
-     * The security spectrum.
-     *
-     * The section is about ciphertext resolving into plaintext, so the light
-     * behind it resolves too: a wide amber-to-violet field that travels across
-     * and settles as you scroll the section, rather than sitting still being
-     * decorative. Hue rotation rather than swapping colours keeps it inside the
-     * page's one-accent rule; it is the same amber, bent.
-     */
-    .mkt-spectrum {
-      animation: mkt-spectrum-kf linear both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
-    }
-    @keyframes mkt-spectrum-kf {
-      0%   { transform: translate3d(-14%, 6%, 0) scale(1);    filter: hue-rotate(-26deg); opacity: 0.5; }
-      50%  { transform: translate3d(6%, -4%, 0)  scale(1.14); filter: hue-rotate(14deg);  opacity: 1; }
-      100% { transform: translate3d(16%, 4%, 0)  scale(1);    filter: hue-rotate(-8deg);  opacity: 0.55; }
-    }
-  }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.72 0.16 58 / 0.5); }
+  62%      { box-shadow: 0 0 0 6px oklch(0.72 0.16 58 / 0); }
 }
 
 /* ─── Reduced motion ─────────────────────────────────────────────────────────
-   Declared last: a media query adds no specificity, so an earlier global block
-   would lose to the rules above. */
+   Motion handles its own reduced-motion behaviour through `useReducedMotion`,
+   so this block only has to deal with the CSS side. Declared last: a media
+   query adds no specificity, so an earlier global block would lose.
+
+   Note the explicit `animation: none` on the loop. A blanket
+   `animation-duration: 0.01ms !important` only helps one-shot animations; an
+   *infinite* loop at 0.01ms restarts every frame, forever.
+   ────────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
-  /* Never leave scroll-reveal content stuck in its hidden pre-state. */
-  .reveal { opacity: 1; transform: none; }
-
-  /* Park the travelling packet: the rail stays a static amber trace, so
-     "three sheets → one system" still reads with no motion at all. */
-  .mkt-beam-pulse {
-    animation: none !important;
-    stroke-dasharray: none;
-    stroke-dashoffset: 0;
-    stroke-width: 1.5;
-    filter: none;
-    opacity: 0.75;
-  }
-  /* <Reveal> skips its observer under reduced motion, so `.reveal-shown` never
-     lands and the draw-in never fires — the rail must start fully drawn. */
-  .mkt-step-rail { transform: none; }
-
-  /* The blanket 0.01ms above only helps one-shot animations: an *infinite* loop
-     at 0.01ms restarts every frame, forever. Kill the looping decoratives
-     outright — the live dot and the hub stay static amber marks, which is all
-     they ever needed to say. */
-  .mkt-live,
-  .mkt-hub-pulse,
-  .mkt-marquee { animation: none !important; }
-  .mkt-hub-pulse { transform: none; opacity: 0.22; }
-
-  /* The CTA keeps its amber weight; only the sweep goes. */
-  .mkt-shimmer::after { animation: none !important; opacity: 0; }
+  .mkt-live { animation: none !important; }
+  .mkt-beacon { transition: none; }
 }

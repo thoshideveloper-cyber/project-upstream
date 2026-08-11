@@ -11,6 +11,13 @@ import type { NextConfig } from "next";
  */
 const pagesExport = process.env.PAGES_EXPORT === "1";
 const basePath = process.env.PAGES_BASE_PATH ?? "/version_zero";
+/**
+ * Absolute origin for the share card. Metadata image URLs are not rewritten by
+ * `basePath` and are not relative-resolved by the crawlers that read them, so
+ * without this Next falls back to `http://localhost:3000` and every shared link
+ * shows no preview. `PAGES_SITE_URL` overrides it for a different host.
+ */
+const siteUrl = process.env.PAGES_SITE_URL ?? "https://project-upstream.github.io";
 
 const nextConfig: NextConfig = {
   // A handful of static product PNGs — skip the optimizer (and the sharp dep).
@@ -24,7 +31,7 @@ const nextConfig: NextConfig = {
         // Injected here rather than exported from the shell: MSYS/Git Bash
         // rewrites a leading-slash env value into a Windows path, which silently
         // produced `src="C:/Program Files/Git/version_zero/..."` on the images.
-        env: { NEXT_PUBLIC_BASE_PATH: basePath },
+        env: { NEXT_PUBLIC_BASE_PATH: basePath, NEXT_PUBLIC_SITE_URL: siteUrl },
       }
     : {}),
 };

@@ -1,55 +1,50 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { CTA_HREF } from "@/content/site";
-import { cn } from "@/lib/utils";
+import { EASE } from "@/components/motion/primitives";
 
 /**
- * Two pieces of persistent chrome for a page that is twelve thousand pixels long.
+ * The CTA that catches up.
  *
- * **The progress rail.** A 2px amber line under the floating nav. On a page this
- * long the reader has no idea whether they are a third of the way in or nearly
- * out, and "how much more of this is there" is the question that closes tabs.
- * Driven by scroll position in a rAF against a transform, so it costs one
- * composited paint and never a layout.
+ * The hero's "Book a demo" is thousands of pixels behind by the time anyone has
+ * read enough to want it, and on a phone the nav collapses to a hamburger, so
+ * there is no persistent one at all. This surfaces once the fold is gone and
+ * retires inside the closing panel, where a floating duplicate sitting on top
+ * of the real button is worse than not being there.
  *
- * **The CTA that catches up.** The hero's "Book a demo" is thousands of pixels
- * behind by the time anyone has read enough to want it, and on a phone the nav
- * collapses to a hamburger so there is no persistent one at all. This surfaces
- * past the fold and retires inside the closing panel, where a duplicate CTA
- * floating over the real one would just be in the way.
+ * Below `lg` only. Above it the header keeps a permanent "Book a demo", so a
+ * second floating copy of the same button is both redundant and a thing that
+ * parks itself on top of the ledger's right-hand column.
  *
- * Both hide under `prefers-reduced-motion`? No: a progress indicator is
- * information, not decoration, so it stays. Only its transition is dropped, in
- * globals.css with everything else.
+ * Bottom right, not bottom centre. Centred, it parks itself over the reading
+ * column and covers a table row or a paragraph on every section it floats past,
+ * which is a worse offence than being missed.
+ *
+ * The progress rail this file used to own moved onto the header's bottom edge,
+ * where it belongs: two pieces of fixed chrome stacked at the top of a page is
+ * one more than a page needs.
  */
 export function ReadingChrome() {
-  const railRef = useRef<HTMLSpanElement>(null);
-  const raf = useRef(0);
-  const [showCta, setShowCta] = useState(false);
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
+    let frame = 0;
     const onScroll = () => {
-      if (raf.current) return;
-      raf.current = requestAnimationFrame(() => {
-        raf.current = 0;
-        const doc = document.documentElement;
-        const max = doc.scrollHeight - window.innerHeight;
-        const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-        if (railRef.current) railRef.current.style.transform = `scaleX(${p})`;
-
-        // Show once past the fold; retire before the closing panel so the
-        // floating button never sits on top of the real one.
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
         const closing = document.getElementById("closing");
         const closingTop = closing
           ? closing.getBoundingClientRect().top + window.scrollY
           : Number.POSITIVE_INFINITY;
-        setShowCta(
-          window.scrollY > window.innerHeight * 0.9 &&
-            window.scrollY + window.innerHeight < closingTop + 200,
+        setShow(
+          window.scrollY > window.innerHeight * 0.95 &&
+            window.scrollY + window.innerHeight < closingTop + 240,
         );
       });
     };
@@ -59,46 +54,30 @@ export function ReadingChrome() {
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
-      cancelAnimationFrame(raf.current);
+      cancelAnimationFrame(frame);
     };
   }, []);
 
   return (
-    <>
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-x-0 top-0 z-40 h-0.5 bg-transparent"
-      >
-        <span
-          ref={railRef}
-          className="block h-full origin-left scale-x-0 bg-primary/70 will-change-transform"
-        />
-      </div>
-
-      {/* Bottom-*right*, not bottom-centre. Centred, it parks itself on top of
-          the reading column and covers a table row or a paragraph on every
-          section it floats over, which is a worse offence than being missed. */}
-      <div
-        className={cn(
-          "pointer-events-none fixed right-0 bottom-0 z-40 flex justify-end px-4 pb-4 transition-all duration-300 sm:px-6 sm:pb-6",
-          showCta ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
-        )}
-      >
-        <Link
-          href={CTA_HREF}
-          prefetch={false}
-          tabIndex={showCta ? 0 : -1}
-          aria-hidden={!showCta}
-          className={cn(
-            "group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground",
-            "shadow-[0_10px_30px_-10px_oklch(0.55_0.03_265/0.5)] transition-transform duration-200 active:scale-[0.985]",
-            showCta && "pointer-events-auto",
-          )}
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 16 }}
+          transition={{ duration: 0.35, ease: EASE }}
+          className="fixed right-0 bottom-0 z-40 px-4 pb-4 sm:px-6 sm:pb-6 lg:hidden"
         >
-          Book a demo
-          <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-        </Link>
-      </div>
-    </>
+          <Link
+            href={CTA_HREF}
+            prefetch={false}
+            className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-medium text-primary-foreground shadow-[0_12px_34px_-14px_oklch(0.55_0.03_265/0.6)] transition-colors duration-200 hover:bg-primary/90"
+          >
+            Book a demo
+            <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none" />
+          </Link>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
