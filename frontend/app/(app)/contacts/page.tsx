@@ -52,7 +52,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DISPLAY, LABEL, MONO, PAGE_TITLE, PAGE_TITLE_STYLE } from "@/lib/design";
+import { DISPLAY, MONO, PAGE_TITLE, PAGE_TITLE_STYLE } from "@/lib/design";
 import { cn } from "@/lib/utils";
 import type { Contact, OutreachEvent, Sentiment } from "@/types";
 
@@ -69,17 +69,18 @@ const ENGAGEMENT_LABEL: Record<string, string> = {
   OTHER: "Other",
 };
 
-// ── People, in colour ───────────────────────────────────────────────────────────
-// Everyone gets a steady hue derived from their name — the rolodex reads as a
-// crowd of individuals, not a column of grey icons. Real initials, no fake faces.
+// ── People, in ink ──────────────────────────────────────────────────────────────
+// Everyone gets a steady shade derived from their name — the rolodex reads as a
+// crowd of individuals, not a column of identical marks. Real initials, no fake faces.
+// Dark shades carry paper-white initials so every step clears contrast.
 
 const AVATAR_TONES = [
-  "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-  "bg-sky-500/15 text-sky-700 dark:text-sky-300",
-  "bg-violet-500/15 text-violet-700 dark:text-violet-300",
-  "bg-destructive/15 text-destructive-ink",
-  "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300",
+  "bg-ink-100 text-foreground",
+  "bg-ink-200 text-foreground",
+  "bg-ink-300 text-foreground",
+  "bg-ink-500 text-background",
+  "bg-ink-700 text-background",
+  "bg-foreground text-background",
 ];
 
 function toneOf(name: string): string {
@@ -100,9 +101,9 @@ function initialsOf(name: string): string {
 
 // The latest reply's read, worn like a presence dot — visible, never shouting.
 const READ_DOT: Record<Sentiment, { dot: string; label: string }> = {
-  POSITIVE: { dot: "bg-emerald-500", label: "Latest reply read positive" },
-  NEUTRAL: { dot: "bg-muted-foreground/70", label: "Latest reply read neutral" },
-  NEGATIVE: { dot: "bg-amber-500", label: "Latest reply read negative" },
+  POSITIVE: { dot: "bg-foreground", label: "Latest reply read positive" },
+  NEUTRAL: { dot: "bg-ink-300", label: "Latest reply read neutral" },
+  NEGATIVE: { dot: "bg-card ring-1 ring-inset ring-foreground", label: "Latest reply read negative" },
 };
 
 function PersonMark({
@@ -215,7 +216,7 @@ function RolodexRail({ present }: { present: Set<string> }) {
               "flex h-[15px] w-5 items-center justify-center rounded text-[9px] font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
               has
                 ? "text-muted-foreground hover:text-primary-ink"
-                : "cursor-default text-muted-foreground/25",
+                : "cursor-default text-ink-300",
             )}
             style={MONO}
             aria-label={has ? `Jump to ${l}` : undefined}
@@ -253,7 +254,7 @@ function PersonRow({
       className={cn(
         "cv-row flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
         active
-          ? "bg-primary/[0.07] shadow-[inset_2px_0_0_0_var(--primary)]"
+          ? "bg-subtle shadow-[inset_2px_0_0_0_var(--primary)]"
           : "hover:bg-muted/50",
         c.archived_at && "opacity-55",
       )}
@@ -267,14 +268,14 @@ function PersonRow({
           {c.is_primary && (
             <span
               title={`Primary contact${c.company_name ? ` at ${c.company_name}` : ""}`}
-              className="shrink-0 text-primary-ink/60"
+              className="shrink-0 text-ink-400"
             >
               <Star className="h-3 w-3 fill-current" aria-hidden />
               <span className="sr-only">Primary contact</span>
             </span>
           )}
           {c.archived_at && (
-            <span className="shrink-0 rounded border border-border px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <span className="shrink-0 rounded border border-border px-1 text-xs font-medium text-muted-foreground">
               archived
             </span>
           )}
@@ -327,13 +328,13 @@ function CompanyDivider({
         <Link
           href={`/companies/${companyId}`}
           title={`Open ${name}`}
-          className="flex min-w-0 items-center gap-1 truncate rounded text-xs font-semibold uppercase tracking-wider outline-none hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-w-0 items-center gap-1 truncate rounded text-xs font-semibold outline-none hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring"
         >
           {name}
           <ArrowUpRight className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
         </Link>
       ) : (
-        <span className="truncate text-xs font-semibold uppercase tracking-wider">{name}</span>
+        <span className="truncate text-xs font-semibold">{name}</span>
       )}
       <span className="text-[11px] tabular-nums text-muted-foreground" style={MONO}>
         {count}
@@ -356,13 +357,15 @@ function CompanyDivider({
 // ── The person card — one relationship, told properly ───────────────────────────
 
 const EVENT_META: Record<string, { label: string; icon: LucideIcon; tone: string }> = {
-  INITIAL_EMAIL: { label: "Initial email", icon: Mail, tone: "bg-indigo-500/12 text-indigo-700 dark:text-indigo-300" },
-  FOLLOW_UP: { label: "Follow-up", icon: Send, tone: "bg-primary/12 text-primary-ink" },
-  RESPONSE: { label: "Reply", icon: MessageSquare, tone: "bg-emerald-500/12 text-emerald-500" },
-  BOUNCE: { label: "Bounce", icon: AlertTriangle, tone: "bg-destructive/12 text-destructive-ink" },
-  CALL: { label: "Call", icon: Phone, tone: "bg-sky-500/12 text-sky-500" },
-  LINKEDIN: { label: "LinkedIn", icon: Network, tone: "bg-violet-500/12 text-violet-500" },
-  MEETING: { label: "Meeting", icon: Users, tone: "bg-sky-500/12 text-sky-500" },
+  // The anchor is inverted, a reply is dark ink, a bounce is ringed; every other touch
+  // is a quiet chip and the icon names the channel.
+  INITIAL_EMAIL: { label: "Initial email", icon: Mail, tone: "bg-info-soft text-info-ink ring-1 ring-inset ring-info-line" },
+  FOLLOW_UP: { label: "Follow-up", icon: Send, tone: "bg-muted text-foreground ring-1 ring-inset ring-border" },
+  RESPONSE: { label: "Reply", icon: MessageSquare, tone: "bg-ink-700 text-background" },
+  BOUNCE: { label: "Bounce", icon: AlertTriangle, tone: "bg-card text-foreground ring-2 ring-inset ring-foreground" },
+  CALL: { label: "Call", icon: Phone, tone: "bg-muted text-foreground ring-1 ring-inset ring-border" },
+  LINKEDIN: { label: "LinkedIn", icon: Network, tone: "bg-muted text-foreground ring-1 ring-inset ring-border" },
+  MEETING: { label: "Meeting", icon: Users, tone: "bg-muted text-foreground ring-1 ring-inset ring-border" },
   NOTE: { label: "Note", icon: StickyNote, tone: "bg-muted text-muted-foreground" },
 };
 
@@ -419,14 +422,14 @@ function PanelSkeleton() {
   return (
     <div className="flex flex-col gap-4 p-5">
       <div className="flex items-center gap-3">
-        <div className="h-12 w-12 animate-pulse rounded-full bg-muted" />
+        <div className="h-12 w-12 animate-pulse rounded-full bg-ink-100" />
         <div className="flex-1 space-y-2">
-          <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
-          <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-2/3 animate-pulse rounded bg-ink-100" />
+          <div className="h-3 w-1/2 animate-pulse rounded bg-ink-100" />
         </div>
       </div>
       {[1, 2, 3].map((n) => (
-        <div key={n} className="h-16 animate-pulse rounded-lg bg-muted/60" />
+        <div key={n} className="h-16 animate-pulse rounded-lg bg-ink-100" />
       ))}
     </div>
   );
@@ -444,7 +447,7 @@ function PersonPanel({ contactId, onClose }: { contactId: number; onClose?: () =
   if (isError || !c)
     return (
       <div className="flex flex-col items-center gap-2 p-8 text-center">
-        <AlertTriangle className="h-5 w-5 text-amber-500" aria-hidden />
+        <AlertTriangle className="h-5 w-5 text-foreground" aria-hidden />
         <p className="text-sm font-medium">Couldn&rsquo;t load this person.</p>
         <button onClick={() => refetch()} className="text-xs font-medium text-primary-ink hover:underline">
           Try again
@@ -505,7 +508,7 @@ function PersonPanel({ contactId, onClose }: { contactId: number; onClose?: () =
           </p>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {c.is_primary && (
-              <span className="inline-flex items-center gap-1 rounded bg-amber-500/[0.12] px-1.5 py-px text-[10px] font-medium text-amber-700/90 dark:text-amber-300/80">
+              <span className="inline-flex items-center gap-1 rounded-[3px] border border-foreground px-1.5 py-px text-[10px] font-medium text-foreground">
                 <Star className="h-2.5 w-2.5 fill-current" aria-hidden /> Primary
               </span>
             )}
@@ -515,7 +518,7 @@ function PersonPanel({ contactId, onClose }: { contactId: number; onClose?: () =
               </span>
             )}
             {archived && (
-              <span className="rounded border border-border px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <span className="rounded border border-border px-1.5 py-px text-xs font-medium text-muted-foreground">
                 Archived
               </span>
             )}
@@ -590,20 +593,20 @@ function PersonPanel({ contactId, onClose }: { contactId: number; onClose?: () =
       ) : (
         <div className="grid grid-cols-3 gap-1.5">
           <Button variant="outline" onClick={() => setQuickType("RESPONSE")}>
-            <Reply className="mr-1 h-3.5 w-3.5 text-emerald-500" aria-hidden /> Reply
+            <Reply className="mr-1 h-3.5 w-3.5 text-foreground" aria-hidden /> Reply
           </Button>
           <Button variant="outline" onClick={() => setQuickType("CALL")}>
-            <PhoneCall className="mr-1 h-3.5 w-3.5 text-sky-500" aria-hidden /> Call
+            <PhoneCall className="mr-1 h-3.5 w-3.5 text-muted-foreground" aria-hidden /> Call
           </Button>
           <Button variant="outline" onClick={() => setQuickType("MEETING")}>
-            <Users className="mr-1 h-3.5 w-3.5 text-violet-500" aria-hidden /> Meeting
+            <Users className="mr-1 h-3.5 w-3.5 text-muted-foreground" aria-hidden /> Meeting
           </Button>
         </div>
       )}
 
       {/* Get in touch */}
       <div>
-        <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">
           Get in touch
         </p>
         {c.email || c.phone || c.linkedin ? (
@@ -672,7 +675,7 @@ function PersonPanel({ contactId, onClose }: { contactId: number; onClose?: () =
       {/* Notes — the human texture */}
       {(c.reason || c.remark || c.comments) && (
         <div>
-          <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <p className="mb-1 px-2 text-xs font-medium text-muted-foreground">
             Notes
           </p>
           <div className="space-y-1.5 rounded-lg bg-muted/40 px-3 py-2.5 text-xs leading-relaxed">
@@ -685,7 +688,7 @@ function PersonPanel({ contactId, onClose }: { contactId: number; onClose?: () =
 
       {/* The story so far */}
       <div>
-        <p className="mb-2 flex items-baseline gap-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <p className="mb-2 flex items-baseline gap-2 px-2 text-xs font-medium text-muted-foreground">
           Story so far
           {events.length > 0 && (
             <span className="tabular-nums" style={MONO}>
@@ -772,8 +775,8 @@ function IdleCard({
 }) {
   return (
     <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-        <BookUser className="h-5 w-5 text-primary-ink/50" aria-hidden />
+      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent">
+        <BookUser className="h-5 w-5 text-ink-400" aria-hidden />
       </span>
       <p className="text-sm">
         The firm knows{" "}
@@ -1102,8 +1105,8 @@ export default function ContactsPage() {
 
       {/* ── Body ── */}
       {isError ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-center">
-          <AlertTriangle className="h-6 w-6 text-amber-500" aria-hidden />
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card py-16 text-center">
+          <AlertTriangle className="h-5 w-5 text-foreground" aria-hidden />
           <p className="text-sm font-medium">Couldn&rsquo;t load the rolodex.</p>
           <button onClick={() => refetch()} className="text-xs font-medium text-primary-ink hover:underline">
             Try again
@@ -1113,18 +1116,18 @@ export default function ContactsPage() {
         <div className="flex flex-col gap-1 pt-2">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
             <div key={n} className="flex items-center gap-3 px-3 py-2">
-              <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+              <div className="h-8 w-8 animate-pulse rounded-full bg-ink-100" />
               <div className="flex-1 space-y-1.5">
-                <div className="h-3.5 w-1/3 animate-pulse rounded bg-muted" />
-                <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+                <div className="h-3.5 w-1/3 animate-pulse rounded bg-ink-100" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-ink-100" />
               </div>
             </div>
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-6 py-16 text-center">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-            <BookUser className="h-5 w-5 text-primary-ink/50" aria-hidden />
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed px-6 py-16 text-center">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent">
+            <BookUser className="h-5 w-5 text-ink-400" aria-hidden />
           </span>
           <div>
             <h3 className="text-sm font-medium">The rolodex is empty</h3>
@@ -1211,7 +1214,7 @@ export default function ContactsPage() {
 
           {/* ── The reading pane (desktop) — full height, anchored, scrolls itself ── */}
           <aside className="hidden w-[360px] shrink-0 lg:block xl:w-[400px]">
-            <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm">
               {selected ? (
                 <div className="min-h-0 flex-1 overflow-y-auto">
                   <PersonPanel key={selected.id} contactId={selected.id} onClose={() => selectPerson(null)} />

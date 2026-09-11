@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OutreachTimeline } from "@/components/features/outreach-timeline";
 import { LogOutreachDialog } from "@/components/features/log-outreach-dialog";
+import { TaskList } from "@/components/features/task-list";
+import { useTasks } from "@/hooks/use-tasks";
 import { useConfirm } from "@/components/features/confirm-dialog";
 import { useDelayed } from "@/hooks/use-delayed";
 import { toastUndo } from "@/lib/undo-toast";
@@ -21,7 +23,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   if (value === null || value === undefined || value === "") return null;
   return (
     <div>
-      <dt className="text-xs text-muted-foreground uppercase tracking-wide">{label}</dt>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 text-sm">{value}</dd>
     </div>
   );
@@ -44,8 +46,8 @@ export default function ContactDetailPage({
     if (!showSkeleton) return null;
     return (
       <div className="p-6">
-        <div className="h-8 w-48 animate-pulse rounded-md bg-muted mb-4" />
-        <div className="h-4 w-64 animate-pulse rounded-md bg-muted" />
+        <div className="h-8 w-48 animate-pulse rounded-md bg-ink-100 mb-4" />
+        <div className="h-4 w-64 animate-pulse rounded-md bg-ink-100" />
       </div>
     );
   }
@@ -149,7 +151,7 @@ export default function ContactDetailPage({
               <Field label="Last contact" value={contact.last_contact_date} />
               {contact.linkedin && (
                 <div>
-                  <dt className="text-xs text-muted-foreground uppercase tracking-wide">LinkedIn</dt>
+                  <dt className="text-xs text-muted-foreground">LinkedIn</dt>
                   <dd className="mt-0.5 text-sm">
                     <a
                       href={contact.linkedin}
@@ -166,13 +168,13 @@ export default function ContactDetailPage({
             </dl>
             {contact.remark && (
               <div className="mt-4 pt-4 border-t">
-                <dt className="text-xs text-muted-foreground uppercase tracking-wide">Remark</dt>
+                <dt className="text-xs text-muted-foreground">Remark</dt>
                 <dd className="mt-1 text-sm">{contact.remark}</dd>
               </div>
             )}
             {contact.comments && (
               <div className="mt-3">
-                <dt className="text-xs text-muted-foreground uppercase tracking-wide">Comments</dt>
+                <dt className="text-xs text-muted-foreground">Comments</dt>
                 <dd className="mt-1 text-sm">{contact.comments}</dd>
               </div>
             )}
@@ -211,7 +213,33 @@ export default function ContactDetailPage({
             />
           </CardContent>
         </Card>
+
+        {/* Quick-add, deliberately not a full task surface: what you want on a
+            person's page is "ring them Thursday", written in one line. Everything
+            else about the task is editable from /tasks. */}
+        {!contact.archived_at && <ContactTasks contactId={contact.id} />}
       </div>
     </div>
+  );
+}
+
+function ContactTasks({ contactId }: { contactId: number }) {
+  const { data, isLoading } = useTasks({ contact_id: contactId });
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm">Tasks</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <TaskList
+          tasks={data?.items ?? []}
+          isLoading={isLoading}
+          showProject={false}
+          defaults={{ title: "", contact_id: contactId }}
+          addPlaceholder="Add a task about this person and press Enter"
+          emptyMessage="Nothing to do about this person right now."
+        />
+      </CardContent>
+    </Card>
   );
 }

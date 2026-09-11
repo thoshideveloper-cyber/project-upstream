@@ -67,7 +67,7 @@ export function DataTable<T>({
               <TableHead
                 key={col.key}
                 className={cn(
-                  "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground",
+                  "text-xs font-medium text-muted-foreground",
                   col.className,
                 )}
               >
@@ -82,7 +82,7 @@ export function DataTable<T>({
               key={getRowId(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={cn(
-                "data-row border-b border-border transition-colors hover:bg-primary/[0.04]",
+                "data-row border-b border-border transition-colors hover:bg-subtle",
                 onRowClick && "cursor-pointer",
               )}
               style={{ "--row-i": index } as React.CSSProperties}

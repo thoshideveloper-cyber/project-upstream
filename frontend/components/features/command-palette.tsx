@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
@@ -23,6 +23,7 @@ import { useCompanies } from "@/hooks/use-companies";
 import { useContacts } from "@/hooks/use-contacts";
 import { visibleNav } from "@/components/layout/nav";
 import { AddCompanyForm } from "@/components/features/add-company";
+import { TaskDialog } from "@/components/features/task-dialog";
 import { LogOutreachDialog } from "@/components/features/log-outreach-dialog";
 import {
   Dialog,
@@ -61,6 +62,7 @@ export function CommandPalette() {
   // parent — so they survive the palette (and its body) closing.
   const [addOpen, setAddOpen] = useState(false);
   const [logTarget, setLogTarget] = useState<{ id: number; name: string } | null>(null);
+  const [taskOpen, setTaskOpen] = useState(false);
 
   // Global ⌘K / Ctrl-K + the topbar button open the palette.
   useEffect(() => {
@@ -85,8 +87,8 @@ export function CommandPalette() {
     <>
       <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
         <DialogPrimitive.Portal>
-          <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/30 supports-backdrop-filter:backdrop-blur-[2px] data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
-          <DialogPrimitive.Popup className="fixed left-1/2 top-[12vh] z-50 flex max-h-[70vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 flex-col overflow-hidden rounded-xl bg-popover text-popover-foreground shadow-2xl ring-1 ring-border outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
+          <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-[oklch(0.18_0.01_265/0.32)] data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+          <DialogPrimitive.Popup className="fixed left-1/2 top-[12vh] z-50 flex max-h-[70vh] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 flex-col overflow-hidden rounded-xl bg-popover text-popover-foreground shadow-lg ring-1 ring-border outline-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98]">
             <DialogPrimitive.Title className="sr-only">Command palette</DialogPrimitive.Title>
             {/* Body (and its data queries) only mount while the palette is open. */}
             {open && (
@@ -100,6 +102,10 @@ export function CommandPalette() {
                   setOpen(false);
                   setLogTarget(t);
                 }}
+                onNewTask={() => {
+                  setOpen(false);
+                  setTaskOpen(true);
+                }}
               />
             )}
           </DialogPrimitive.Popup>
@@ -107,6 +113,8 @@ export function CommandPalette() {
       </DialogPrimitive.Root>
 
       {/* Launched actions — always mounted, independent of the palette lifecycle. */}
+      <TaskDialog open={taskOpen} onOpenChange={setTaskOpen} />
+
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
@@ -147,9 +155,15 @@ interface PaletteBodyProps {
   onClose: () => void;
   onNewCompany: () => void;
   onLogCompany: (target: { id: number; name: string }) => void;
+  onNewTask: () => void;
 }
 
-function PaletteBody({ onClose, onNewCompany, onLogCompany }: PaletteBodyProps) {
+function PaletteBody({
+  onClose,
+  onNewCompany,
+  onLogCompany,
+  onNewTask,
+}: PaletteBodyProps) {
   const router = useRouter();
   const { user } = useAuth();
 
@@ -201,16 +215,41 @@ function PaletteBody({ onClose, onNewCompany, onLogCompany }: PaletteBodyProps) 
         keywords: "email follow up call event touch",
         action: "log-outreach",
       },
+      {
+        id: "action-new-task",
+        kind: "action",
+        label: "New task",
+        sublabel: "Write down something to do",
+        keywords: "todo to-do work assign due reminder",
+        action: "new-task",
+      },
     ];
 
-    const pages: PaletteItem[] = visibleNav(role).map((n) => ({
-      id: `page-${n.href}`,
-      kind: "page",
-      label: n.label,
-      sublabel: "Go to page",
-      keywords: n.href,
-      href: n.href,
-    }));
+    const pages: PaletteItem[] = [
+      // "/tasks" is in the nav now too; the richer entry below is the one kept, so the
+      // list never carries the same page (and the same React key) twice.
+      ...visibleNav(role)
+        .filter((n) => n.href !== "/tasks")
+        .map((n) => ({
+        id: `page-${n.href}`,
+        kind: "page" as const,
+        label: n.label,
+        sublabel: "Go to page",
+        keywords: n.href,
+        href: n.href,
+      })),
+      // My work is deliberately not in the sidebar any more — project work lives in
+      // the project. But personal tasks belong to no project and would otherwise have
+      // no door at all, so the cross-project inbox stays reachable from here.
+      {
+        id: "page-/tasks",
+        kind: "page" as const,
+        label: "My work",
+        sublabel: "Every task assigned to you, across projects",
+        keywords: "tasks todo personal backlog blocked done",
+        href: "/tasks",
+      },
+    ];
 
     const projects: PaletteItem[] = (projectData?.items ?? []).map((p) => ({
       id: `project-${p.id}`,
@@ -294,6 +333,10 @@ function PaletteBody({ onClose, onNewCompany, onLogCompany }: PaletteBodyProps) 
         onNewCompany();
         return;
       }
+      if (item.action === "new-task") {
+        onNewTask();
+        return;
+      }
       if (item.action === "log-outreach") {
         setMode("log-pick");
         setQuery("");
@@ -305,7 +348,7 @@ function PaletteBody({ onClose, onNewCompany, onLogCompany }: PaletteBodyProps) 
         router.push(item.href);
       }
     },
-    [mode, onClose, onLogCompany, onNewCompany, router],
+    [mode, onClose, onLogCompany, onNewCompany, onNewTask, router],
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -385,7 +428,7 @@ function PaletteBody({ onClose, onNewCompany, onLogCompany }: PaletteBodyProps) 
         ) : (
           groups.map((group) => (
             <div key={group.heading} className="mb-1 last:mb-0">
-              <div className="px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <div className="px-3.5 py-1 text-xs font-medium text-muted-foreground">
                 {group.heading}
               </div>
               {group.items.map((item) => {
@@ -402,7 +445,7 @@ function PaletteBody({ onClose, onNewCompany, onLogCompany }: PaletteBodyProps) 
                     onMouseMove={() => setActive(idx)}
                     className={cn(
                       "mx-1.5 flex cursor-pointer items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-                      isActive ? "bg-primary/10 text-foreground" : "text-foreground/90",
+                      isActive ? "bg-accent text-foreground" : "text-secondary-foreground",
                     )}
                     data-testid="command-item"
                   >

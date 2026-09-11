@@ -33,11 +33,13 @@ const KIND_LABEL: Record<TemplateKind, string> = {
   BREAKUP: "Breakup",
 };
 
+// The intro is the anchor of every sequence, so it is the one inverted kind; the rest
+// step lighter the further into the sequence they sit.
 const KIND_STYLE: Record<TemplateKind, string> = {
-  INITIAL: "bg-indigo-500/[0.08] text-indigo-600 dark:text-indigo-300",
-  FOLLOW_UP: "bg-sky-500/[0.08] text-sky-700 dark:text-sky-300",
-  BUMP: "bg-amber-500/[0.08] text-amber-700 dark:text-amber-300",
-  BREAKUP: "bg-destructive/[0.08] text-destructive-ink",
+  INITIAL: "bg-info-soft text-info-ink ring-1 ring-inset ring-info-line",
+  FOLLOW_UP: "bg-muted text-foreground ring-1 ring-inset ring-border",
+  BUMP: "bg-card text-foreground ring-1 ring-inset ring-border",
+  BREAKUP: "bg-ink-200 text-foreground",
 };
 
 // ── Account card ───────────────────────────────────────────────────────────────
@@ -100,7 +102,7 @@ export function EmailSendingCard() {
                 ) : account.provider === "MICROSOFT" ? (
                   <OutlookGlyph className="h-5 w-5" />
                 ) : (
-                  <FlaskConical className="h-5 w-5 text-indigo-600 dark:text-indigo-400" aria-hidden />
+                  <FlaskConical className="h-5 w-5 text-foreground" aria-hidden />
                 )}
               </span>
               <div className="min-w-0 flex-1">

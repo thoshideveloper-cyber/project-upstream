@@ -43,11 +43,11 @@ export function SourceQualityMatrix({ rows }: { rows: SourceRow[] }) {
         <table className="w-full border-separate border-spacing-1 text-sm">
           <thead>
             <tr>
-              <th className="w-28 pb-1 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground" />
+              <th className="w-28 pb-1 text-left text-xs font-medium text-muted-foreground" />
               {cols.map((q) => (
                 <th
                   key={q}
-                  className="pb-1 text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+                  className="pb-1 text-center text-xs font-medium text-muted-foreground"
                 >
                   {q === "UNRATED" ? "Unrated" : QUALITY_LABEL[q]}
                 </th>
@@ -98,15 +98,26 @@ function Cell({ cell }: { cell?: SourceRow }) {
         "flex h-12 flex-col items-center justify-center rounded-md",
         thin && "border border-dashed border-border bg-transparent",
       )}
-      style={thin ? undefined : { background: `oklch(0.72 0.16 58 / ${intensity})` }}
+      // Ink density is the rate. Past the midpoint the cell is dark enough that its
+      // figures flip to paper-white, so a strong source never hides its own number.
+      style={thin ? undefined : { background: `oklch(0.17 0 0 / ${intensity})` }}
     >
       <span
-        className={cn("font-mono text-xs font-semibold tabular-nums", thin ? "text-muted-foreground" : "text-foreground")}
+        className={cn(
+          "tabular-nums text-xs font-semibold tabular-nums",
+          thin ? "text-muted-foreground" : intensity > 0.45 ? "text-background" : "text-foreground",
+        )}
         style={MONO}
       >
         {pctLabel(cell.response_rate)}
       </span>
-      <span className={cn("font-mono text-[10px] tabular-nums", thin ? "text-muted-foreground" : "text-foreground/70")} style={MONO}>
+      <span
+        className={cn(
+          "tabular-nums text-[10px] tabular-nums",
+          thin ? "text-muted-foreground" : intensity > 0.45 ? "text-background" : "text-foreground",
+        )}
+        style={MONO}
+      >
         {cell.responded}/{cell.total}
       </span>
     </div>

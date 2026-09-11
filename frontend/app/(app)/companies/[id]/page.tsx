@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -16,7 +16,12 @@ import { toast } from "sonner";
 
 import { useCompany, useArchiveCompany, useUnarchiveCompany } from "@/hooks/use-companies";
 import { useCycles, usePatchSchedule } from "@/hooks/use-schedule";
+import { ActivityFeed } from "@/components/features/activity-feed";
 import { OutreachTimeline } from "@/components/features/outreach-timeline";
+import { TaskDialog } from "@/components/features/task-dialog";
+import { TaskList } from "@/components/features/task-list";
+import { useCompanyActivity } from "@/hooks/use-activity";
+import { useTasks } from "@/hooks/use-tasks";
 import { useConfirm } from "@/components/features/confirm-dialog";
 import { useDelayed } from "@/hooks/use-delayed";
 import { toastUndo } from "@/lib/undo-toast";
@@ -34,9 +39,9 @@ import {
 } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ContactDialog } from "@/components/features/contact-dialog";
-import { DISPLAY, LABEL, RECORD_TITLE, RECORD_TITLE_STYLE } from "@/lib/design";
+import { DISPLAY, RECORD_TITLE, RECORD_TITLE_STYLE } from "@/lib/design";
 import { cn } from "@/lib/utils";
-import type { CompanyDetail, Contact } from "@/types";
+import type { CompanyDetail, Contact, Task } from "@/types";
 
 
 // ── Field display ────────────────────────────────────────────────────────────
@@ -45,7 +50,7 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
   if (value === null || value === undefined || value === "") return null;
   return (
     <div>
-      <dt className="text-xs text-muted-foreground uppercase tracking-wide">{label}</dt>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 text-sm">{value}</dd>
     </div>
   );
@@ -55,9 +60,9 @@ function Field({ label, value }: { label: string; value: React.ReactNode }) {
 
 function MetricTile({ label, value, sub }: { label: string; value: React.ReactNode; sub?: string }) {
   return (
-    <div className="min-w-[136px] flex-1 rounded-xl border border-border bg-card px-4 py-3">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold leading-none tabular-nums" style={DISPLAY}>
+    <div className="min-w-[136px] flex-1 bg-card px-4 py-3.5">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold leading-8 tracking-[-0.01em] tabular-nums" style={DISPLAY}>
         {value}
       </p>
       {sub && <p className="mt-1 text-xs text-muted-foreground">{sub}</p>}
@@ -70,7 +75,7 @@ function BenchmarkStrip({ companyId }: { companyId: number }) {
   if (!bm) return null;
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border">
       <MetricTile
         label="Touches"
         value={bm.this_company_touches}
@@ -105,10 +110,10 @@ function ConfidencePill({ confidence, matchType }: { confidence: number; matchTy
   const isExact = confidence >= 1.0;
   return (
     <span
-      className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+      className={`inline-flex h-5 items-center rounded-[4px] px-1.5 text-[11px] font-medium ring-1 ring-inset ${
         isExact
-          ? "bg-amber-200 text-amber-800 dark:bg-amber-800/40 dark:text-amber-200"
-          : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+          ? "bg-warning-soft text-warning-ink ring-warning-line"
+          : "bg-card text-foreground ring-border"
       }`}
       title={`Match type: ${MATCH_TYPE_LABEL[matchType] ?? matchType}`}
     >
@@ -120,29 +125,29 @@ function ConfidencePill({ confidence, matchType }: { confidence: number; matchTy
 function DuplicateBanner({ warnings }: { warnings: CompanyDetail["duplicate_warnings"] }) {
   if (!warnings.length) return null;
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-950/20">
-      <div className="flex items-start gap-2">
-        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
+    <div className="rounded-lg bg-warning-soft p-3.5 ring-1 ring-inset ring-warning-line" role="status">
+      <div className="flex items-start gap-2.5">
+        <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning-ink" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+          <p className="text-sm font-medium text-foreground">
             Possible duplicate{warnings.length > 1 ? "s" : ""} across mandates
           </p>
           <ul className="mt-1.5 space-y-1">
             {warnings.map((w) => (
-              <li key={w.company_id} className="flex flex-wrap items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+              <li key={w.company_id} className="flex flex-wrap items-center gap-2 text-xs text-foreground">
                 <span className="font-medium">{w.company_name}</span>
-                <span className="text-amber-500/70">mandate {w.mandate_id}</span>
+                <span className="text-muted-foreground">mandate {w.mandate_id}</span>
                 <StatusBadge status={w.status} />
                 {w.confidence !== undefined && (
                   <ConfidencePill confidence={w.confidence} matchType={w.match_type} />
                 )}
                 {w.initial_date && (
-                  <span className="text-amber-500/70">first contact {w.initial_date}</span>
+                  <span className="text-muted-foreground">first contact {w.initial_date}</span>
                 )}
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[10px] text-amber-600/70 dark:text-amber-400/60">
+          <p className="mt-2 text-xs text-muted-foreground">
             Advisory only — these matches may or may not be the same entity.
           </p>
         </div>
@@ -271,8 +276,8 @@ function OverviewTab({ company }: { company: CompanyDetail }) {
         <CardContent>
           {/* Focal read: what happens next */}
           {company.schedule_status === "AWAITING_INITIAL" ? (
-            <div className="mb-4 rounded-lg border border-indigo-500/25 bg-indigo-500/[0.06] px-3.5 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+            <div className="mb-4 rounded-lg border border-border bg-muted/60 px-3.5 py-3">
+              <p className="text-xs font-semibold text-foreground">
                 Awaiting first email
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -284,11 +289,11 @@ function OverviewTab({ company }: { company: CompanyDetail }) {
               className={cn(
                 "mb-4 rounded-lg border px-3.5 py-3",
                 company.is_overdue
-                  ? "border-destructive/25 bg-destructive/[0.06]"
-                  : "border-primary/25 bg-primary/[0.06]",
+                  ? "border-danger-line bg-danger-soft"
+                  : "border-border bg-subtle",
               )}
             >
-              <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground">
                 Next follow-up
               </p>
               <p className="mt-1 flex flex-wrap items-baseline gap-x-2.5">
@@ -299,7 +304,11 @@ function OverviewTab({ company }: { company: CompanyDetail }) {
                   <span
                     className={cn(
                       "text-sm font-medium",
-                      company.is_overdue ? "text-destructive-ink" : "text-primary-ink",
+                      company.is_overdue
+                        ? "text-danger-ink"
+                        : (company.days_remaining ?? 99) <= 7
+                          ? "text-warning-ink"
+                          : "text-muted-foreground",
                     )}
                   >
                     {company.is_overdue
@@ -456,8 +465,8 @@ export default function CompanyDetailPage({
     if (!showSkeleton) return null;
     return (
       <div className="p-6">
-        <div className="h-8 w-48 animate-pulse rounded-md bg-muted mb-4" />
-        <div className="h-4 w-64 animate-pulse rounded-md bg-muted" />
+        <div className="h-8 w-48 animate-pulse rounded-md bg-ink-100 mb-4" />
+        <div className="h-4 w-64 animate-pulse rounded-md bg-ink-100" />
       </div>
     );
   }
@@ -537,9 +546,9 @@ export default function CompanyDetailPage({
       </div>
 
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5 sm:p-6">
+      <div className="relative overflow-hidden rounded-lg border border-border bg-card p-5 sm:p-6">
         <div
-          className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-primary/[0.06] blur-2xl"
+          className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full bg-subtle blur-2xl"
           aria-hidden
         />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -628,6 +637,12 @@ export default function CompanyDetailPage({
             <TabsTrigger value="timeline">
               Timeline ({company.events.length})
             </TabsTrigger>
+            {/* Activity is a different thing from Timeline and both belong here.
+                Timeline is the append-only record of outreach — what was said to whom
+                and when. Activity is who changed the record. Folding them together
+                would make "Rhea archived this company" read like a touch. */}
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="tasks">Tasks</TabsTrigger>
           </TabsList>
         </div>
 
@@ -646,7 +661,75 @@ export default function CompanyDetailPage({
         <TabsContent value="timeline" className="mt-4">
           <TimelineTab company={company} />
         </TabsContent>
+
+        <TabsContent value="activity" className="mt-4">
+          <CompanyActivityTab companyId={company.id} />
+        </TabsContent>
+
+        <TabsContent value="tasks" className="mt-4">
+          <CompanyTasksTab companyId={company.id} companyName={company.company_name} />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+
+// ── Activity + tasks tabs ────────────────────────────────────────────────────
+
+function CompanyActivityTab({ companyId }: { companyId: number }) {
+  const { data, isLoading, isError, refetch } = useCompanyActivity(companyId);
+  return (
+    <div className="max-w-3xl rounded-lg bg-card p-4 ring-1 ring-border">
+      <ActivityFeed
+        events={data?.items ?? []}
+        isLoading={isLoading}
+        isError={isError}
+        onRetry={() => refetch()}
+        emptyLine="No changes have been recorded against this company yet."
+      />
+    </div>
+  );
+}
+
+function CompanyTasksTab({
+  companyId,
+  companyName,
+}: {
+  companyId: number;
+  companyName: string;
+}) {
+  const { data, isLoading } = useTasks({ company_id: companyId });
+  const [editing, setEditing] = useState<Task | null>(null);
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="max-w-3xl">
+      <div className="rounded-lg bg-card px-3 py-1 ring-1 ring-border">
+        <TaskList
+          tasks={data?.items ?? []}
+          isLoading={isLoading}
+          onEdit={(t) => {
+            setEditing(t);
+            setOpen(true);
+          }}
+          showProject={false}
+          // Pre-attached: the server derives the mandate and project from the company,
+          // so a to-do written here lands in the project's task list too.
+          defaults={{ title: "", company_id: companyId }}
+          addPlaceholder={`Add a task about ${companyName} and press Enter`}
+          emptyMessage="No open tasks on this company."
+        />
+      </div>
+      <TaskDialog
+        task={editing}
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o);
+          if (!o) setEditing(null);
+        }}
+        defaults={{ title: "", company_id: companyId }}
+      />
     </div>
   );
 }

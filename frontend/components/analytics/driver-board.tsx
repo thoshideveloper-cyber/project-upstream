@@ -33,7 +33,7 @@ function Row({ r, rank, benchmark, thin }: { r: RateRow; rank?: number; benchmar
   const body = (
     <>
       <div className="flex w-36 shrink-0 items-center gap-2">
-        <span className="w-4 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+        <span className="w-4 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground">
           {thin ? "·" : rank}
         </span>
         <span className={cn("truncate text-xs", thin ? "text-muted-foreground" : "text-foreground")} title={r.label}>
@@ -50,8 +50,8 @@ function Row({ r, rank, benchmark, thin }: { r: RateRow; rank?: number; benchmar
           style={{ width: `${widthPct}%` }}
         >
           <span
-            className={cn("font-mono text-[11px] font-semibold tabular-nums", above ? "" : "text-foreground/70")}
-            style={above ? { color: "oklch(0.14 0.006 265)" } : undefined}
+            className={cn("tabular-nums text-[11px] font-semibold tabular-nums", above ? "" : "text-secondary-foreground")}
+            style={above ? { color: "var(--primary-foreground)" } : undefined}
           >
             {pctLabel(r.rate)}
           </span>
@@ -62,7 +62,7 @@ function Row({ r, rank, benchmark, thin }: { r: RateRow; rank?: number; benchmar
           aria-hidden
         />
       </div>
-      <span className="w-14 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground" style={MONO}>
+      <span className="w-14 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground" style={MONO}>
         {r.responded}/{r.total}
       </span>
     </>
@@ -70,7 +70,7 @@ function Row({ r, rank, benchmark, thin }: { r: RateRow; rank?: number; benchmar
 
   const cls = "flex items-center gap-3";
   return r.href && !thin ? (
-    <Link href={r.href} className={cn(cls, "group rounded-md transition-colors hover:bg-primary/[0.04]")}>
+    <Link href={r.href} className={cn(cls, "group rounded-md transition-colors hover:bg-subtle")}>
       {body}
     </Link>
   ) : (
@@ -98,7 +98,7 @@ export function DriverBoard({
     return (
       <div className="flex flex-col gap-2.5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
+          <div key={i} className="h-7 animate-pulse rounded-md bg-ink-100" />
         ))}
       </div>
     );
@@ -158,7 +158,7 @@ export function DriverBoard({
           ))}
           {thin.length > 0 && (
             <>
-              <li className="flex items-center gap-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <li className="flex items-center gap-2 pt-1 text-xs font-medium text-muted-foreground">
                 <span className="h-px flex-1 bg-border/60" />
                 Thin data · n&lt;{MIN_N}
                 <span className="h-px flex-1 bg-border/60" />

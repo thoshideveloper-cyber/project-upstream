@@ -15,7 +15,7 @@ import { MONO } from "@/lib/design";
  */
 
 export function Leaderboard({ rows, loading }: { rows: AnalystRow[]; loading?: boolean }) {
-  if (loading) return <div className="h-32 animate-pulse rounded-md bg-muted" />;
+  if (loading) return <div className="h-32 animate-pulse rounded-md bg-ink-100" />;
 
   const active = rows.filter((r) => r.emails_sent > 0).sort((a, b) => b.initial_emails - a.initial_emails);
   if (active.length === 0)
@@ -29,13 +29,13 @@ export function Leaderboard({ rows, loading }: { rows: AnalystRow[]; loading?: b
       <ul className="flex flex-col gap-1.5">
         {top.map((r, i) => (
           <li key={r.user_id} className="flex items-center gap-3 py-1">
-            <span className="w-4 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground" style={MONO}>
+            <span className="w-4 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground" style={MONO}>
               {i + 1}
             </span>
             <span className="w-36 shrink-0 truncate text-sm font-medium" title={r.full_name}>
               {r.full_name}
             </span>
-            <span className="w-16 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground" style={MONO}>
+            <span className="w-16 shrink-0 text-right tabular-nums text-xs tabular-nums text-muted-foreground" style={MONO}>
               {r.initial_emails} sent
             </span>
             <div className="relative h-5 flex-1">
@@ -45,13 +45,13 @@ export function Leaderboard({ rows, loading }: { rows: AnalystRow[]; loading?: b
                 style={{ width: `${Math.max(r.conversion_rate > 0 ? 8 : 0, (r.conversion_rate / maxConv) * 100)}%` }}
               >
                 {r.conversion_rate > 0 && (
-                  <span className="font-mono text-[10px] font-semibold tabular-nums" style={{ ...MONO, color: "oklch(0.14 0.006 265)" }}>
+                  <span className="tabular-nums text-[10px] font-semibold tabular-nums" style={{ ...MONO, color: "var(--primary-foreground)" }}>
                     {pctLabel(r.conversion_rate)}
                   </span>
                 )}
               </div>
             </div>
-            <span className="w-12 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground" style={MONO}>
+            <span className="w-12 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground" style={MONO}>
               {r.responses}/{r.initial_emails}
             </span>
           </li>

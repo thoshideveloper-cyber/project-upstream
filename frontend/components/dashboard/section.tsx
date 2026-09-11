@@ -1,10 +1,13 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PANEL } from "@/lib/design";
 import { cn } from "@/lib/utils";
 
-/** Standard dashboard panel: uppercase eyebrow header + optional action, with
- *  a body that can run edge-to-edge (for lists) or use the default padding. */
+/**
+ * A titled panel: a sentence-case heading on a hairline, an optional count and action,
+ * and a body that can run edge-to-edge (for lists and tables) or take the default
+ * padding. The icon, when given, is always muted — a heading is not a state.
+ */
 export function Section({
   title,
   icon,
@@ -27,18 +30,20 @@ export function Section({
   style?: React.CSSProperties;
 }) {
   return (
-    <Card className={cn("stat-card gap-0 py-0", className)} style={style}>
-      <CardHeader className="border-b border-border px-4 py-3">
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            {icon}
-            {title}
-            {badge}
-          </CardTitle>
-          {action}
-        </div>
-      </CardHeader>
-      <CardContent className={cn(flush ? "p-0" : "p-4", bodyClassName)}>{children}</CardContent>
-    </Card>
+    <section className={cn(PANEL, "flex min-w-0 flex-col overflow-hidden", className)} style={style}>
+      <header className="flex min-h-11 items-center justify-between gap-3 border-b border-border px-4 py-2">
+        <h2 className="flex min-w-0 items-center gap-2 text-sm font-semibold text-foreground">
+          {icon && (
+            <span className="flex shrink-0 [&_svg]:size-4 [&_svg]:text-muted-foreground" aria-hidden>
+              {icon}
+            </span>
+          )}
+          <span className="truncate">{title}</span>
+          {badge && <span className="shrink-0 font-normal">{badge}</span>}
+        </h2>
+        {action && <div className="shrink-0 text-xs">{action}</div>}
+      </header>
+      <div className={cn("min-w-0", flush ? "" : "p-4", bodyClassName)}>{children}</div>
+    </section>
   );
 }

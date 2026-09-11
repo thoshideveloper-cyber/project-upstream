@@ -1,56 +1,118 @@
-# Project Upstream — Design Rationale
+# Project Upstream — Design System ("Ledger")
 
-## Philosophy
-
-This is a financial deal-sourcing tool, not a consumer app. The decisions below
-reflect what that context demands: high information density, operational calm,
-keyboard-driven navigation, and a visual language that signals competence and
-trustworthiness to the bankers using it every day.
-
-The primary inspiration set: **Bloomberg Terminal** (density + monochrome authority),
-**Affinity CRM** (relationship-aware layout), **Linear** (keyboard-first, no clutter),
-**Stripe Dashboard** (restrained colour use, surgical typography).
+The product UI's visual system. Strategy and audience live in `PRODUCT.md`; the tokens
+live in `frontend/app/globals.css`; the shared roles live in `frontend/lib/design.ts`.
+If a value in this document and the code disagree, the code wins — fix this file.
 
 ---
 
-## Aesthetic direction
+## Visual theme
 
-**Dense, calm, trustworthy.** Analysts spend eight or more hours inside this tool on
-deal days. The UI must never feel playful or promotional. Rounded corners are used
-sparingly; borders are 1px/neutral; whitespace is generous within components but
-tight between them.
+**Black, white, and state.** A white workspace framed by a near-black navigation rail,
+ink typography, crisp solid hairlines, and one filled black action per surface. Colour
+appears only where it states a fact about a record.
 
-### Colour
+- Scene: an analyst at a desk monitor in a bright office, eight hours a day, alternating
+  with Excel. Light theme, high contrast, dense.
+- References, and what is borrowed: Linear (status glyphs, keyboard flow), Stripe
+  (tables set like statements), Attio/Affinity (list + record + relationships), Ramp
+  (black-and-white restraint with semantic colour).
+- Anti-references: floating-card AI dashboards, hero metrics, gradients, glass, pill
+  soup, and the previous all-grey Upstream where "late" and "replied" were both grey.
 
-- **Neutral background.** `--background` and `--muted` cover 95% of all surfaces.
-  No coloured sidebars or hero sections.
-- **Single accent.** Only `--primary` (shadcn/ui's default neutral-900 in light mode,
-  neutral-50 in dark) is used for interactive affordances. No multi-colour dashboard
-  celebrations.
-- **Semantic status colours** (§7.3 authoritative map, replicated here):
-  | State              | Colour intent    | Tailwind example              |
-  |-------------------|-----------------|-------------------------------|
-  | Responded          | Green            | `bg-emerald-100 text-emerald-700` |
-  | Interested         | Blue             | `bg-blue-100 text-blue-700`   |
-  | Declined           | Amber            | `bg-amber-100 text-amber-700` |
-  | Bounced            | Red              | `bg-red-100 text-red-700`     |
-  | Contacted          | Slate            | `bg-slate-100 text-slate-600` |
-  | Not contacted      | Grey             | `bg-zinc-100 text-zinc-500`   |
-  | Overdue (cadence)  | Red pill         | `bg-red-100 text-red-600`     |
-  | Due soon (≤7d)     | Amber pill       | `bg-amber-100 text-amber-700` |
-  | Needs initial      | Violet pill      | `bg-violet-100 text-violet-700` |
-  | Cold (exhausted)   | Blue pill        | `bg-blue-100 text-blue-600`   |
+---
 
-### Typography
+## Colour
 
-- **Tailwind defaults** — `font-sans` (system stack). No custom webfonts; they add
-  loading jitter on slow connections inside secure banking networks.
-- `text-xs` (12px) is standard for dense table cells. `text-sm` (14px) for body copy.
-  `text-base` and above only for page-level headers.
-- `tabular-nums` everywhere numbers appear. Figures must never jump as data refreshes.
-- `font-medium` weight for values; `text-muted-foreground` for labels. This visual
-  split — lighter labels, heavier values — lets the analyst scan numbers without
-  reading every label.
+All values are OKLCH. Neutrals carry a faint cool cast (hue 265, chroma < 0.01).
+
+### Neutrals
+
+| Token | Role |
+|---|---|
+| `--background` / `--card` / `--popover` | White. The workspace, panels and floating surfaces. |
+| `--subtle` | Row hover, recessed wells. |
+| `--muted` | Table headers, toolbars, segmented-control tracks. |
+| `--accent` | Hover and selected fills on controls and rows. |
+| `--border` | The one hairline for panels, rows and dividers (solid, not translucent). |
+| `--border-strong` / `--input` | Control edges, hover edges, strong rules. |
+| `--foreground` (`ink-900`) | Text, the primary action, anything that must be acted on. |
+| `--muted-foreground` | Secondary text. 5.3:1 on white — never alpha-diluted. |
+| `ink-100 … ink-700` | Magnitude fills (bars, charts) and skeletons. |
+
+### State — the only colour in the product
+
+Four families, each with a **solid** (dots, bars), an **ink** (text on white), a **soft**
+ground and a **line**. Use them through `CHIP_TONE`, `LATE_TOKEN`, `DUE_TOKEN`,
+`STATUS_META`, `TASK_STATUS_META`, or the `*-danger` / `*-success` utilities.
+
+| Family | Means | Examples |
+|---|---|---|
+| **danger** (red) | Time already lost, failure, destruction | `12d late`, overdue tasks, bounced, delete |
+| **warning** (amber) | Due soon, blocked, needs a decision | `Today`, `3d`, blocked task, archived banner |
+| **success** (green) | An outcome that is good news | replied, interested, done, replies series |
+| **info** (blue) | In flight | contacted, in progress, the focus ring |
+
+Rules:
+
+1. A raw palette class (`emerald-500`, `sky-100`…) is a regression.
+2. Every coloured mark is paired with a shape or a word, so no state is carried by hue
+   alone (WCAG 1.4.1).
+3. Categories are not states: deal sides (Sell/Buy/Raise), segments, sources and people
+   (avatars) are neutral.
+4. Magnitudes are ink. A stage count or a reply-rate bar is a number, not a verdict.
+5. Colour marks exceptions. A health bar that is mostly grey is a healthy bar.
+
+### The navigation rail
+
+`--sidebar-*` tokens: near-black ground, white active text, `--sidebar-muted` idle text
+(≈8:1). It is the only dark surface — the frame, never the work.
+
+---
+
+## Typography
+
+- **Instrument Sans** for everything: titles, labels, body, figures. Real tabular
+  figures (`tnum`), so numbers align in the UI face — `MONO` in `lib/design.ts` is now
+  `font-variant-numeric: tabular-nums`, not a monospace family.
+- **IBM Plex Mono** only for genuinely code-like strings: keyboard hints, references.
+- Product scale, fixed rem: `text-2xs` 11 · `text-xs` 12 · **`text-sm` 13 (the working
+  size)** · `text-base` 15 · `text-lg` 18 · `text-xl` 20 (page title) · `text-2xl` 24
+  (record title).
+- Labels are **sentence case**, 12px medium, muted (`LABEL`). No tracked all-caps
+  eyebrows; the only uppercase is data tokens such as `SELL`.
+- No italics as a UI voice. "Not started yet" is the dashed glyph, not italic type.
+
+---
+
+## Shape, depth, motion
+
+- Radius: controls 6px (`rounded-md`), panels and menus 8px (`rounded-lg`), dialogs
+  10px, chips 4px. Pills are not used for tags or filters.
+- Depth: panels are flat (a ring, no shadow). Only floating things cast a shadow —
+  menus, popovers, dialogs, the bulk-action bar, toasts (`--shadow-md` / `--shadow-lg`).
+- Focus: a visible 2px ring in `--ring` (blue) with offset on every control; the rail
+  uses `--sidebar-ring`.
+- Motion: 150–220ms, ease-out. Motion conveys state (open, close, row cleared, bar
+  rising); no page choreography, no staggered row entrances, no scroll reveals.
+  `prefers-reduced-motion` is honoured globally.
+
+---
+
+## Components
+
+| Pattern | Definition |
+|---|---|
+| Button | `components/ui/button.tsx`. `default` = the page's one primary (ink). `outline` = secondary. `ghost` = toolbars and rows. `destructive` = solid red, confirm-only. |
+| Chip | `CHIP` + `CHIP_TONE` — square 4px tags for facts. |
+| Status glyph | `.hb` in globals.css: fill = how far, colour = what kind. `hb-dashed` = not started. |
+| Late / due | `LATE_TOKEN` (red) and `DUE_TOKEN` (amber). |
+| Segmented control | `SEG_GROUP` / `SEG_ITEM_ON` — recessed track, raised white segment. |
+| Panel | `PANEL` (+ `PANEL_HEAD`) — white, one ring, 8px. Never nest panels. |
+| Metric strip | Figures share hairlines in one ruled strip (`MetricRail`, `BookTape`, `DeskBriefing`) — never a grid of floating stat cards. |
+| Table | Header on `--muted`, 12px labels, 13px rows, hairline rules, `hover:bg-subtle`, selected `bg-accent`. Numbers right-aligned and tabular. |
+| Page header | `components/layout/page-header.tsx` — breadcrumb, title, one-sentence description, actions (primary last), optional tabs row. |
+| Empty state | `EmptyState` — what this holds, why it is empty, the one action that fills it. |
 
 ---
 
@@ -58,141 +120,58 @@ tight between them.
 
 ### Shell
 
-- **Persistent left sidebar** — always visible on desktop; collapses to icon-only at
-  `md` breakpoint. This mirrors the Bloomberg/Affinity pattern: navigation is never
-  more than one click away, and the current location is always clear.
-- **Top bar** — firm name + user menu + role badge. The role badge (PARTNER / ANALYST)
-  is always visible because role affects which numbers the user trusts.
-- **Content area** — full height, individually scrollable. The grid page uses a flex
-  column so the sticky table header stays in place while rows scroll.
+- **Navigation rail** (`components/layout/sidebar.tsx`): firm and brand, Search (⌘/Ctrl
+  K), the nav groups (Home · Deals · Outreach · Insights · Workspace), the recent-project
+  list with a red dot for anything late, and the account menu with the role on screen.
+  Collapses to an icon rail (`[`), remembered per browser. `g` then a letter jumps to a
+  section (`g h` Home, `g p` Projects, `g s` Schedule …).
+- **Below `md`** the rail becomes a drawer behind a 48px top bar (menu, home, search).
+- **The page** (`app/(app)/template.tsx`) owns scroll, padding and the 1680px measure.
 
-### Responsive / mobile degradation
+### The working register
 
-The app is designed desktop-first; M&A analysts don't close deals on phones. However
-the UI does not break on small screens — tables degrade to scrollable horizontal
-overflow, stat strips wrap, and dialogs are `sm:max-w-md` with `w-full` fallback.
-The grid page header and summary strip use `flex-wrap` so they reflow at narrow widths
-rather than overflowing.
+The register (`/projects/[id]/workspace`) is the centrepiece: a dense, virtualized list
+of companies, never a card grid. Four properties are non-negotiable:
 
----
+1. **Column alignment.** One shared `grid-template-columns` (`GRID_COLS` in
+   `components/project/workspace/grid.tsx`) for the header and every row.
+2. **Row density.** 20+ companies on one screen; Comfortable 44px / Compact 32px.
+3. **Sticky headers.** Column labels and the engagement you are inside stay put.
+4. **A count you can scroll to.** A group header that says 47 is followed by 47 rows,
+   which is why the register is virtualized and therefore a CSS grid with real
+   `role="grid"` / `row` / `gridcell` semantics and `aria-activedescendant`.
 
-## Information density
+Columns respond to **container** width, not the viewport: the peek panel takes ~26rem
+from the register without the window moving.
 
-### Working grid
+### Cadence cells
 
-The grid (`/projects/[id]/grid`) is the centrepiece. It is a dense HTML `<table>`,
-not a card grid or flexbox layout. The choice of `<table>` is deliberate:
+Next-due and days-remaining are server-computed (IST, `today_ist()`); the UI only
+chooses how loud to say them: red `12d late`, amber `Today`/`3d`, grey date, dashed
+`Intro pending`, grey `Cold`.
 
-1. **Column alignment.** Numbers in the same column align vertically across all rows.
-   Cards cannot achieve this. Analysts compare figures across rows — the table layout
-   makes that effortless.
-2. **Keyboard navigation.** Native table keyboard semantics (Tab, arrow keys) work
-   without any JavaScript.
-3. **Row density.** The grid fits 20+ companies on one screen. Cards would require
-   4× as much vertical space.
-4. **Sticky column headers.** `sticky top-0 z-10` keeps column labels visible while
-   scrolling through hundreds of rows — a requirement for any serious data tool.
+### Duplicate nudges
 
-Category sections (`STRATEGIC`, `PRIVATE_EQUITY`, etc.) are collapsible `<tbody>`
-groups. This mirrors the Excel pattern analysts already know (grouped rows with
-hide/show), making migration from spreadsheets lower-friction.
-
-### Cadence columns
-
-- **Next due** and **Days remaining** are server-computed (IST, `today_ist()`). The
-  "↻" icon next to "Days" labels the column as a computed value, signalling to the
-  analyst that the number is live. This is important for trust: analysts must know
-  whether they're looking at a live computation or a stale cache.
-- **Cadence badge** + tooltip explains WHY a company is overdue, cold, or awaiting
-  outreach. A tooltip on hover provides the reasoning without cluttering the row.
-- **Cold companies** show a snowflake icon (❄) alongside the badge. The icon is
-  language-agnostic and immediately recognisable as "frozen / stalled".
-
-### Fuzzy duplicate nudges
-
-Cross-mandate duplicate warnings are surfaced in two places:
-1. **Company detail** — a `DuplicateBanner` with the matching company name, its
-   mandate, current status, and a confidence pill (`exact name`, `same domain`, or
-   `similar name · 87%`). The confidence label tells the analyst how certain the
-   match is, so they can triage without clicking through.
-2. **Working grid** — a dismissible `DupNudgeBanner` appears immediately below the
-   category section after an inline-add that returns warnings. The nudge is inline
-   (not a floating toast) so it persists until the analyst consciously dismisses it.
-
-Advisory framing: both nudge components include the text "Advisory only — these
-matches may or may not be the same entity." This is honest about the limits of
-fuzzy matching and protects analyst trust in the system.
+A possible cross-mandate duplicate shows as an amber banner on the company dossier, with
+the match type and confidence as a chip, and the text "Advisory only — these matches
+may or may not be the same entity."
 
 ---
 
-## Component conventions
+## States
 
-### States (§7.3 rule)
+Every list and data surface has loading (skeletons shaped like the content, `ink-100`),
+empty (teaches the next step), error (red glyph, plain sentence, retry) and no-results
+(names the filter that is hiding everything, with a way to clear it).
 
-Every list and data surface has three states, all implemented:
+## Dialogs and confirmation
 
-| State   | Treatment                                                       |
-|---------|----------------------------------------------------------------|
-| Loading | `animate-pulse` skeleton blocks that mirror the shape of content |
-| Empty   | Centred text with a CTA (e.g., "Add company to get started")   |
-| Error   | Muted text with a retry action; 403 shown as "access denied"   |
+All dialogs use `components/ui/dialog.tsx` (flat scrim, no blur). Destructive actions go
+through `useConfirm()` — never `window.confirm` — and irreversible ones are archive-first
+and name-confirmed.
 
-Skeleton blocks mirror the shape of real content so loading feels fast and predictable
-rather than blank-screen jarring.
+## Keyboard
 
-### Optimistic updates
-
-TanStack Query `onMutate` / `onSettled` callbacks provide optimistic updates on the
-most latency-sensitive mutations:
-- **Log outreach event** — the grid's company data is immediately invalidated so the
-  cadence badge updates without a manual refresh.
-- **Create company (inline add)** — the query cache for the mandate's company list is
-  invalidated immediately after the API call settles (success or error).
-
-Mutation state (`isPending`) disables submit buttons to prevent double-submits.
-
-### Dialog patterns
-
-- All dialogs use shadcn/ui `<Dialog>`. No `alert()` or `confirm()` — they block the
-  tab and break keyboard navigation.
-- Confirmation on destructive actions (`confirm(...)` is used only as a stopgap in the
-  current implementation; production should migrate to a `<Dialog>` confirmation).
-- Forms use React Hook Form + Zod for client-side validation before sending. Backend
-  validation errors are surfaced via `toast.error`.
-
----
-
-## Keyboard-first
-
-The grid is the analyst's primary interaction surface. It supports:
-- **Tab** to move between "Log" action buttons
-- **Enter** to submit the inline-add form
-- **Escape** to cancel the inline form
-- Collapse/expand section headers are focusable `<button>` elements
-
-No action requires a mouse beyond the initial click to open a dialog.
-
----
-
-## Colour theme
-
-Both light and dark modes are handled via shadcn/ui's CSS variable system. The design
-defaults to light mode (standard for financial tooling in boardroom presentations) but
-dark mode works identically — all colours use the `dark:` variant.
-
----
-
-## Token reference (plan.md §7.3 excerpt)
-
-> Aesthetic: restrained, data-dense financial SaaS. Generous whitespace, one accent
-> colour, neutral greys, crisp 1px borders.
->
-> States: every list has a loading skeleton, an empty state with a CTA, and an error
-> state.
->
-> Layout: persistent left sidebar; top bar with firm name + user menu + role badge.
->
-> Responsive: desktop-first (analyst tool); tables degrade to cards on narrow screens.
-
-These are met in the implementation. Where a decision in the codebase diverges from
-a generic default, the rationale above explains why.
+- ⌘/Ctrl K — command palette (jump to anything, quick actions).
+- `g` + letter — go to a section; `[` — fold the rail.
+- Registers: ↑/↓ or j/k to move, Enter to open, `/` to search, `N` new project.

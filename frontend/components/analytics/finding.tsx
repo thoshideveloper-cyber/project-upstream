@@ -4,44 +4,47 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import type { Finding } from "@/lib/analytics";
+import { PANEL } from "@/lib/design";
 import { cn } from "@/lib/utils";
 
 /**
- * The Finding line — the page's computed thesis. The single highest-salience
- * finding leads in the display serif; up to two more ride as drill-through chips.
- * Every sentence is a deterministic re-read of real fields (see lib/analytics.ts),
- * never a prediction, and any rate it names carries its denominator.
+ * The Finding line — the page's computed thesis. The single highest-salience finding
+ * leads as a sentence; up to two more ride underneath as drill-through links. Every
+ * sentence is a deterministic re-read of real fields (see lib/analytics.ts), never a
+ * prediction, and any rate it names carries its denominator.
+ *
+ * Tone is carried by a small state dot beside each sentence — red for something costing
+ * time, green for something working — never by a coloured bar down the side.
  */
 
-const TONE_RULE: Record<Finding["tone"], string> = {
-  neutral: "bg-primary/70",
-  positive: "bg-emerald-500",
-  warning: "bg-primary",
+const TONE_DOT: Record<Finding["tone"], string> = {
+  neutral: "bg-ink-300",
+  positive: "bg-success",
+  warning: "bg-danger",
 };
 
-const CHIP_TONE: Record<Finding["tone"], string> = {
-  neutral: "text-muted-foreground",
-  positive: "text-emerald-700 dark:text-emerald-400",
-  warning: "text-primary-ink",
+const CTA_TONE: Record<Finding["tone"], string> = {
+  neutral: "text-foreground",
+  positive: "text-foreground",
+  warning: "text-foreground",
 };
 
 function Chip({ f }: { f: Finding }) {
   const body = (
     <span className="inline-flex items-center gap-1.5">
-      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", TONE_RULE[f.tone])} aria-hidden />
-      <span className="text-foreground/80">{f.text}</span>
+      <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", TONE_DOT[f.tone])} aria-hidden />
+      <span className="text-secondary-foreground">{f.text}</span>
       {f.cta && (
-        <span className={cn("inline-flex items-center gap-0.5 font-medium", CHIP_TONE[f.tone])}>
+        <span className={cn("inline-flex items-center gap-0.5 font-medium", CTA_TONE[f.tone])}>
           {f.cta}
           <ArrowRight className="h-3 w-3" />
         </span>
       )}
     </span>
   );
-  const cls =
-    "rounded-full bg-muted/40 px-3 py-1.5 text-xs ring-1 ring-border transition-colors";
+  const cls = "rounded-md bg-subtle px-2.5 py-1.5 text-xs ring-1 ring-inset ring-border transition-colors";
   return f.href ? (
-    <Link href={f.href} className={cn(cls, "hover:bg-muted/70")}>
+    <Link href={f.href} className={cn(cls, "hover:bg-muted")}>
       {body}
     </Link>
   ) : (
@@ -52,14 +55,11 @@ function Chip({ f }: { f: Finding }) {
 export function FindingLine({ findings, loading }: { findings: Finding[]; loading?: boolean }) {
   if (loading) {
     return (
-      <div className="flex gap-4 rounded-xl bg-card p-5 ring-1 ring-border">
-        <div className="w-1 shrink-0 rounded-full bg-muted" />
-        <div className="flex-1 space-y-3">
-          <div className="h-6 w-3/4 animate-pulse rounded bg-muted" />
-          <div className="flex gap-2">
-            <div className="h-7 w-40 animate-pulse rounded-full bg-muted" />
-            <div className="h-7 w-32 animate-pulse rounded-full bg-muted" />
-          </div>
+      <div className={cn(PANEL, "space-y-3 p-5")} aria-busy="true">
+        <div className="h-6 w-3/4 animate-pulse rounded bg-ink-100" />
+        <div className="flex gap-2">
+          <div className="h-7 w-40 animate-pulse rounded-md bg-ink-100" />
+          <div className="h-7 w-32 animate-pulse rounded-md bg-ink-100" />
         </div>
       </div>
     );
@@ -67,11 +67,8 @@ export function FindingLine({ findings, loading }: { findings: Finding[]; loadin
 
   if (findings.length === 0) {
     return (
-      <div className="flex gap-4 rounded-xl bg-card p-5 ring-1 ring-border">
-        <div className="w-1 shrink-0 rounded-full bg-muted-foreground/30" />
-        <p className="self-center text-lg text-muted-foreground" style={{ fontFamily: "var(--font-display)" }}>
-          Not enough outreach yet to read a trend.
-        </p>
+      <div className={cn(PANEL, "p-5")}>
+        <p className="text-base text-muted-foreground">Not enough outreach yet to read a trend.</p>
       </div>
     );
   }
@@ -80,34 +77,32 @@ export function FindingLine({ findings, loading }: { findings: Finding[]; loadin
   const chips = rest.slice(0, 2);
 
   return (
-    <div className="flex gap-4 rounded-xl bg-card p-5 ring-1 ring-border sm:p-6">
-      <div className={cn("w-1 shrink-0 rounded-full", TONE_RULE[head.tone])} aria-hidden />
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <p
-            className="text-xl leading-snug text-foreground sm:text-2xl"
-            style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.01em" }}
+    <div className={cn(PANEL, "flex flex-col gap-3 p-5")}>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <p className="flex items-baseline gap-2 text-lg font-semibold leading-snug tracking-[-0.01em] text-foreground">
+          <span
+            className={cn("relative top-[-2px] h-2 w-2 shrink-0 rounded-full", TONE_DOT[head.tone])}
+            aria-hidden
+          />
+          {head.text}
+        </p>
+        {head.href && head.cta && (
+          <Link
+            href={head.href}
+            className="group inline-flex items-center gap-0.5 text-sm font-medium text-foreground underline decoration-border-strong underline-offset-[3px] hover:decoration-foreground"
           >
-            {head.text}
-          </p>
-          {head.href && head.cta && (
-            <Link
-              href={head.href}
-              className={cn("inline-flex items-center gap-0.5 text-sm font-medium", CHIP_TONE[head.tone])}
-            >
-              {head.cta}
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          )}
-        </div>
-        {chips.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {chips.map((f) => (
-              <Chip key={f.id} f={f} />
-            ))}
-          </div>
+            {head.cta}
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         )}
       </div>
+      {chips.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {chips.map((f) => (
+            <Chip key={f.id} f={f} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -268,7 +268,7 @@ function Stepper({ step }: { step: Step }) {
               "flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors",
               i < order && "bg-primary text-primary-ink",
               i === order &&
-                "bg-primary text-primary-ink ring-2 ring-primary/30 ring-offset-1 ring-offset-background",
+                "bg-primary text-primary-ink ring-2 ring-border-strong ring-offset-1 ring-offset-background",
               i > order && "bg-muted text-muted-foreground",
             )}
           >
@@ -330,15 +330,15 @@ function UploadStep({
             if (!pending) takeFiles(e.dataTransfer.files);
           }}
           className={cn(
-            "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-colors",
-            dragOver ? "border-primary bg-primary/5" : "hover:border-primary/40 hover:bg-muted/40",
+            "flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed p-10 text-center transition-colors",
+            dragOver ? "border-primary bg-accent" : "hover:border-border-strong hover:bg-muted/40",
             pending && "pointer-events-none opacity-70",
           )}
         >
           {pending ? (
             <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
               <FileSpreadsheet className="h-6 w-6 text-primary-ink" />
             </div>
           )}
@@ -752,7 +752,7 @@ function ReviewStep({
           {preview.flags.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-3.5 w-3.5 text-amber-500" aria-hidden />
+                <AlertTriangle className="h-3.5 w-3.5 text-foreground" aria-hidden />
                 <span className="text-xs font-medium">
                   {flagged.length} row{flagged.length === 1 ? "" : "s"} need a second look
                 </span>
@@ -866,8 +866,8 @@ function DoneStep({
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-inset ring-border">
+          <CheckCircle2 className="h-7 w-7 text-foreground" />
         </div>
         <p className="text-sm font-medium" data-testid="import-complete">
           {last.project_name} is live

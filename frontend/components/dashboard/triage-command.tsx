@@ -73,11 +73,11 @@ function PressureGauge({ pressure, active }: { pressure: number; active: number 
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
           className="text-4xl font-semibold leading-none tabular-nums"
-          style={{ fontFamily: "var(--font-mono)", color: hot ? "var(--destructive)" : "var(--foreground)" }}
+          style={{ fontVariantNumeric: "tabular-nums", color: hot ? "var(--destructive)" : "var(--foreground)" }}
         >
           {active}
         </span>
-        <span className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <span className="mt-1 text-xs font-medium text-muted-foreground">
           to clear
         </span>
       </div>
@@ -105,12 +105,12 @@ function Segment({ label, count, total, tone, emphasize }: SegProps) {
   return (
     <div className="flex items-center gap-3">
       <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: t.dot }} aria-hidden />
-      <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+      <span className="w-24 shrink-0 text-xs font-medium text-muted-foreground">
         {label}
       </span>
       <span
         className={cn("w-10 shrink-0 text-right text-lg tabular-nums", emphasize ? "font-semibold" : "font-medium")}
-        style={{ fontFamily: "var(--font-mono)", color: count > 0 && tone !== "calm" ? t.dot : "var(--foreground)" }}
+        style={{ fontVariantNumeric: "tabular-nums", color: count > 0 && tone !== "calm" ? t.dot : "var(--foreground)" }}
       >
         {count}
       </span>
@@ -148,26 +148,17 @@ export function TriageCommand({
   return (
     <section
       className={cn(
-        "stat-card relative overflow-hidden rounded-xl bg-card ring-1 ring-border",
+        "stat-card relative overflow-hidden rounded-lg bg-card ring-1 ring-border",
         overdue > 0 && "stat-card-overdue",
       )}
       aria-label="Work queue triage"
     >
-      {/* faint instrument grid wash */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            "radial-gradient(ellipse 60% 100% at 12% 0%, oklch(0.72 0.16 58 / 0.06), transparent 70%)",
-        }}
-        aria-hidden
-      />
       <div className="relative flex flex-col gap-6 p-5 lg:flex-row lg:items-center lg:gap-8 lg:p-6">
         {/* Left: gauge */}
         <div className="flex items-center gap-5">
           <PressureGauge pressure={pressure} active={attention} />
           <div className="lg:hidden">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               Work queue
             </p>
           </div>
@@ -176,10 +167,10 @@ export function TriageCommand({
         {/* Middle: triage readouts */}
         <div className="min-w-0 flex-1">
           <div className="mb-3 hidden items-center justify-between lg:flex">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <p className="text-xs font-medium text-muted-foreground">
               Work queue · triage
             </p>
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+            <span className="tabular-nums text-[11px] tabular-nums text-muted-foreground">
               {workload} in window
             </span>
           </div>
@@ -192,7 +183,7 @@ export function TriageCommand({
 
         {/* Right: situation + actions */}
         <div className="flex shrink-0 flex-col gap-3 border-t border-border pt-4 lg:w-64 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
-          <p className="text-sm leading-snug text-foreground/90">{situation}</p>
+          <p className="text-sm leading-snug text-secondary-foreground">{situation}</p>
           <div className="flex flex-col gap-2">
             <Link href="/schedule" className="w-full">
               <Button size="sm" variant={overdue > 0 ? "default" : "outline"} className="w-full justify-between">
@@ -206,7 +197,7 @@ export function TriageCommand({
                 className="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
               >
                 <Mail className="size-3.5" />
-                <span className="font-mono tabular-nums text-foreground">{needsInitial}</span>
+                <span className="tabular-nums text-foreground">{needsInitial}</span>
                 need a first outreach
               </Link>
             )}

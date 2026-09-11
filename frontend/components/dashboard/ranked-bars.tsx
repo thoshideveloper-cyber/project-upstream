@@ -28,7 +28,7 @@ export function RankedBars({
     return (
       <div className="flex flex-col gap-2.5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-7 animate-pulse rounded-md bg-muted" />
+          <div key={i} className="h-7 animate-pulse rounded-md bg-ink-100" />
         ))}
       </div>
     );
@@ -44,7 +44,7 @@ export function RankedBars({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <span className="uppercase tracking-widest">Ranked by response rate</span>
+        <span>Ranked by response rate</span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-px bg-foreground/40" />
           firm avg {Math.round(benchmark * 100)}%
@@ -58,7 +58,7 @@ export function RankedBars({
           return (
             <li key={`${d.label}-${i}`} className="flex items-center gap-3">
               <div className="flex shrink-0 items-center gap-2" style={{ width: "8.5rem" }}>
-                <span className="w-4 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+                <span className="w-4 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground">
                   {i + 1}
                 </span>
                 <span className="truncate text-xs text-foreground" title={d.label}>
@@ -76,10 +76,10 @@ export function RankedBars({
                 >
                   <span
                     className={cn(
-                      "font-mono text-[11px] font-semibold tabular-nums",
-                      above ? "" : "text-foreground/70",
+                      "tabular-nums text-[11px] font-semibold tabular-nums",
+                      above ? "" : "text-secondary-foreground",
                     )}
-                    style={above ? { color: "oklch(0.14 0.006 265)" } : undefined}
+                    style={above ? { color: "var(--primary-foreground)" } : undefined}
                   >
                     {Math.round(d.rate * 100)}%
                   </span>
@@ -91,7 +91,7 @@ export function RankedBars({
                   aria-hidden
                 />
               </div>
-              <span className="w-12 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground">
+              <span className="w-12 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground">
                 {d.total.toLocaleString()}
               </span>
             </li>

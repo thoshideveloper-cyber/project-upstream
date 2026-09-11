@@ -14,32 +14,35 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DISPLAY, LABEL, SELECT_CLS } from "@/lib/design";
+import { DISPLAY, SELECT_CLS } from "@/lib/design";
 import { cn } from "@/lib/utils";
 import { useCounter } from "@/hooks/use-counter";
 import type { Company, CompanyStatus, CompanyType } from "@/types";
 
 
-// Where a company came from — a small legend keys the coloured dots in the table.
+// Where a company came from — a small legend keys the shaded dots in the table. Own
+// research is solid ink; anything that arrived from outside is lighter, down to an
+// empty ring for a bulk import nobody has vouched for yet.
 const SOURCE_META: { value: string; label: string; dot: string }[] = [
-  { value: "PROPRIETARY", label: "Proprietary", dot: "bg-violet-500" },
-  { value: "PUBLIC", label: "Public", dot: "bg-sky-400" },
-  { value: "REFERRAL", label: "Referral", dot: "bg-emerald-500" },
-  { value: "IMPORTED", label: "Imported", dot: "bg-muted-foreground/50" },
+  { value: "PROPRIETARY", label: "Proprietary", dot: "bg-foreground" },
+  { value: "PUBLIC", label: "Public", dot: "bg-ink-500" },
+  { value: "REFERRAL", label: "Referral", dot: "bg-ink-300" },
+  { value: "IMPORTED", label: "Imported", dot: "bg-card ring-1 ring-inset ring-ink-400" },
 ];
 const SOURCE_DOT: Record<string, string> = Object.fromEntries(
   SOURCE_META.map((s) => [s.value, s.dot]),
 );
 
-// Status hues for the composition bar — same families as the pills, tuned to read as
-// solid fills on the dark canvas.
+// Status steps for the composition bar, in the product's state colours: untouched is
+// light grey, contacted blue (in flight), a reply green — deeper once they are
+// interested — a decline closes to grey, a bounce is red (it never reached anyone).
 const SPECTRUM: Record<CompanyStatus, { label: string; color: string }> = {
-  NOT_CONTACTED: { label: "Not contacted", color: "oklch(0.55 0.012 265)" },
-  CONTACTED: { label: "Contacted", color: "oklch(0.62 0.12 250)" },
-  RESPONDED: { label: "Responded", color: "oklch(0.64 0.16 152)" },
-  INTERESTED: { label: "Interested", color: "oklch(0.62 0.17 270)" },
-  DECLINED: { label: "Declined", color: "oklch(0.72 0.15 58)" },
-  BOUNCED: { label: "Bounced", color: "oklch(0.62 0.20 25)" },
+  NOT_CONTACTED: { label: "Not contacted", color: "var(--ink-200)" },
+  CONTACTED: { label: "Contacted", color: "var(--info)" },
+  RESPONDED: { label: "Responded", color: "oklch(0.8 0.1 155)" },
+  INTERESTED: { label: "Interested", color: "var(--success)" },
+  DECLINED: { label: "Declined", color: "var(--ink-400)" },
+  BOUNCED: { label: "Bounced", color: "var(--danger)" },
 };
 const STATUS_ORDER: CompanyStatus[] = [
   "NOT_CONTACTED",
@@ -123,7 +126,7 @@ const COLUMNS: Column<Company>[] = [
     header: "Category",
     cell: (row) => (
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <span className="text-xs font-medium text-muted-foreground">
           {row.type}
         </span>
         {row.category_name && (
@@ -201,18 +204,13 @@ function SummaryTile({
   const shown =
     value === null ? "—" : isPercent ? `${counted ?? value}%` : (counted ?? value);
   return (
-    <div
-      className={cn(
-        "stat-card flex flex-col rounded-xl border border-border bg-card px-4 py-3",
-        pulse && "stat-card-overdue stat-card-overdue-active",
-      )}
-    >
-      <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+    <div className={cn("flex flex-col bg-card px-4 py-3.5")} data-alert={pulse || undefined}>
+      <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <span className={cn("h-1.5 w-1.5 rounded-full", dotClass)} aria-hidden />
         {label}
       </span>
       <span
-        className={cn("mt-1.5 text-3xl font-semibold leading-none tabular-nums", tone)}
+        className={cn("mt-1 text-2xl font-semibold leading-8 tabular-nums tracking-[-0.01em]", tone)}
         style={DISPLAY}
       >
         {shown}
@@ -294,26 +292,26 @@ export default function CompaniesPage() {
 
       {/* Instrument panel — the quick numeric read */}
       {summary && (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <div className="grid gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border grid-cols-2 sm:grid-cols-4">
           <SummaryTile
             label="Total"
             value={total}
             hint={total === 1 ? "company" : "companies"}
-            dotClass="bg-primary"
+            dotClass="bg-ink-300"
           />
           <SummaryTile
             label="Needs first outreach"
             value={summary.needs_initial_count}
             hint="awaiting initial email"
-            tone="text-indigo-600 dark:text-indigo-400"
-            dotClass="bg-indigo-500"
+            tone="text-foreground"
+            dotClass="bg-card ring-1 ring-inset ring-ink-400"
           />
           <SummaryTile
             label="Overdue"
             value={summary.overdue_count}
             hint={summary.overdue_count > 0 ? "follow-up past due" : "all on schedule"}
-            tone={summary.overdue_count > 0 ? "text-destructive-ink" : undefined}
-            dotClass="bg-destructive"
+            tone={summary.overdue_count > 0 ? "text-danger-ink" : undefined}
+            dotClass="bg-danger"
             pulse={summary.overdue_count > 0}
           />
           <SummaryTile
@@ -321,17 +319,17 @@ export default function CompaniesPage() {
             value={Math.round(summary.responded_pct * 100)}
             isPercent
             hint="of contacted companies"
-            tone="text-emerald-700 dark:text-emerald-400"
-            dotClass="bg-emerald-500"
+            tone="text-foreground"
+            dotClass="bg-success"
           />
         </div>
       )}
 
       {/* Status composition — the signature: a proportional read of the set, and a filter */}
       {statusTotal > 0 && (
-        <div className="rounded-xl border border-border bg-card px-4 py-3">
+        <div className="rounded-lg bg-card px-4 py-3 ring-1 ring-border">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               Status mix
             </span>
             {status && (
@@ -380,9 +378,9 @@ export default function CompaniesPage() {
                   onClick={() => toggleStatus(seg.status)}
                   aria-pressed={active}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs transition-colors",
+                    "inline-flex h-6 items-center gap-1.5 rounded-md border px-2 text-xs transition-colors",
                     active
-                      ? "border-primary/50 bg-primary/10 text-foreground"
+                      ? "border-border-strong bg-accent text-foreground"
                       : "border-border text-muted-foreground hover:border-border hover:text-foreground",
                   )}
                 >
@@ -434,7 +432,7 @@ export default function CompaniesPage() {
           ))}
         </select>
 
-        <label className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-input px-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground has-[:checked]:border-primary/50 has-[:checked]:bg-primary/[0.07] has-[:checked]:text-foreground">
+        <label className="flex h-8 cursor-pointer items-center gap-1.5 rounded-md border border-input bg-card px-2.5 text-sm text-muted-foreground shadow-xs transition-colors hover:text-foreground has-[:checked]:border-border-strong has-[:checked]:bg-accent has-[:checked]:text-foreground">
           <input
             type="checkbox"
             checked={includeArchived}
@@ -447,7 +445,7 @@ export default function CompaniesPage() {
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-xs text-muted-foreground hover:text-foreground"
+            className="inline-flex h-8 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             Clear filters
             <X className="h-3 w-3" />
@@ -457,7 +455,7 @@ export default function CompaniesPage() {
         {mandateId && (
           <button
             onClick={() => router.push("/companies")}
-            className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary-ink"
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-border-strong bg-accent px-2.5 text-xs font-medium text-foreground"
           >
             Mandate #{mandateId}
             <X className="h-3 w-3" />

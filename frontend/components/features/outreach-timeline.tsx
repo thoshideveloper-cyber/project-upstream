@@ -33,38 +33,39 @@ import {
 } from "@/lib/outreach-timeline";
 import type { Contact, OutreachEvent, ScheduleStatus } from "@/types";
 
-// ── Colour + icon language ───────────────────────────────────────────────────
-// Tints are the literal plan.md §7.3 pills from StatusBadge, so a green node in
-// the timeline is the same green as the "Responded" badge on the row above it.
+// ── Ink + icon language ──────────────────────────────────────────────────────
+// The anchor is inverted, a reply is dark ink, an alarm is a heavy ring, a no is a
+// pale fill; touches and notes are quiet chips. The same roles the contact card's
+// event chips use, so a node here and a chip there never disagree.
 
 const TONE: Record<EventTone, { chip: string; rule: string; text: string }> = {
-  violet: {
-    chip: "[background:oklch(0.93_0.045_270)] [color:oklch(0.48_0.15_270)] dark:[background:oklch(0.20_0.12_270_/_0.6)] dark:[color:oklch(0.72_0.18_270)]",
-    rule: "[border-color:oklch(0.48_0.15_270_/_0.35)] dark:[border-color:oklch(0.72_0.18_270_/_0.35)]",
-    text: "[color:oklch(0.48_0.15_270)] dark:[color:oklch(0.72_0.18_270)]",
+  anchor: {
+    chip: "bg-info-soft text-info-ink ring-1 ring-inset ring-info-line",
+    rule: "border-foreground",
+    text: "text-foreground",
   },
-  slate: {
-    chip: "[background:oklch(0.92_0.015_250)] [color:oklch(0.42_0.04_255)] dark:[background:oklch(0.30_0.02_265_/_0.6)] dark:[color:oklch(0.72_0.02_265)]",
-    rule: "[border-color:oklch(0.42_0.04_255_/_0.3)] dark:[border-color:oklch(0.72_0.02_265_/_0.3)]",
-    text: "[color:oklch(0.42_0.04_255)] dark:[color:oklch(0.72_0.02_265)]",
+  touch: {
+    chip: "bg-muted text-foreground ring-1 ring-inset ring-border",
+    rule: "border-ink-300",
+    text: "text-foreground",
   },
-  green: {
-    chip: "[background:oklch(0.93_0.05_152)] [color:oklch(0.46_0.13_152)] dark:[background:oklch(0.20_0.10_152_/_0.6)] dark:[color:oklch(0.72_0.18_152)]",
-    rule: "[border-color:oklch(0.46_0.13_152_/_0.35)] dark:[border-color:oklch(0.72_0.18_152_/_0.35)]",
-    text: "[color:oklch(0.46_0.13_152)] dark:[color:oklch(0.72_0.18_152)]",
+  reply: {
+    chip: "bg-ink-700 text-background",
+    rule: "border-ink-700",
+    text: "font-medium text-foreground",
   },
-  amber: {
-    chip: "[background:oklch(0.94_0.05_75)] [color:oklch(0.52_0.12_60)] dark:[background:oklch(0.22_0.08_58_/_0.6)] dark:[color:oklch(0.78_0.16_58)]",
-    rule: "[border-color:oklch(0.52_0.12_60_/_0.35)] dark:[border-color:oklch(0.78_0.16_58_/_0.35)]",
-    text: "[color:oklch(0.52_0.12_60)] dark:[color:oklch(0.78_0.16_58)]",
+  alarm: {
+    chip: "bg-card text-foreground ring-2 ring-inset ring-foreground",
+    rule: "border-foreground",
+    text: "font-semibold text-foreground",
   },
-  red: {
-    chip: "[background:oklch(0.93_0.05_25)] [color:oklch(0.52_0.20_25)] dark:[background:oklch(0.22_0.12_25_/_0.6)] dark:[color:oklch(0.72_0.22_25)]",
-    rule: "[border-color:oklch(0.52_0.20_25_/_0.35)] dark:[border-color:oklch(0.72_0.22_25_/_0.35)]",
-    text: "[color:oklch(0.52_0.20_25)] dark:[color:oklch(0.72_0.22_25)]",
+  closed: {
+    chip: "bg-ink-200 text-foreground",
+    rule: "border-ink-400",
+    text: "text-muted-foreground",
   },
-  grey: {
-    chip: "[background:oklch(0.93_0.004_265)] [color:oklch(0.44_0.02_265)] dark:[background:oklch(0.25_0.01_265_/_0.6)] dark:[color:oklch(0.55_0.01_265)]",
+  note: {
+    chip: "bg-muted text-muted-foreground",
     rule: "border-border",
     text: "text-muted-foreground",
   },
@@ -91,9 +92,9 @@ const MODE_LABEL: Record<string, string> = {
 };
 
 const SENTIMENT: Record<string, { label: string; tone: EventTone }> = {
-  POSITIVE: { label: "Positive", tone: "green" },
-  NEGATIVE: { label: "Negative", tone: "red" },
-  NEUTRAL: { label: "Neutral", tone: "slate" },
+  POSITIVE: { label: "Positive", tone: "reply" },
+  NEGATIVE: { label: "Negative", tone: "alarm" },
+  NEUTRAL: { label: "Neutral", tone: "touch" },
 };
 
 // ── Small parts ──────────────────────────────────────────────────────────────
@@ -121,7 +122,7 @@ function GapMarker({ label }: { label: string }) {
       <span className="flex w-8 justify-center">
         <span className="size-1 rounded-full bg-border" />
       </span>
-      <span className="font-mono text-[10px] tracking-wide text-muted-foreground tabular-nums">
+      <span className="tabular-nums text-[10px] tracking-wide text-muted-foreground tabular-nums">
         {label}
       </span>
     </li>
@@ -145,22 +146,22 @@ export interface TimelineCadence {
 function HeadNode({ cadence }: { cadence: TimelineCadence }) {
   const { scheduleStatus, nextDueDate, daysRemaining, isOverdue, stoppedReason } = cadence;
 
-  let tone: EventTone = "slate";
+  let tone: EventTone = "touch";
   let title = "";
   let detail: string | null = null;
 
   if (scheduleStatus === "AWAITING_INITIAL") {
-    tone = "violet";
+    tone = "anchor";
     title = "Awaiting the first email";
     detail = "The cadence clock starts the day the initial email is logged — not before.";
   } else if (scheduleStatus === "STOPPED") {
-    tone = "grey";
+    tone = "note";
     title = "Cadence stopped";
     detail = stoppedReason
       ? `Reason: ${stoppedReason.toLowerCase().replace(/_/g, " ")}. No further follow-ups are scheduled.`
       : "No further follow-ups are scheduled.";
   } else if (nextDueDate) {
-    tone = isOverdue ? "red" : "amber";
+    tone = isOverdue ? "alarm" : "touch";
     title = `Next follow-up · ${formatEventDate(nextDueDate)}`;
     detail =
       daysRemaining == null
@@ -187,7 +188,7 @@ function HeadNode({ cadence }: { cadence: TimelineCadence }) {
       <div className="min-w-0 flex-1 pt-1">
         <p className="text-sm font-medium">{title}</p>
         {detail && (
-          <p className={cn("mt-0.5 text-xs", isOverdue ? TONE.red.text : "text-muted-foreground")}>
+          <p className={cn("mt-0.5 text-xs", isOverdue ? TONE.alarm.text : "text-muted-foreground")}>
             {detail}
           </p>
         )}
@@ -233,12 +234,12 @@ function EntryNode({
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <p className="text-sm font-medium">{eventLabel(event.event_type)}</p>
-          {entry.isAnchor && <Pill tone="violet">anchor · day 0</Pill>}
+          {entry.isAnchor && <Pill tone="anchor">anchor · day 0</Pill>}
           {entry.stops && <Pill tone={tone}>stopped the cadence</Pill>}
           {sentiment && <Pill tone={sentiment.tone}>{sentiment.label}</Pill>}
           <span className="ml-auto flex shrink-0 items-baseline gap-2">
             {offset && !entry.isAnchor && (
-              <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+              <span className="tabular-nums text-[10px] text-muted-foreground tabular-nums">
                 {offset}
               </span>
             )}
@@ -257,12 +258,12 @@ function EntryNode({
 
         {event.regarding && (
           <p className="mt-1 text-xs text-muted-foreground">
-            <span className="text-foreground/70">Re:</span> {event.regarding}
+            <span className="font-medium text-foreground">Re:</span> {event.regarding}
           </p>
         )}
 
         {event.notes && (
-          <p className="mt-1.5 border-l-2 border-border pl-2.5 text-xs leading-relaxed text-foreground/80">
+          <p className="mt-1.5 border-l-2 border-border pl-2.5 text-xs leading-relaxed text-foreground">
             {event.notes}
           </p>
         )}
@@ -324,12 +325,12 @@ export function OutreachTimeline({
     return (
       <div
         className={cn(
-          "flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center",
+          "flex flex-col items-center justify-center rounded-lg border border-dashed px-6 py-10 text-center",
           className,
         )}
       >
-        <span className="mb-3 flex size-9 items-center justify-center rounded-full bg-primary/10">
-          <Mail className="size-4 text-primary-ink/50" />
+        <span className="mb-3 flex size-9 items-center justify-center rounded-full bg-muted ring-1 ring-inset ring-border">
+          <Mail className="size-4 text-muted-foreground" />
         </span>
         <h3 className="text-sm font-medium">Nothing logged yet</h3>
         <p className="mt-1 max-w-xs text-xs text-muted-foreground">
@@ -383,7 +384,7 @@ export function OutreachTimeline({
           <Fragment key={band.cycleNumber ?? "none"}>
             {multiCycle && band.cycleNumber != null && (
               <li className="relative mb-3 flex items-center gap-3.5 pl-[2.875rem]">
-                <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <span className="tabular-nums text-xs font-medium text-muted-foreground">
                   Cycle {band.cycleNumber}
                 </span>
                 <span className="h-px flex-1 bg-border" />

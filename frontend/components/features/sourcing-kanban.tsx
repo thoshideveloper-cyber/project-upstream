@@ -70,15 +70,15 @@ export function requiresPushConfirm(
   return targetKind === "ACTIVE" && !hasCompany;
 }
 
-/** Per-stage accent so the board reads as a pipeline, not a list of boxes. The
- *  `edge` is a left border colour — no overflow clipping, so long names never cut. */
-const KIND_ACCENT: Record<SourcingStageKind, { dot: string; edge: string }> = {
-  RESEARCH: { dot: "bg-muted-foreground/50", edge: "border-l-muted-foreground/50" },
-  SHORTLIST: { dot: "bg-primary", edge: "border-l-primary/70" },
-  ACTIVE: { dot: "bg-sky-500", edge: "border-l-sky-500/70" },
-  ENGAGED: { dot: "bg-emerald-500", edge: "border-l-emerald-500/70" },
-  PASSED: { dot: "bg-muted-foreground/50", edge: "border-l-muted-foreground/50" },
-  CUSTOM: { dot: "bg-violet-400", edge: "border-l-violet-400/70" },
+/** Per-stage glyph so the board reads as a pipeline, not a list of boxes: each column
+ *  is headed by its stage's Harvey ball, which fills as the stage advances. */
+const KIND_ACCENT: Record<SourcingStageKind, { dot: string }> = {
+  RESEARCH: { dot: "hb hb-0" },
+  SHORTLIST: { dot: "hb hb-25" },
+  ACTIVE: { dot: "hb hb-50" },
+  ENGAGED: { dot: "hb hb-100" },
+  PASSED: { dot: "hb hb-mute" },
+  CUSTOM: { dot: "hb hb-75" },
 };
 
 export function SourcingKanban({
@@ -212,7 +212,7 @@ export function SourcingKanban({
 
   if (mandateId <= 0) {
     return (
-      <div className="rounded-xl border border-dashed bg-card/50 p-10 text-center text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed bg-card/50 p-10 text-center text-sm text-muted-foreground">
         Pick an engagement above to see its funnel.
       </div>
     );
@@ -251,11 +251,11 @@ export function SourcingKanban({
                 else colRefs.current.delete(col.stage.id);
               }}
               className={cn(
-                "flex w-[248px] shrink-0 flex-col rounded-xl border transition-colors",
+                "flex w-[248px] shrink-0 flex-col rounded-lg border transition-colors",
                 pinned
                   ? "sticky left-0 z-20 bg-background shadow-[10px_0_20px_-12px_rgba(0,0,0,0.45)]"
                   : "bg-muted/20",
-                isOver && "border-primary/60 bg-primary/5 ring-1 ring-primary/30",
+                isOver && "border-border-strong bg-accent ring-1 ring-border-strong",
                 flashCol === col.stage.id && "col-flash",
               )}
               onDragOver={(e) => {
@@ -299,8 +299,7 @@ export function SourcingKanban({
                       setOverCol(null);
                     }}
                     className={cn(
-                      "group cursor-grab rounded-lg border border-l-[3px] bg-card p-3 text-xs shadow-sm transition-shadow",
-                      accent.edge,
+                      "group cursor-grab rounded-lg border bg-card p-3 text-xs shadow-sm transition-shadow",
                       "hover:shadow-md active:cursor-grabbing",
                       dragId === c.id && "opacity-50",
                     )}
@@ -309,7 +308,7 @@ export function SourcingKanban({
                       <span className="min-w-0 flex-1 break-words font-medium leading-normal">{c.company_name}</span>
                       <div className="flex shrink-0 items-center">
                         <GripVertical
-                          className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-muted-foreground"
+                          className="h-3.5 w-3.5 text-ink-300 group-hover:text-muted-foreground"
                           aria-hidden
                         />
                         <DropdownMenu>
@@ -383,7 +382,7 @@ export function SourcingKanban({
                   <p
                     className={cn(
                       "rounded-lg border border-dashed px-2 py-6 text-center text-[11px] text-muted-foreground",
-                      isOver && "border-primary/50 text-primary-ink",
+                      isOver && "border-border-strong text-primary-ink",
                     )}
                   >
                     {isOver ? "Release to move here" : "Empty"}
@@ -395,7 +394,7 @@ export function SourcingKanban({
         })}
 
         {columns.length === 0 && (
-          <div className="w-full rounded-xl border border-dashed bg-card/50 p-10 text-center text-sm text-muted-foreground">
+          <div className="w-full rounded-lg border border-dashed bg-card/50 p-10 text-center text-sm text-muted-foreground">
             No funnel stages yet. Shortlist a company from the pool to start the funnel.
           </div>
         )}

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 /**
- * Error boundary for the authenticated app group. Catches render/runtime errors
- * in any (app) route and offers a recovery path.
+ * Error boundary for the authenticated app group. Catches render/runtime errors in any
+ * (app) route and offers a recovery path. The navigation rail stays usable around it,
+ * so "go somewhere else" is always one click away as well.
  */
 export default function AppError({
   error,
@@ -22,20 +23,27 @@ export default function AppError({
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 p-6 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-destructive/12">
-        <AlertTriangle className="size-6 text-destructive-ink" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
+      <div className="mb-4 grid size-10 place-items-center rounded-lg bg-danger-soft ring-1 ring-inset ring-danger-line">
+        <AlertTriangle className="size-5 text-danger-ink" strokeWidth={1.75} />
       </div>
-      <div>
-        <h1 className="text-xl font-semibold">Something went wrong</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          An unexpected error occurred while loading this page.
+      <h1 className="text-lg font-semibold tracking-[-0.01em]">This page couldn&rsquo;t load</h1>
+      <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+        Something failed while rendering it. Nothing you saved has been lost — try again, or
+        head back to Home.
+      </p>
+      {error.digest && (
+        <p className="mt-3 rounded-md bg-muted px-2 py-1 font-mono text-[11px] text-muted-foreground ring-1 ring-inset ring-border">
+          Reference {error.digest}
         </p>
-      </div>
-      <div className="flex gap-2">
-        <Button onClick={reset}>Try again</Button>
+      )}
+      <div className="mt-6 flex gap-2">
+        <Button onClick={reset}>
+          <RotateCcw aria-hidden />
+          Try again
+        </Button>
         <Button variant="outline" onClick={() => (window.location.href = "/dashboard")}>
-          Go to dashboard
+          Go to Home
         </Button>
       </div>
     </div>

@@ -50,7 +50,7 @@ export function StatCard({
     <Card className={cn("stat-card gap-0 py-0", className)} style={style}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <span className="text-xs font-medium text-muted-foreground">
             {label}
           </span>
           {Icon ? <Icon className="text-muted-foreground size-4" /> : null}
@@ -61,7 +61,7 @@ export function StatCard({
           <div className="mt-2 flex items-baseline gap-2">
             <div
               className="text-3xl font-semibold tabular-nums"
-              style={{ fontFamily: "var(--font-mono)" }}
+              style={{ fontVariantNumeric: "tabular-nums" }}
             >
               {displayValue}
             </div>
@@ -70,7 +70,7 @@ export function StatCard({
                 className={cn(
                   "text-xs font-medium tabular-nums",
                   delta > 0 === deltaGoodUp
-                    ? "text-emerald-700 dark:text-emerald-400"
+                    ? "text-foreground"
                     : "text-destructive-ink",
                 )}
               >

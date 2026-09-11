@@ -2682,3 +2682,79 @@ own header states the fixture it needs — `bootstrap --reset`, `sourcing_pool`,
 assertions about specific pool and Master List companies cannot hold. The file is
 `describe.serial`, which is why one failure leaves the rest unrun. Nothing in Sourcing or
 Master List was touched by this track.
+
+---
+
+## Track UX — "Ledger": product-wide redesign  ✅ complete (2026-09-11)
+
+**Goal:** replace the all-grey "ink on paper" system across every product surface with one
+coherent, production-grade visual language: black and white foundation, strong type,
+crisp hairlines, and colour used only for state. Strategy in `PRODUCT.md` (new), the
+system in `DESIGN.md` (rewritten). Behaviour, routes and data flow are unchanged.
+
+**Why:** the previous system removed all hue — late, replied and bounced were all shades
+of grey, status needed a legend, and the inverted black blocks, tracked-caps eyebrows and
+monospace figures read as templated. The brief asked for a serious B2B product, not an
+"AI dashboard".
+
+### The system
+- Tokens (`app/globals.css`): white workspace, cool-tinted neutrals, solid hairlines, a
+  13px working `text-sm`, four state families (danger / warning / success / info) each
+  with solid, ink, soft and line, and a near-black navigation rail (`--sidebar-*`).
+- Type: Instrument Sans everywhere with tabular figures; `MONO` is now
+  `font-variant-numeric: tabular-nums`; Plex Mono only for code-like strings.
+- Roles (`lib/design.ts`, same export names): status glyph with state colour, `CHIP` +
+  `CHIP_TONE`, `LATE_TOKEN` (red) and `DUE_TOKEN` (amber), segmented control as a raised
+  white segment, sentence-case `LABEL`, flat `PANEL` + `PANEL_HEAD`.
+- Primitives rebuilt: button, badge, input, select, dropdown, popover, dialog, tabs,
+  card, table, skeleton, toast, avatar.
+
+### Shell and navigation
+- Dark rail replaces sidebar + top bar: firm and brand, Search (⌘/Ctrl K), Home · My work
+  · Deals · Outreach · Insights · Workspace groups, the recent-project list with a red dot
+  for anything late, and an account menu that keeps the role on screen. Collapses to an
+  icon rail (`[`); `g` + letter jumps to a section. Below `md` it is a drawer behind a
+  48px bar. "My work" (`/tasks`) is back in the nav as the cross-project inbox.
+- Shared `PageHeader` with breadcrumbs; skip link; skeleton shell while auth loads.
+
+### Surfaces
+- Home: a "Today" module (one sentence + four ruled figures + the queue action) replaces
+  the hero number and pressure gauge; focus queue as an aligned table.
+- Project shell, workspace register, peek, filter builder, view picker, bulk bar, work,
+  analytics, activity, details — state colours throughout; the "why now" column no longer
+  repeats lateness beside the late chip; phone-width column template for the register.
+- Projects, Master List (cells, board, next-touch), Sourcing (fit column without the side
+  stripe), Schedule (horizon bars, row tints and stagger removed), Contacts, Companies,
+  company and contact detail, Analytics (finding line, ruled metrics, conversion strip,
+  green replies), Project health, Sourcing analytics, My work (status tabs), Settings
+  (section index + flat panels), Import, Login/Signup (split auth shell), 404, error.
+- Mechanical sweep: tracked-caps labels → sentence case, monospace figures → tabular,
+  translucent washes → surface tokens, 12–16px radii → 8px, italic "provisional" voice →
+  dashed glyph, invisible `bg-muted` skeletons → `ink-100`, pills → square chips.
+
+### Verification
+
+Run against a Faker-seeded redesign stack (`api-redesign` :8200 + `product-app-v2` :3030,
+`backend/upstream_redesign.db`, plus ~30 realistic tasks so Work and Activity are populated).
+
+- `tsc --noEmit` clean; `next build` succeeds (all 28 routes).
+- Vitest: **253 passed** (23 files).
+- Playwright (full suite, serial): **40 passed**; the 6 initial failures were 2 real
+  regressions — `login`/`smoke` expect a heading named "Upstream", which the new auth shell
+  had demoted to text (fixed: the lockup is the page `<h1>`) — and 4 environment
+  mismatches (`activity`, `outreach-timeline` call the API at `NEXT_PUBLIC_API_URL`, which
+  defaults to :8000). Re-run with the URL set: **18/18 passed**. `feature-sweep` still needs
+  its own bootstrap + pool + workbooks fixture (unchanged known gap; 13 serial dependants
+  unrun).
+- Every route captured at 1440×900 before and after, plus interactive states (palette,
+  account menu, dialogs, peek, filter builder, view picker, row menu, bulk bar, collapsed
+  rail, confirm) and 390px mobile. Two layout bugs found this way and fixed: the phone-width
+  register header collision, and a duplicate command-palette key from adding My work to
+  the nav.
+- `eslint`: 7 pre-existing React Compiler errors (`set-state-in-effect` in
+  `companies/page.tsx`, `command-palette`, `compose-email-sheet`, `email-sending-card`,
+  `use-counter`) are untouched by this track — the redesign changed only class names in
+  those regions. Unused imports it left behind were removed.
+
+**Dev-only note:** Next's dev indicator sits over the rail's account button in `next dev`
+(not in production builds); use the keyboard or collapse it when testing that corner.

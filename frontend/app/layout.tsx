@@ -1,28 +1,32 @@
 import type { Metadata } from "next";
-import { Cormorant, Outfit, JetBrains_Mono } from "next/font/google";
+import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 
 import { Providers } from "@/components/providers";
-import { THEME_INIT_SCRIPT } from "@/components/theme";
 
-const cormorant = Cormorant({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
-const outfit = Outfit({
+/*
+ * One working face for the whole product.
+ *
+ * Instrument Sans is a compact neo-grotesque: tight enough to hold 13px table cells,
+ * with real tabular figures (`tnum`), so every number in a column aligns without
+ * switching to a monospace. Figures stay in the same family as the words beside them,
+ * which is how financial statements are set — a mono face for numbers reads as a
+ * terminal, not a ledger.
+ *
+ * Plex Mono is kept only for the things that are genuinely code-like: keyboard hints,
+ * identifiers, file names.
+ */
+const instrumentSans = Instrument_Sans({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  style: ["normal", "italic"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const plexMono = IBM_Plex_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -39,14 +43,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
-      className={`${cormorant.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${instrumentSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <head>
-        {/* Server-rendered so it executes before first paint (client-rendered
-            scripts never run and React 19 warns about them). */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-      </head>
       <body className="bg-background text-foreground min-h-full" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
