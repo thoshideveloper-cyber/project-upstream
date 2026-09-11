@@ -51,19 +51,19 @@ describe("daysBetween", () => {
   });
 });
 
-describe("event language (plan.md §7.3)", () => {
-  it("maps each event type to its status hue", () => {
-    expect(eventTone("INITIAL_EMAIL")).toBe("violet");
-    expect(eventTone("FOLLOW_UP")).toBe("slate");
-    expect(eventTone("CALL")).toBe("slate");
-    expect(eventTone("RESPONSE")).toBe("green");
-    expect(eventTone("BOUNCE")).toBe("red");
-    expect(eventTone("DECLINED")).toBe("amber");
-    expect(eventTone("NOTE")).toBe("grey");
+describe("event language", () => {
+  it("maps each event type to the role it plays in the relationship", () => {
+    expect(eventTone("INITIAL_EMAIL")).toBe("anchor");
+    expect(eventTone("FOLLOW_UP")).toBe("touch");
+    expect(eventTone("CALL")).toBe("touch");
+    expect(eventTone("RESPONSE")).toBe("reply");
+    expect(eventTone("BOUNCE")).toBe("alarm");
+    expect(eventTone("DECLINED")).toBe("closed");
+    expect(eventTone("NOTE")).toBe("note");
   });
 
-  it("falls back to grey + a readable label for an unknown type", () => {
-    expect(eventTone("SMOKE_SIGNAL")).toBe("grey");
+  it("falls back to a note + a readable label for an unknown type", () => {
+    expect(eventTone("SMOKE_SIGNAL")).toBe("note");
     expect(eventLabel("SMOKE_SIGNAL")).toBe("smoke signal");
     expect(eventLabel("RESPONSE")).toBe("Response");
   });

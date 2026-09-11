@@ -83,8 +83,21 @@ test.describe("Workbook import", () => {
     await expect(page.getByRole("heading", { name: project, exact: true })).toBeVisible({
       timeout: 15_000,
     });
+
     // A company from row 7 of the sheet is really there.
-    await expect(page.getByText("Mandala Capital").first()).toBeVisible({ timeout: 15_000 });
+    //
+    // Asserted in the workspace, not on the overview. The overview's queue is the seven
+    // most urgent rows, so whether any *particular* company appears on it depends on how
+    // the sheet's dates land against today — which made this assertion pass or fail by
+    // calendar rather than by whether the import worked. The workspace holds the whole
+    // book, and searching it proves both that the row was written and that it is findable.
+    const projectId = page.url().match(/\/projects\/(\d+)/)?.[1];
+    await page.goto(`/projects/${projectId}/workspace`);
+    await expect(page.getByTestId("grid-table")).toBeVisible({ timeout: 15_000 });
+    await page.getByTestId("grid-search").fill("Mandala Capital");
+    await expect(
+      page.getByTestId("grid-company-row").filter({ hasText: "Mandala Capital" }).first(),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("an analyst takes the client's whole book — all three workbooks, one project", async ({

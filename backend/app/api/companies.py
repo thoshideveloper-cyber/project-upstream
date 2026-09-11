@@ -10,12 +10,14 @@ from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
-from app.core.deps import CurrentUser, SessionDep, visible_mandate_ids
+from app.core.deps import CurrentUser, SessionDep, visible_mandate_ids, visible_project_ids
 from app.core.time import today_ist
 from app.models.company import Company
 from app.models.company_category import CompanyCategoryVocab
 from app.models.contact import Contact
 from app.models.enums import (
+    ActivityObjectType,
+    ActivityVerb,
     CompanyCategory,
     CompanyStatus,
     CompanyType,
@@ -34,6 +36,7 @@ from app.models.outreach_schedule import OutreachSchedule
 from app.models.sourcing_layer import SourcingLayer
 from app.schemas.company import CompanyCreate, CompanyRead, CompanyUpdate
 from app.schemas.outreach_schedule import OutreachScheduleUpdate
+from app.services import activity
 from app.services.cadence import (
     EVENT_STOP_MAP,
     activate_schedule,
@@ -423,10 +426,17 @@ async def list_companies(
     sourcing_layer_id: int | None = Query(default=None),
     unsorted: bool = Query(default=False, description="Only companies with no sourcing layer"),
     mandate_id: int | None = Query(default=None),
+    project_id: int | None = Query(
+        default=None, description="Every engagement in this project — the deal room's book"
+    ),
     source: Source | None = Query(default=None),
     sort: str | None = Query(default="company_name"),
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=25, ge=1, le=500),
+    # Ceiling raised from 500 to 1000 for the project workspace, which reads a whole
+    # book in one lens and must not silently truncate it. The client still pages (see
+    # ``useProjectBook``) — a bigger page only means fewer round trips for the common
+    # case, not permission to stop paging.
+    page_size: int = Query(default=25, ge=1, le=1000),
     include_archived: bool = Query(default=False),
 ):
     visible = await visible_mandate_ids(current_user, db)
@@ -454,6 +464,19 @@ async def list_companies(
         conditions.append(Company.sourcing_layer_id.is_(None))
     if mandate_id:
         conditions.append(Company.mandate_id == mandate_id)
+    if project_id:
+        # The project's whole book in one read. Composed with the `visible` predicate
+        # above rather than replacing it, so an analyst asking for a project they can
+        # only partly see gets their slice, never the rest of it.
+        conditions.append(
+            Company.mandate_id.in_(
+                select(Mandate.id).where(
+                    Mandate.project_id == project_id,
+                    Mandate.firm_id == current_user.firm_id,
+                    Mandate.archived_at.is_(None),
+                )
+            )
+        )
     if source:
         conditions.append(Company.source == source)
 
@@ -566,6 +589,17 @@ async def create_company(body: CompanyCreate, db: SessionDep, current_user: Curr
         cadence_interval_days=cadence_interval_days,
     )
     db.add(schedule)
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.COMPANY_CREATED,
+        object_type=ActivityObjectType.COMPANY,
+        object_id=company.id,
+        object_label=company.company_name,
+        project_id=mandate.project_id,
+        mandate_id=mandate.id,
+        company_id=company.id,
+    )
     await db.commit()
     # Reload server-managed columns (updated_at onupdate) touched by the profile write.
     await db.refresh(company)
@@ -1021,6 +1055,30 @@ async def log_event(
         _refresh_contact_cache(contact, body)
 
     await db.flush()
+    # ONE row for the whole touch, not one per side effect: the schedule activating, the
+    # cadence stopping and the status projection are all consequences of this single act,
+    # and a feed that narrates each of them separately reads as noise rather than history.
+    mandate_row = (
+        await db.execute(
+            select(Mandate.project_id).where(Mandate.id == company.mandate_id)
+        )
+    ).scalar_one_or_none()
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.OUTREACH_LOGGED,
+        object_type=ActivityObjectType.OUTREACH_EVENT,
+        object_id=event.id,
+        object_label=company.company_name,
+        project_id=mandate_row,
+        mandate_id=company.mandate_id,
+        company_id=company.id,
+        meta={
+            "event_type": body.event_type.value,
+            "occurred_on": body.occurred_on.isoformat(),
+            "sentiment": body.sentiment.value if body.sentiment else None,
+        },
+    )
     await db.commit()
 
     from app.schemas.outreach_event import OutreachEventRead
@@ -1121,3 +1179,25 @@ async def restart_company_cycle(
     base = OutreachScheduleRead.model_validate(new_sched).model_dump()
     base.update(cadence)
     return base
+
+
+@router.get("/{company_id}/activity")
+async def company_activity(
+    company_id: int,
+    db: SessionDep,
+    current_user: CurrentUser,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+):
+    """This company's trail — a different thing from its outreach Timeline, which is the
+    append-only record of touches. Both belong on the page."""
+    await _get_visible_company(company_id, db, current_user, include_archived=True)
+    visible = await visible_project_ids(current_user, db)
+    return await activity.feed(
+        db,
+        user=current_user,
+        visible_projects=visible,
+        company_id=company_id,
+        page=page,
+        page_size=page_size,
+    )

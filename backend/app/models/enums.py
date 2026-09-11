@@ -191,3 +191,99 @@ class ImportRowAction(str, enum.Enum):
 class DataSourceKind(str, enum.Enum):
     ENRICHMENT = "ENRICHMENT"
     RANKING = "RANKING"
+
+
+# ── Tasks & activity (PROJECTS_ACTIVITY_TASKS_PLAN) ───────────────────────────
+
+
+class TaskStatus(str, enum.Enum):
+    BACKLOG = "BACKLOG"
+    IN_PROGRESS = "IN_PROGRESS"
+    BLOCKED = "BLOCKED"
+    DONE = "DONE"
+
+
+class TaskPriority(str, enum.Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class TaskScope(str, enum.Enum):
+    """What a task hangs off.
+
+    Every scope but PERSONAL resolves up to a project (see ``services/scope.py``), which
+    is what makes "tasks on this project" one indexed predicate instead of four ORs.
+    PERSONAL carries no attachment at all and is owner-only, always — including against
+    a partner's firm-wide list.
+    """
+
+    PROJECT = "PROJECT"
+    MANDATE = "MANDATE"
+    COMPANY = "COMPANY"
+    CONTACT = "CONTACT"
+    PERSONAL = "PERSONAL"
+
+
+class ActivityObjectType(str, enum.Enum):
+    PROJECT = "PROJECT"
+    MANDATE = "MANDATE"
+    COMPANY = "COMPANY"
+    CONTACT = "CONTACT"
+    TASK = "TASK"
+    OUTREACH_EVENT = "OUTREACH_EVENT"
+    SCHEDULE = "SCHEDULE"
+    IMPORT_BATCH = "IMPORT_BATCH"
+    SOURCING_CANDIDATE = "SOURCING_CANDIDATE"
+    PROJECT_ASSIGNMENT = "PROJECT_ASSIGNMENT"
+    MANDATE_ASSIGNMENT = "MANDATE_ASSIGNMENT"
+
+
+class ActivityVerb(str, enum.Enum):
+    """The activity vocabulary — APPEND-ONLY.
+
+    ``SAEnum(native_enum=False)`` stores the member *name*, so renaming or removing a verb
+    makes every historical row raise ``LookupError`` on read. Add members; never edit or
+    delete them.
+    """
+
+    PROJECT_CREATED = "PROJECT_CREATED"
+    PROJECT_UPDATED = "PROJECT_UPDATED"
+    PROJECT_ARCHIVED = "PROJECT_ARCHIVED"
+    PROJECT_UNARCHIVED = "PROJECT_UNARCHIVED"
+    PROJECT_DELETED = "PROJECT_DELETED"
+    PROJECT_MEMBER_ADDED = "PROJECT_MEMBER_ADDED"
+    PROJECT_MEMBER_REMOVED = "PROJECT_MEMBER_REMOVED"
+
+    MANDATE_CREATED = "MANDATE_CREATED"
+    MANDATE_UPDATED = "MANDATE_UPDATED"
+    MANDATE_ARCHIVED = "MANDATE_ARCHIVED"
+    MANDATE_UNARCHIVED = "MANDATE_UNARCHIVED"
+    MANDATE_ASSIGNED = "MANDATE_ASSIGNED"
+    MANDATE_UNASSIGNED = "MANDATE_UNASSIGNED"
+
+    COMPANY_CREATED = "COMPANY_CREATED"
+    COMPANY_UPDATED = "COMPANY_UPDATED"
+    COMPANY_ARCHIVED = "COMPANY_ARCHIVED"
+    COMPANY_UNARCHIVED = "COMPANY_UNARCHIVED"
+    COMPANY_STATUS_CHANGED = "COMPANY_STATUS_CHANGED"
+
+    CONTACT_CREATED = "CONTACT_CREATED"
+    CONTACT_UPDATED = "CONTACT_UPDATED"
+    CONTACT_ARCHIVED = "CONTACT_ARCHIVED"
+
+    OUTREACH_LOGGED = "OUTREACH_LOGGED"
+    SCHEDULE_UPDATED = "SCHEDULE_UPDATED"
+    SCHEDULE_RESTARTED = "SCHEDULE_RESTARTED"
+    EMAIL_SENT = "EMAIL_SENT"
+
+    CANDIDATE_ADDED = "CANDIDATE_ADDED"
+    CANDIDATE_PUSHED = "CANDIDATE_PUSHED"
+    CANDIDATE_STAGE_CHANGED = "CANDIDATE_STAGE_CHANGED"
+    IMPORT_APPLIED = "IMPORT_APPLIED"
+
+    TASK_CREATED = "TASK_CREATED"
+    TASK_UPDATED = "TASK_UPDATED"
+    TASK_ASSIGNED = "TASK_ASSIGNED"
+    TASK_STATUS_CHANGED = "TASK_STATUS_CHANGED"
+    TASK_ARCHIVED = "TASK_ARCHIVED"

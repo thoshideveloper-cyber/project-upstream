@@ -26,6 +26,8 @@ from app.core.time import utcnow
 from app.models.company import Company
 from app.models.company_profile import CompanyProfile
 from app.models.enums import (
+    ActivityObjectType,
+    ActivityVerb,
     CandidateScoreStatus,
     CompanyType,
     MandateStatus,
@@ -37,6 +39,7 @@ from app.models.mandate import Mandate
 from app.models.project import Project
 from app.models.sourcing_candidate import SourcingCandidate
 from app.schemas.sourcing_candidate import SourcingCandidateRead
+from app.services import activity
 from app.services.profiles import compute_domain_key
 from app.services.providers import get_ranking_provider
 from app.services.providers.mock import MockRankingProvider
@@ -81,6 +84,11 @@ def _dec(v: str | None) -> Decimal | None:
         return None
 
 
+# The sector facet's name for "no sector recorded". A company that arrived on a client
+# sheet carrying no such column is a real, filterable state — not a row to hide — so the
+# lens counts it and this sentinel lets a click narrow to it.
+UNCLASSIFIED = "__unclassified__"
+
 # Revenue size bands (₹ Cr) — lower-inclusive / upper-exclusive so every profile
 # lands in exactly ONE band. The same table drives the facet counts and the
 # ``rev_band`` pool filter, so a lens count can never disagree with a click result.
@@ -118,11 +126,24 @@ def _pool_conditions(
     headcount_max: int | None,
     rev_band: str | None = None,
     warm_only: bool = False,
+    segment: str | None = None,
+    sector: str | None = None,
 ) -> list:
     conditions = [
         CompanyProfile.firm_id == firm_id,
         CompanyProfile.archived_at.is_(None),
     ]
+    # segment / sector live on the profile, so they narrow the database itself — unlike
+    # category and type below, which can only ask "has a placement like this" and are
+    # therefore blind to every company the firm has never put on a deal.
+    if segment:
+        conditions.append(CompanyProfile.segment == segment)
+    if sector:
+        conditions.append(
+            CompanyProfile.sector.is_(None)
+            if sector == UNCLASSIFIED
+            else CompanyProfile.sector == sector
+        )
     if q:
         like = f"%{q}%"
         domain = compute_domain_key(q)
@@ -196,6 +217,8 @@ async def _run_pool_search(
     page_size: int,
     rev_band: str | None = None,
     warm_only: bool = False,
+    segment: str | None = None,
+    sector: str | None = None,
 ) -> dict:
     # mandate_id is optional: without one this is the firm's standing company database
     # (browse + search the pool itself), with no per-deal candidate overlay to compute.
@@ -214,6 +237,8 @@ async def _run_pool_search(
         headcount_max=headcount_max,
         rev_band=rev_band,
         warm_only=warm_only,
+        segment=segment,
+        sector=sector,
     )
 
     # Left-join the candidate for THIS mandate so we can overlay + sort by AI score.
@@ -288,6 +313,8 @@ async def _run_pool_search(
                 "hq": profile.hq,
                 "website": profile.website,
                 "linkedin": profile.linkedin,
+                "segment": profile.segment,
+                "sector": profile.sector,
                 "headcount": profile.headcount,
                 "revenue_inr_cr": (
                     str(profile.revenue_inr_cr) if profile.revenue_inr_cr is not None else None
@@ -408,6 +435,18 @@ async def push_to_project_side(
 
     warm = await build_warm_history(
         db, firm_id=current_user.firm_id, profile_ids=[profile.id], visible=visible
+    )
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.CANDIDATE_PUSHED,
+        object_type=ActivityObjectType.SOURCING_CANDIDATE,
+        object_id=company.id,
+        object_label=company.company_name,
+        project_id=target.project_id,
+        mandate_id=target.id,
+        company_id=company.id,
+        meta={"side": target.type.value, "engagement": target.name},
     )
     await db.commit()
     return {
@@ -655,6 +694,13 @@ async def search_candidates(
         default=None, description="lt100 | b100_500 | b500_2000 | gte2000"
     ),
     warm_only: bool = Query(default=False, description="Only profiles with prior placements"),
+    segment: str | None = Query(
+        default=None, description="Profile-level side of the market: TARGET | BUYER | INVESTOR"
+    ),
+    sector: str | None = Query(
+        default=None,
+        description=f"Profile-level research bucket; '{UNCLASSIFIED}' for rows with none",
+    ),
     sort: str = Query(default="name", description="score | name | rev"),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
@@ -679,6 +725,8 @@ async def search_candidates(
         page_size=page_size,
         rev_band=rev_band,
         warm_only=warm_only,
+        segment=segment,
+        sector=sector,
     )
 
 
@@ -698,6 +746,8 @@ async def export_candidates(
     has_score: bool = Query(default=False),
     rev_band: str | None = Query(default=None),
     warm_only: bool = Query(default=False),
+    segment: str | None = Query(default=None),
+    sector: str | None = Query(default=None),
     sort: str = Query(default="name"),
 ):
     if rev_band is not None and rev_band not in REV_BANDS:
@@ -720,11 +770,23 @@ async def export_candidates(
         page_size=200,
         rev_band=rev_band,
         warm_only=warm_only,
+        segment=segment,
+        sector=sector,
     )
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(
-        ["Company", "HQ", "Website", "Headcount", "Revenue (INR Cr)", "Stage", "Fit score"]
+        [
+            "Company",
+            "HQ",
+            "Segment",
+            "Sector",
+            "Website",
+            "Headcount",
+            "Revenue (INR Cr)",
+            "Stage",
+            "Fit score",
+        ]
     )
     for it in data["items"]:
         cand = it["candidate"] or {}
@@ -732,6 +794,8 @@ async def export_candidates(
             [
                 it["company_name"],
                 it["hq"] or "",
+                it["segment"] or "",
+                it["sector"] or "",
                 it["website"] or "",
                 it["headcount"] if it["headcount"] is not None else "",
                 it["revenue_inr_cr"] or "",
@@ -756,10 +820,11 @@ async def pool_facets(
 ):
     """Composition of the firm-wide pool — the Discover lens.
 
-    Cheap read-only group-bys over the shared pool: category mix (via placements —
-    the pool itself carries no category), top HQ cities, revenue size bands, and the
-    warm-door count (profiles with any prior placement). ``scored`` is per-mandate
-    when a mandate is given. Firm-wide by design, like the pool itself.
+    Cheap read-only group-bys over the shared pool: segment and sector (profile-level, so
+    they read the whole database), category mix (via placements — a placement is the only
+    thing that has a category), top HQ cities, revenue size bands, and the warm-door count
+    (profiles with any prior placement). ``scored`` is per-mandate when a mandate is given.
+    Firm-wide by design, like the pool itself.
     """
     firm_id = current_user.firm_id
     pool_where = [CompanyProfile.firm_id == firm_id, CompanyProfile.archived_at.is_(None)]
@@ -767,6 +832,40 @@ async def pool_facets(
     total = (
         await db.execute(select(func.count()).select_from(CompanyProfile).where(*pool_where))
     ).scalar() or 0
+
+    seg_rows = (
+        await db.execute(
+            select(CompanyProfile.segment, func.count())
+            .where(*pool_where, CompanyProfile.segment.is_not(None))
+            .group_by(CompanyProfile.segment)
+            .order_by(func.count().desc(), CompanyProfile.segment)
+        )
+    ).all()
+    by_segment = [{"segment": s, "count": n} for s, n in seg_rows]
+
+    sector_rows = (
+        await db.execute(
+            select(CompanyProfile.sector, func.count())
+            .where(*pool_where, CompanyProfile.sector.is_not(None))
+            .group_by(CompanyProfile.sector)
+            .order_by(func.count().desc(), CompanyProfile.sector)
+            .limit(8)
+        )
+    ).all()
+    by_sector = [{"sector": s, "label": s, "count": n} for s, n in sector_rows]
+    # Rows with no sector are the honest remainder of an import — countable and clickable
+    # rather than quietly missing from a lens that claims to read the whole database.
+    unclassified = (
+        await db.execute(
+            select(func.count())
+            .select_from(CompanyProfile)
+            .where(*pool_where, CompanyProfile.sector.is_(None))
+        )
+    ).scalar() or 0
+    if unclassified:
+        by_sector.append(
+            {"sector": UNCLASSIFIED, "label": "Unclassified", "count": unclassified}
+        )
 
     from app.models.company_category import CompanyCategoryVocab
 
@@ -825,6 +924,25 @@ async def pool_facets(
         )
     ).scalar() or 0
 
+    # How much of the database is actually filled in. On a firm's first day the shipped
+    # dataset carries names, cities and domains but no financials — so the lens says so
+    # out loud instead of rendering four empty revenue bands and looking broken. Every
+    # import raises these numbers, which makes the honest read also the useful prompt.
+    async def _filled(column) -> int:
+        return (
+            await db.execute(
+                select(func.count())
+                .select_from(CompanyProfile)
+                .where(*pool_where, column.is_not(None))
+            )
+        ).scalar() or 0
+
+    coverage = {
+        "revenue": await _filled(CompanyProfile.revenue_inr_cr),
+        "headcount": await _filled(CompanyProfile.headcount),
+        "website": await _filled(CompanyProfile.domain_key),
+    }
+
     scored = 0
     if mandate_id is not None:
         await _assert_mandate_visible(mandate_id, db, current_user)
@@ -841,9 +959,12 @@ async def pool_facets(
 
     return {
         "total": total,
+        "by_segment": by_segment,
+        "by_sector": by_sector,
         "by_category": by_category,
         "by_hq": by_hq,
         "size_bands": size_bands,
+        "coverage": coverage,
         "warm": warm,
         "scored": scored,
     }

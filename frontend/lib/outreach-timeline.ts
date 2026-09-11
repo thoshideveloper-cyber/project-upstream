@@ -11,7 +11,13 @@
 import type { OutreachEvent } from "@/types";
 
 /** plan.md §7.3 status-colour language, reused verbatim for event types. */
-export type EventTone = "green" | "amber" | "red" | "violet" | "slate" | "grey";
+/**
+ * What an event does to the relationship — named for its role, not a hue, because the
+ * product has no hues. `anchor` starts the clock, `touch` is us reaching out, `reply` is
+ * them answering, `alarm` is an address that never arrived, `closed` is a no, and
+ * `note` is an annotation rather than a touch.
+ */
+export type EventTone = "anchor" | "touch" | "reply" | "alarm" | "closed" | "note";
 
 export const EVENT_LABEL: Record<string, string> = {
   INITIAL_EMAIL: "Initial email",
@@ -26,23 +32,21 @@ export const EVENT_LABEL: Record<string, string> = {
 };
 
 /**
- * §7.3: Responded = green · Declined = amber · Bounced = red · Contacted =
- * slate · Not contacted = grey · needs-initial = violet. Event types inherit the
- * colour of the state they put the company in, which makes the spine readable
- * as one sentence: violet starts it, slate is us reaching out, green is them
- * answering, red/amber ends it, grey is an annotation. Channel is carried by the
- * icon, not by a new hue — one language, no rainbow.
+ * Event types take the role of the state they put the company in, which makes the
+ * spine readable as one sentence: the anchor starts it, touches are us reaching out, a
+ * reply is them answering, an alarm or a no ends it, a note is an aside. Channel is
+ * carried by the icon, never by a new treatment — one language.
  */
 export const EVENT_TONE: Record<string, EventTone> = {
-  INITIAL_EMAIL: "violet", // the anchor — the needs-initial hue, resolved
-  FOLLOW_UP: "slate", // contacted
-  CALL: "slate",
-  LINKEDIN: "slate",
-  MEETING: "slate",
-  RESPONSE: "green", // responded
-  BOUNCE: "red", // bounced
-  DECLINED: "amber", // declined
-  NOTE: "grey", // not a touch — an annotation
+  INITIAL_EMAIL: "anchor", // day 0 — the clock starts here (CLAUDE.md rule 3)
+  FOLLOW_UP: "touch",
+  CALL: "touch",
+  LINKEDIN: "touch",
+  MEETING: "touch",
+  RESPONSE: "reply",
+  BOUNCE: "alarm",
+  DECLINED: "closed",
+  NOTE: "note", // not a touch — an annotation
 };
 
 /** Touches that stop the cadence (CLAUDE.md rule 4). */
@@ -57,7 +61,7 @@ export function eventLabel(eventType: string): string {
 }
 
 export function eventTone(eventType: string): EventTone {
-  return EVENT_TONE[eventType] ?? "grey";
+  return EVENT_TONE[eventType] ?? "note";
 }
 
 /** Whole days from `from` to `to` for ISO `YYYY-MM-DD` dates. Negative if `to` is earlier. */

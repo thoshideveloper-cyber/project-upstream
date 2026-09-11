@@ -20,6 +20,8 @@ SL1_REVISION = "a7c9e1b2d3f4"
 PREV_REVISION = "f4b3c5d7e9a0"
 WB1_REVISION = "b2e4f6a8c0d1"
 WB1_PREV_REVISION = "a1c3e5f7b9d0"
+TASKS_REVISION = "e7c4d9a2f611"
+TASKS_PREV_REVISION = "d5a7c9e1f3b8"
 
 
 def _alembic_config() -> Config:
@@ -162,3 +164,55 @@ async def test_wb1_upgrade_downgrade_upgrade(tmp_path, monkeypatch):
     command.upgrade(cfg, "head")
     assert added_to_rows <= _columns(sync_url, "import_rows")
     assert added_to_batches <= _columns(sync_url, "import_batches")
+
+
+@pytest.mark.asyncio
+async def test_tasks_activity_round_trip(tmp_path, monkeypatch):
+    """Create-only, so the round-trip is about the three tables appearing and vanishing.
+
+    Nothing existing is altered, which means SQLite's batch table-rebuild — where every
+    migration bug in this project has lived — never runs.
+    """
+    db_file = tmp_path / "mig_tasks.db"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{db_file}")
+    sync_url = settings.sync_database_url
+    cfg = _alembic_config()
+
+    added = {"tasks", "activity_events", "project_assignments"}
+
+    command.upgrade(cfg, "head")
+    assert added <= _tables(sync_url)
+
+    command.downgrade(cfg, TASKS_PREV_REVISION)
+    assert not (added & _tables(sync_url))
+    # The book survives the downgrade.
+    assert {"projects", "mandates", "companies", "contacts"} <= _tables(sync_url)
+
+    command.upgrade(cfg, "head")
+    assert added <= _tables(sync_url)
+
+
+@pytest.mark.asyncio
+async def test_migration_matches_the_models_column_for_column(tmp_path, monkeypatch):
+    """conftest builds the test schema from ``Base.metadata.create_all``, not Alembic.
+
+    So a migration that forgets a column passes every functional test in the suite and
+    fails only in production. This codebase has already been bitten by exactly that
+    (revision d5a7c9e1f3b8), which is why the parity check is explicit rather than
+    assumed.
+    """
+    from app.models.activity_event import ActivityEvent
+    from app.models.project_assignment import ProjectAssignment
+    from app.models.task import Task
+
+    db_file = tmp_path / "mig_parity.db"
+    monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{db_file}")
+    sync_url = settings.sync_database_url
+    command.upgrade(_alembic_config(), "head")
+
+    for table, model in (
+        ("tasks", Task),
+        ("activity_events", ActivityEvent),
+        ("project_assignments", ProjectAssignment),
+    ):
+        assert _columns(sync_url, table) == set(model.__table__.columns.keys()), table

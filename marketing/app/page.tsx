@@ -1,64 +1,65 @@
-import { Choreography } from "@/components/motion/primitives";
-import { Clock } from "@/components/marketing/clock";
-import { Closing } from "@/components/marketing/closing";
-import { Desk } from "@/components/marketing/desk";
-import { Faq } from "@/components/marketing/faq";
-import { Hero } from "@/components/marketing/hero";
-import { Ledger, LedgerTurn } from "@/components/marketing/ledger";
-import { ReadingChrome } from "@/components/marketing/reading-chrome";
-import { Record } from "@/components/marketing/record";
-import { Secret } from "@/components/marketing/secret";
-import { SiteFooter } from "@/components/marketing/site-footer";
-import { SiteNav } from "@/components/marketing/site-nav";
+import { MotionConfig } from "motion/react";
+
+import { Closing } from "@/components/site/closing";
+import { Cost, Turn } from "@/components/site/cost";
+import { Depth } from "@/components/site/depth";
+import { Desk } from "@/components/site/desk";
+import { Hero } from "@/components/site/hero";
+import { Mechanism } from "@/components/site/mechanism";
+import { Questions } from "@/components/site/questions";
+import { Record } from "@/components/site/record";
+import { SiteFooter } from "@/components/site/footer";
+import { SiteNav } from "@/components/site/nav";
 
 /**
- * The argument, as a film.
+ * The argument, as one descent.
  *
- *   hero      OPEN        the promise, over a real queue
- *   ledger    SETUP       four failures, stated as losses already taken
- *   turn      BREATH      the one thing all four have in common
- *   desk      DISCOVERY   what it actually is, in screenshots
- *   clock     BUILD       the mechanism, running, operable, not asserted
- *   record    PAYOFF      the moat: what the second mandate knows
- *   secret    ASSURANCE   the buyer list is the secret, so who can see it
- *   faq       OBJECTIONS  what is left after all of that
- *   closing   RESOLUTION  one mandate, beside the sheet
+ *   hero       THE FILM      the current, scrubbed, settling into the queue
+ *   cost       THE LOSSES    four things that happened, and how late you heard
+ *   turn       THE BREATH    one line: they are all the same failure
+ *   mechanism  THE ACT       the reader logs one email and watches four
+ *                            consequences derive themselves
+ *   desk       THE PROOF     three real screens, held while you read them
+ *   record     THE DEPTH     the page goes under: one name, two mandates
+ *   depth      THE SEAL      who can see the book, and why a URL cannot argue
+ *   questions  THE OBJECTION the first one is the one they are all thinking
+ *   closing    THE MOUTH     back to the surface, one call to action
  *
- * Two things about this order are worth defending.
+ * Three things about this order are deliberate.
  *
- * **The desk sits third, not last.** A previous cut ran hero → problem →
- * cadence → memory → security → faq → cta and never showed the product, on the
- * reasoning that mechanism beats screenshots. It does, for a reader who has
- * already decided the thing is real. Nobody at fold three has. The screenshots
- * do the work that no amount of prose does, which is to let an analyst picture
- * a Tuesday morning inside it, and everything after them is read differently
- * because of it.
+ * **The mechanism sits before the screenshots.** The usual move is to show the
+ * product first and explain second. But the claim this product lives or dies on
+ * is that the record maintains itself, and a reader who has performed that with
+ * their own hand reads the three screenshots afterwards as evidence rather than
+ * as pictures.
  *
- * **Density alternates.** Dense fold, quiet fold, dense fold. The ledger and
- * the desk are heavy; the turn between them is one sentence on a mostly empty
- * band; the record opens on a statement before it gets to work. A page that is
- * uniformly dense is exhausting and a page that is uniformly airy says nothing,
- * and this product is dense, so the rhythm has to earn the quiet.
+ * **The page changes ground exactly once.** The record and access folds are
+ * underwater. That is the only dark stretch, it is two folds long, and it lands
+ * on the two subjects that are actually about what is hidden. A page that flips
+ * ground every second fold is a page where the flip means nothing.
+ *
+ * **Density alternates.** Dense, quiet, dense. The turn is one sentence on a
+ * mostly empty band between the two heaviest folds on the page, because a page
+ * that is uniformly dense is exhausting and this product is dense.
  */
 export default function LandingPage() {
   return (
-    <Choreography>
+    <MotionConfig reducedMotion="user" transition={{ duration: 0.62 }}>
       <div className="min-h-screen">
         <SiteNav />
-        <ReadingChrome />
         <main id="content" tabIndex={-1} className="outline-none">
           <Hero />
-          <Ledger />
-          <LedgerTurn />
+          <Cost />
+          <Turn />
+          <Mechanism />
           <Desk />
-          <Clock />
           <Record />
-          <Secret />
-          <Faq />
+          <Depth />
+          <Questions />
           <Closing />
         </main>
         <SiteFooter />
       </div>
-    </Choreography>
+    </MotionConfig>
   );
 }

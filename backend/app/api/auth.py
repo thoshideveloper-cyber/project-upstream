@@ -75,7 +75,13 @@ async def _issue_tokens(response: Response, user: User, db) -> None:
 
 @router.post("/signup", response_model=UserWithFirm, status_code=status.HTTP_201_CREATED)
 async def signup(body: SignupRequest, response: Response, db: SessionDep):
-    """Create a new firm and its first user (PARTNER)."""
+    """Create a new firm and its first user (PARTNER).
+
+    A firm is the workspace: the new one comes up with its configuration (categories,
+    funnel stages, data sources) and the shipped company database to search, and with no
+    book at all — no projects, companies, contacts or schedules. Those arrive when this
+    firm uploads its own workbooks, and are visible to nobody else.
+    """
     existing = await db.execute(select(User).where(User.email == body.email))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -86,12 +92,14 @@ async def signup(body: SignupRequest, response: Response, db: SessionDep):
 
     # Seed the firm's default counterparty-category vocabulary (§7.2) + funnel stages.
     from app.services.classification import seed_firm_categories
+    from app.services.pool import seed_firm_pool
     from app.services.providers.registry import seed_firm_data_sources
     from app.services.sourcing import seed_firm_stages
 
     await seed_firm_categories(db, firm.id)
     await seed_firm_stages(db, firm.id)
     await seed_firm_data_sources(db, firm.id)
+    await seed_firm_pool(db, firm.id)
 
     user = User(
         firm_id=firm.id,

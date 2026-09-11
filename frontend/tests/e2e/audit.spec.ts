@@ -25,7 +25,13 @@ const OUT_DIR = path.resolve(__dirname, ".audit", LABEL);
 /** Every route a user can reach from the nav, plus the deep links that hang off them. */
 const ROUTES: { path: string; name: string; partnerOnly?: boolean }[] = [
   { path: "/dashboard", name: "Dashboard" },
+  // My work is no longer in the sidebar (project work lives in the project), but the
+  // route still serves personal tasks and is still reachable from the palette — so the
+  // audit still walks it.
+  { path: "/tasks", name: "My work — task list" },
+  { path: "/tasks?view=board", name: "My work — task board" },
   { path: "/projects", name: "Projects — deal floor" },
+  { path: "/projects?scope=archived", name: "Projects — archived" },
   { path: "/sourcing", name: "Sourcing — discover" },
   { path: "/sourcing?view=funnel", name: "Sourcing — funnel" },
   { path: "/sourcing/analytics", name: "Sourcing — analytics" },
@@ -175,6 +181,45 @@ async function auditRoute(
   };
 }
 
+/**
+ * The project's own six views, resolved at runtime.
+ *
+ * They cannot sit in ROUTES because every one of them needs a real project id, and the
+ * whole point of the redesign is that they are separate routes rather than modes of one
+ * page — so walking only `/projects/{id}` would now audit a sixth of the surface.
+ */
+const PROJECT_VIEWS: { segment: string; name: string }[] = [
+  { segment: "", name: "Project — overview" },
+  { segment: "/workspace", name: "Project — workspace" },
+  { segment: "/workspace?attention=late", name: "Project — workspace, late only" },
+  { segment: "/work", name: "Project — work" },
+  { segment: "/analytics", name: "Project — analytics" },
+  { segment: "/activity", name: "Project — activity" },
+  { segment: "/details", name: "Project — details" },
+];
+
+/** The first project this role can see, or null when their desk is empty. */
+async function firstProjectId(page: Page): Promise<number | null> {
+  await page.goto("/projects", { waitUntil: "domcontentloaded" });
+  const href = await page
+    .locator('a[href^="/projects/"]')
+    .first()
+    .getAttribute("href", { timeout: 15_000 })
+    .catch(() => null);
+  const id = href?.match(/\/projects\/(\d+)/)?.[1];
+  return id ? Number(id) : null;
+}
+
+async function auditProjectViews(page: Page, role: string) {
+  const id = await firstProjectId(page);
+  if (id === null) return;
+  for (const view of PROJECT_VIEWS) {
+    reports.push(
+      await auditRoute(page, { path: `/projects/${id}${view.segment}`, name: view.name }, role),
+    );
+  }
+}
+
 test.describe.configure({ mode: "serial" });
 
 test.describe(`Route audit (${LABEL})`, () => {
@@ -184,6 +229,7 @@ test.describe(`Route audit (${LABEL})`, () => {
     for (const route of ROUTES) {
       reports.push(await auditRoute(page, route, "partner"));
     }
+    await auditProjectViews(page, "partner");
   });
 
   test("analyst walks every route they can reach", async ({ page }) => {
@@ -192,6 +238,7 @@ test.describe(`Route audit (${LABEL})`, () => {
     for (const route of ROUTES.filter((r) => !r.partnerOnly)) {
       reports.push(await auditRoute(page, route, "analyst"));
     }
+    await auditProjectViews(page, "analyst");
   });
 
   test.afterAll(() => {

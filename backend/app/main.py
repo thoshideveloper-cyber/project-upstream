@@ -7,6 +7,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.activity import router as activity_router
 from app.api.analytics import router as analytics_router
 from app.api.auth import router as auth_router
 from app.api.companies import router as companies_router
@@ -25,8 +26,10 @@ from app.api.sourcing import router as sourcing_router
 from app.api.sourcing_candidates import router as sourcing_candidates_router
 from app.api.sourcing_layers import router as sourcing_layers_router
 from app.api.sourcing_stages import router as sourcing_stages_router
+from app.api.tasks import router as tasks_router
 from app.api.users import router as users_router
 from app.api.workbook_imports import router as workbook_imports_router
+from app.api.workspace import router as workspace_router
 from app.core.config import settings
 
 app = FastAPI(
@@ -77,7 +80,10 @@ app.include_router(contacts_router)
 app.include_router(schedule_router)
 app.include_router(email_router)
 app.include_router(analytics_router)
+app.include_router(tasks_router)
+app.include_router(activity_router)
 app.include_router(users_router)
+app.include_router(workspace_router)
 
 
 @app.get("/health", tags=["health"])

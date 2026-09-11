@@ -1,12 +1,17 @@
-"""Empty-canvas bootstrap — a firm and its users, and nothing else.
+"""Empty-canvas bootstrap — the real initialisation path, dev and prod.
 
-``seed.py`` fabricates a demo book with Faker. This does the opposite: it creates the
-minimum a real firm starts with on day one — the firm, its category vocabulary, a partner
-and a few analysts — so the app can be walked in its genuinely empty state before any
-client data lands. Use it to check empty states, and as the starting point for the real
-onboarding path (``/import`` → the client's workbooks).
+This creates exactly what a firm starts with on day one and not one row more: the firm,
+its category vocabulary, its funnel stages, a partner, a few analysts, and the shipped
+company database that makes Discover searchable (``app/data/company_pool.py`` — real
+organisations only). No projects, no companies, no contacts, no schedules, no outreach:
+that book arrives through ``/import`` from the firm's own workbooks.
+
+``seed.py`` beside this file fabricates a Faker demo book instead. It is a local
+development toy — never the deploy path, and it refuses to run against a non-SQLite
+database for exactly that reason.
 
     python -m app.seed.bootstrap --reset
+    python -m app.seed.bootstrap --no-pool   # firm + users only, empty Discover too
 """
 
 from __future__ import annotations
@@ -25,6 +30,7 @@ from app.models.firm import Firm
 from app.models.sourcing_stage import SourcingStage
 from app.models.user import User
 from app.services.classification import DEFAULT_CATEGORIES
+from app.services.pool import seed_firm_pool_sync
 from app.services.sourcing import DEFAULT_STAGES
 
 PASSWORD = "Passw0rd!"
@@ -83,6 +89,11 @@ def bootstrap(session: Session, firm_name: str = "Upstream Advisors") -> Firm:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Create an empty firm (no client data).")
     parser.add_argument("--reset", action="store_true", help="Wipe all data first.")
+    parser.add_argument(
+        "--no-pool",
+        action="store_true",
+        help="Skip the shipped company database (leaves Discover empty too).",
+    )
     parser.add_argument("--firm", default="Upstream Advisors")
     args = parser.parse_args()
 
@@ -95,10 +106,22 @@ def main() -> None:
                 session.execute(table.delete())
             session.commit()
         firm = bootstrap(session, args.firm)
-        print(f"Firm '{firm.name}' ready — empty canvas, no client data.")
-        print(f"Logins (password {PASSWORD}):")
-        for email, full_name, role in USERS:
-            print(f"  {role.value:<8} {email:<26} {full_name}")
+        firm_name = firm.name
+        # One transaction, one engine, no event loop: the firm and its company database
+        # land together or not at all.
+        planted = None if args.no_pool else seed_firm_pool_sync(session, firm.id)
+        session.commit()
+    engine.dispose()
+
+    print(f"Firm '{firm_name}' ready — no client book, nothing imported.")
+    if planted:
+        print(
+            f"Company database: {planted['pool_after']} companies "
+            f"(+{planted['added']} planted from the shipped dataset)."
+        )
+    print(f"Logins (password {PASSWORD}):")
+    for email, full_name, role in USERS:
+        print(f"  {role.value:<8} {email:<26} {full_name}")
 
 
 if __name__ == "__main__":

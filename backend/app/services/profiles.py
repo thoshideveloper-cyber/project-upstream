@@ -30,6 +30,12 @@ STATIC_FACT_FIELDS = (
     "revenue_inr_cr",
 )
 
+# Pool classification — profile-only, so deliberately NOT in STATIC_FACT_FIELDS (there is
+# no matching column on ``companies`` to cache it into). Fill-if-empty rather than
+# latest-wins: these describe where a company was *researched from*, so the first source
+# to classify it wins and a later import can only fill a gap, never relabel it.
+CLASSIFICATION_FIELDS = ("segment", "sector")
+
 
 def compute_name_key(company_name: str) -> str:
     return normalise_name(company_name)
@@ -81,7 +87,7 @@ async def upsert_profile(
             name_key=name_key,
             domain_key=domain_key,
         )
-        for field in STATIC_FACT_FIELDS:
+        for field in (*STATIC_FACT_FIELDS, *CLASSIFICATION_FIELDS):
             if field == "company_name":
                 continue
             setattr(profile, field, facts.get(field))
@@ -96,6 +102,10 @@ async def upsert_profile(
             if val is not None and getattr(profile, field) != val:
                 setattr(profile, field, val)
                 changed = True
+        for field in CLASSIFICATION_FIELDS:
+            val = facts.get(field)
+            if val is not None and getattr(profile, field) is None:
+                setattr(profile, field, val)
         # Keep normalised keys fresh when the name/website change.
         if changed:
             profile.name_key = compute_name_key(profile.company_name or "")

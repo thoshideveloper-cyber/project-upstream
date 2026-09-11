@@ -20,13 +20,19 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from app.core.deps import CurrentUser, SessionDep, visible_mandate_ids
-from app.models.enums import ImportSource, ImportStatus, UserRole
+from app.core.deps import (
+    CurrentUser,
+    SessionDep,
+    visible_mandate_ids,
+    visible_project_ids,
+)
+from app.models.enums import ActivityObjectType, ActivityVerb, ImportSource, ImportStatus, UserRole
 from app.models.import_batch import ImportBatch
 from app.models.import_row import ImportRow
 from app.models.mandate import Mandate
 from app.models.project import Project
 from app.schemas.import_batch import ImportBatchRead, ImportRowRead
+from app.services import activity
 from app.services.workbook_import import (
     FLAG_LABELS,
     WorkbookPlan,
@@ -55,34 +61,6 @@ class WorkbookPlanRequest(BaseModel):
     plan: dict
 
 
-async def _visible_project_ids(current_user, db) -> list[int] | None:
-    """Project IDs this user may import into. Partners → None (all).
-
-    Mirrors ``projects._visible_project_ids``: an analyst sees projects holding one of
-    their assigned engagements, plus projects they created themselves (so a project
-    opened moments ago, still empty, is a legal import target).
-    """
-    if current_user.role == UserRole.PARTNER:
-        return None
-    ids: set[int] = set()
-    owned = await db.execute(
-        select(Project.id).where(
-            Project.firm_id == current_user.firm_id,
-            Project.created_by_id == current_user.id,
-        )
-    )
-    ids.update(row[0] for row in owned.all())
-    visible = await visible_mandate_ids(current_user, db)
-    if visible:
-        rows = await db.execute(
-            select(Mandate.project_id)
-            .where(Mandate.id.in_(visible), Mandate.project_id.is_not(None))
-            .distinct()
-        )
-        ids.update(row[0] for row in rows.all())
-    return list(ids)
-
-
 async def _assert_plan_writable(plan: WorkbookPlan, current_user, db) -> None:
     """Refuse a plan that reaches outside what this user can already see.
 
@@ -95,7 +73,7 @@ async def _assert_plan_writable(plan: WorkbookPlan, current_user, db) -> None:
     if current_user.role == UserRole.PARTNER:
         return
 
-    project_ids = await _visible_project_ids(current_user, db)
+    project_ids = await visible_project_ids(current_user, db, include_archived=True)
     if plan.project_id is not None and plan.project_id not in (project_ids or []):
         raise HTTPException(
             status_code=403,
@@ -242,7 +220,7 @@ async def import_targets(db: SessionDep, current_user: CurrentUser):
     Scoped, so an analyst is offered only their own book rather than a firm-wide picker
     whose entries the apply step would then refuse.
     """
-    project_filter = await _visible_project_ids(current_user, db)
+    project_filter = await visible_project_ids(current_user, db, include_archived=True)
     project_q = select(Project).where(
         Project.firm_id == current_user.firm_id, Project.archived_at.is_(None)
     )
@@ -424,6 +402,16 @@ async def apply(body: WorkbookPlanRequest, db: SessionDep, current_user: Current
         raise
     batch.mapping = {**(batch.mapping or {}), "plan": plan.to_dict()}
     batch.status = ImportStatus.APPLIED
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.IMPORT_APPLIED,
+        object_type=ActivityObjectType.IMPORT_BATCH,
+        object_id=batch.id,
+        object_label=batch.filename,
+        project_id=batch.project_id,
+        meta={"source": batch.source.value, "summary": summary},
+    )
     await db.commit()
     return {"batch_id": batch.id, "status": batch.status.value, "summary": summary}
 

@@ -1317,7 +1317,14 @@ async def apply_workbook(
                     excel_row=row.get("_excel_row"),
                     name=name,
                 )
-                facts = master_row_facts(row)
+                # The engagement's side is the one classification a client sheet always
+                # implies: a row on a sell-side master list is a target, full stop. It
+                # fills the profile's segment only if nothing has classified it yet
+                # (``CLASSIFICATION_FIELDS``), so a verified research label always wins.
+                facts = {
+                    **master_row_facts(row),
+                    "segment": _TYPE_BY_MANDATE_TYPE[mandate.type].value,
+                }
                 profile = await upsert_profile(db, firm_id, facts, enrich=True)
 
                 index = await resolver.mandate_companies(mandate.id)

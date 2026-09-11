@@ -90,8 +90,13 @@ test.describe("Sourcing — the standing company database", () => {
     const search = page.getByRole("searchbox", { name: /search the firm database/i });
     await search.fill("Accenture");
     await expect(page.getByText("Accenture").first()).toBeVisible({ timeout: 15_000 });
-    // Scoring needs a thesis, so it is disabled with a reason rather than hidden.
-    await expect(page.getByRole("button", { name: /score matches/i })).toBeDisabled();
+    // Scoring needs a thesis. Rather than a dead amber button in the page's strongest
+    // slot, the action states its prerequisite in the quiet register — and the button
+    // itself is genuinely absent, not merely disabled.
+    await expect(page.getByText(/open a deal to score/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /score matches/i })).toHaveCount(0);
+    // Same rule for the funnel: no deal, no board to switch to.
+    await expect(page.getByRole("tab", { name: /funnel/i })).toHaveCount(0);
   });
 
   test("shortlists a pool company onto a deal and it lands in the funnel", async ({ page }) => {
@@ -179,8 +184,11 @@ test.describe("Master List", () => {
     // Imported, not hand-entered.
     await expect(page.getByText("IMPORTED").first()).toBeVisible();
 
-    // Trunorth sits on both projects, so the cross-mandate duplicate notice fires.
-    await expect(page.getByText(/Possible duplicate across mandates/i)).toBeVisible();
+    // Trunorth sits on more than one engagement, so the cross-mandate duplicate notice
+    // fires. The banner pluralises with the number of other placements, and how many that
+    // is depends on which workbooks this database has taken — so match both spellings
+    // rather than pinning the assertion to a particular import history.
+    await expect(page.getByText(/Possible duplicates? across mandates/i)).toBeVisible();
 
     // The append-only log is behind the Timeline tab and is not empty.
     await page.getByRole("tab", { name: /timeline/i }).click();

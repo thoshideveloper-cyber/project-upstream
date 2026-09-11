@@ -2,7 +2,12 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { Project, ProjectDetail } from "@/types";
+import type {
+  Project,
+  ProjectDeletionPreview,
+  ProjectDetail,
+  ProjectMember,
+} from "@/types";
 
 interface ProjectListResponse {
   items: Project[];
@@ -65,6 +70,99 @@ export function useArchiveProject() {
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["projects"] });
       qc.invalidateQueries({ queryKey: ["project", vars.id] });
+    },
+  });
+}
+
+
+/* ── Members ──────────────────────────────────────────────────────────────── */
+
+export function useProjectMembers(projectId: number) {
+  return useQuery<{ items: ProjectMember[] }>({
+    queryKey: ["project-members", projectId],
+    queryFn: () => api.get<{ items: ProjectMember[] }>(`/projects/${projectId}/members`),
+    enabled: projectId > 0,
+    staleTime: 30_000,
+  });
+}
+
+function invalidateMembers(qc: ReturnType<typeof useQueryClient>, projectId: number) {
+  qc.invalidateQueries({ queryKey: ["project-members", projectId] });
+  // Membership also changes what the assignee picker offers and what the row shows.
+  qc.invalidateQueries({ queryKey: ["projects"] });
+  qc.invalidateQueries({ queryKey: ["project", projectId] });
+  qc.invalidateQueries({ queryKey: ["activity"] });
+}
+
+export function useAssignProjectMember(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: number) =>
+      api.post<{ detail: string }>(`/projects/${projectId}/assignments`, {
+        user_id: userId,
+      }),
+    onSuccess: () => invalidateMembers(qc, projectId),
+  });
+}
+
+export function useUnassignProjectMember(projectId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: number) =>
+      api.del<{ detail: string }>(`/projects/${projectId}/assignments/${userId}`),
+    onSuccess: () => invalidateMembers(qc, projectId),
+  });
+}
+
+/* ── Permanent delete ─────────────────────────────────────────────────────── */
+
+/**
+ * The dry run behind the delete dialog.
+ *
+ * Fetched only when the dialog is actually open (`enabled`), and never cached for long:
+ * the counts are the whole argument the dialog makes, and a stale "412 companies" beside
+ * a name box is worse than a spinner.
+ */
+export function useDeletionPreview(projectId: number, enabled: boolean) {
+  return useQuery<ProjectDeletionPreview>({
+    queryKey: ["project-deletion-preview", projectId],
+    queryFn: () =>
+      api.get<ProjectDeletionPreview>(`/projects/${projectId}/deletion-preview`),
+    enabled: enabled && projectId > 0,
+    staleTime: 0,
+    gcTime: 0,
+  });
+}
+
+export function useDeleteProject() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, name }: { id: number; name: string }) =>
+      api.post<{ deleted: boolean; total: number; counts: Record<string, number> }>(
+        `/projects/${id}/permanent-delete`,
+        { confirm_project_name: name },
+      ),
+    onSuccess: (_r, vars) => {
+      // Everything downstream of a project just changed, and several read models now
+      // reference rows that no longer exist. Bust broadly rather than surgically.
+      for (const key of [
+        ["projects"],
+        ["project"],
+        ["mandates"],
+        ["mandate"],
+        ["companies"],
+        ["company"],
+        ["contacts"],
+        ["schedule"],
+        ["my-book"],
+        ["analytics"],
+        ["tasks"],
+        ["task-summary"],
+        ["activity"],
+      ]) {
+        qc.invalidateQueries({ queryKey: key });
+      }
+      qc.removeQueries({ queryKey: ["project", vars.id] });
     },
   });
 }

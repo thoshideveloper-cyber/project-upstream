@@ -43,10 +43,19 @@ export interface PoolFilters {
   has_score?: boolean;
   rev_band?: RevBand;
   warm_only?: boolean;
+  /** Profile-level side of the market — narrows the database itself, deal or no deal. */
+  segment?: PoolSegment;
+  /** Profile-level research bucket; UNCLASSIFIED_SECTOR selects rows carrying none. */
+  sector?: string;
   sort?: "name" | "score" | "rev";
   page?: number;
   page_size?: number;
 }
+
+export type PoolSegment = "TARGET" | "BUYER" | "INVESTOR";
+
+/** The server's sentinel for "no sector recorded" — a real, filterable state. */
+export const UNCLASSIFIED_SECTOR = "__unclassified__";
 
 export function buildPoolQS(filters: PoolFilters): string {
   const p = new URLSearchParams();
@@ -63,6 +72,8 @@ export function buildPoolQS(filters: PoolFilters): string {
   if (filters.has_score) p.set("has_score", "true");
   if (filters.rev_band) p.set("rev_band", filters.rev_band);
   if (filters.warm_only) p.set("warm_only", "true");
+  if (filters.segment) p.set("segment", filters.segment);
+  if (filters.sector) p.set("sector", filters.sector);
   if (filters.sort) p.set("sort", filters.sort);
   if (filters.page) p.set("page", String(filters.page));
   if (filters.page_size) p.set("page_size", String(filters.page_size));

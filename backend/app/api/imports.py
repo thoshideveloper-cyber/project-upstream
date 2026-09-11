@@ -14,7 +14,7 @@ from fastapi.responses import PlainTextResponse
 from sqlalchemy import select
 
 from app.core.deps import CurrentUser, PartnerDep, SessionDep
-from app.models.enums import ImportRowAction, ImportSource, ImportStatus
+from app.models.enums import ActivityObjectType, ActivityVerb, ImportRowAction, ImportSource, ImportStatus
 from app.models.import_batch import ImportBatch
 from app.models.import_row import ImportRow
 from app.schemas.import_batch import (
@@ -23,6 +23,7 @@ from app.schemas.import_batch import (
     ImportRowRead,
     ImportValidateRequest,
 )
+from app.services import activity
 from app.services.imports import (
     PROFILE_FIELDS,
     apply_import,
@@ -170,6 +171,20 @@ async def apply_csv(
         await db.commit()
         raise
     batch.status = ImportStatus.APPLIED
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.IMPORT_APPLIED,
+        object_type=ActivityObjectType.IMPORT_BATCH,
+        object_id=batch.id,
+        object_label=batch.filename,
+        meta={
+            "source": batch.source.value,
+            "created": result.get("created"),
+            "updated": result.get("updated"),
+            "skipped": result.get("skipped"),
+        },
+    )
     await db.commit()
     return {"batch_id": batch.id, "status": batch.status.value, **result}
 

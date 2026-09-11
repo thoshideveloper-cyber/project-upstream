@@ -1,15 +1,29 @@
 import { describe, it, expect } from "vitest";
 import { scoreTone, revLabel } from "@/components/features/candidate-card";
-import { buildPoolQS } from "@/hooks/use-candidates";
+import { buildPoolQS, UNCLASSIFIED_SECTOR } from "@/hooks/use-candidates";
 
 describe("scoreTone", () => {
-  it("bands by score", () => {
+  // The product is ink on paper: a fit score is banded by ink density, darkest for the
+  // strongest fit, and never by hue.
+  it("bands by score down the ink ladder", () => {
     expect(scoreTone(null)).toContain("muted");
-    expect(scoreTone(90)).toContain("emerald");
-    expect(scoreTone(65)).toContain("lime");
-    expect(scoreTone(45)).toContain("amber");
-    expect(scoreTone(25)).toContain("orange");
-    expect(scoreTone(5)).toContain("red");
+    expect(scoreTone(90)).toContain("ink-900");
+    expect(scoreTone(65)).toContain("ink-700");
+    expect(scoreTone(45)).toContain("ink-200");
+    expect(scoreTone(25)).toContain("ink-100");
+    expect(scoreTone(5)).toContain("ring-border");
+  });
+
+  it("keeps paper-white type on the two dark bands", () => {
+    expect(scoreTone(90)).toContain("text-background");
+    expect(scoreTone(65)).toContain("text-background");
+    expect(scoreTone(45)).toContain("text-foreground");
+  });
+
+  it("never reaches for a hue", () => {
+    for (const s of [null, 0, 5, 25, 45, 65, 90, 100]) {
+      expect(scoreTone(s)).not.toMatch(/emerald|amber|sky|violet|indigo|red|green/);
+    }
   });
 });
 
@@ -42,5 +56,19 @@ describe("buildPoolQS", () => {
     const bare = buildPoolQS({ mandate_id: 1 });
     expect(bare).not.toContain("rev_band");
     expect(bare).not.toContain("warm_only");
+  });
+
+  it("serializes the profile-level criteria (segment, sector)", () => {
+    const qs = buildPoolQS({ segment: "INVESTOR", sector: "Private equity" });
+    expect(qs).toContain("segment=INVESTOR");
+    expect(qs).toContain("sector=Private+equity");
+    // Both narrow the database itself, so neither needs a mandate to be meaningful.
+    expect(qs).not.toContain("mandate_id");
+  });
+
+  it("passes the unclassified-sector sentinel through unchanged", () => {
+    expect(buildPoolQS({ sector: UNCLASSIFIED_SECTOR })).toContain(
+      `sector=${encodeURIComponent(UNCLASSIFIED_SECTOR)}`,
+    );
   });
 });

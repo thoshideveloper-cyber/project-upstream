@@ -35,6 +35,13 @@ class CompanyProfile(Base):
     headcount: Mapped[int | None] = mapped_column(Integer, nullable=True)
     revenue_source: Mapped[str | None] = mapped_column(Text, nullable=True)
     revenue_inr_cr: Mapped[Decimal | None] = mapped_column(Numeric(15, 2), nullable=True)
+    # Research provenance, not per-deal role. ``segment`` is which side of the market the
+    # company sits on (TARGET / INVESTOR) and ``sector`` is the bucket it was researched
+    # from — both live on the profile because they are true of the *company*, whereas
+    # ``companies.type``/``category_id`` are true of one placement on one deal. They are
+    # what makes the pool searchable before any deal exists; NULL means "not classified".
+    segment: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)
+    sector: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     name_key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     domain_key: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

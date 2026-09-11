@@ -1,14 +1,15 @@
 /**
- * E2E — the engagement grid inside the deal room:
- *   1. Open a project → the grid is already there (no "Grid view" hop)
- *   2. Add a company from a category's inline add → it appears in the grid
+ * E2E — the company table inside the project workspace:
+ *   1. Open a project → Workspace → the whole book is there, every engagement at once
+ *   2. Add a company from a group's inline add → it appears in the table
  *   3. Send the intro from its row → the cadence starts and the row stops saying
  *      "Needs first outreach"
  *
- * Rewritten in P5. The old version clicked a "Grid view" link and typed into an
- * inline row form; the Projects redesign merged detail + grid into one deal room
- * (`/projects/[id]`, with `/projects/[id]/grid` kept as a redirect) and the inline
- * add now opens the shared add-company dialog.
+ * Rewritten twice. P5 merged the standalone grid page into the deal room; the Project
+ * redesign then split the deal room into routes, so the book now lives at
+ * `/projects/[id]/workspace` (with `/projects/[id]/grid` still redirecting there) and
+ * the project's landing page is an overview. The inline add still opens the shared
+ * add-company dialog.
  *
  * Requires both servers + a seeded DB:
  *   backend:  uvicorn app.main:app --reload   (port 8000)
@@ -29,13 +30,18 @@ async function login(page: Page) {
   await expect(page).toHaveURL("/dashboard");
 }
 
-/** Open the first project on the deal floor and wait for its grid. */
+/** Open the first project on the deal floor and land in its workspace. */
 async function openFirstDealRoom(page: Page) {
   await page.goto("/projects");
   const firstProject = page.locator('a[href^="/projects/"]').first();
   await firstProject.waitFor({ timeout: 10_000 });
   await firstProject.click();
   await expect(page).toHaveURL(/\/projects\/\d+/);
+  // The project opens on its overview; the book is one tab across. Addressed by href:
+  // `getByRole(name:)` matches substrings, and the overview also carries "Open the
+  // workspace" and "Workspace" links into the very same place.
+  await page.locator('nav[aria-label="Project views"] a[href$="/workspace"]').click();
+  await expect(page).toHaveURL(/\/projects\/\d+\/workspace/, { timeout: 10_000 });
   await expect(page.getByTestId("grid-table")).toBeVisible({ timeout: 10_000 });
 }
 
@@ -51,8 +57,8 @@ async function addCompanyInline(page: Page, label: string) {
   return name;
 }
 
-test.describe("Deal-room grid", () => {
-  test("add a company from the grid → it appears in the grid", async ({ page }) => {
+test.describe("Project workspace table", () => {
+  test("add a company from a workspace group → it appears in the table", async ({ page }) => {
     await login(page);
     await openFirstDealRoom(page);
 
@@ -63,7 +69,7 @@ test.describe("Deal-room grid", () => {
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  test("send the intro from a grid row → the cadence starts", async ({ page }) => {
+  test("send the intro from a workspace row → the cadence starts", async ({ page }) => {
     await login(page);
     await openFirstDealRoom(page);
 

@@ -307,7 +307,28 @@ export interface Project {
   cold_count?: number;
   needs_initial_count?: number;
   last_activity?: string | null;
+  /** Names only — the original shape. Kept because existing screens read it. */
   team?: string[];
+  /** The richer form: who is on this project and how they got here. */
+  members?: ProjectMember[];
+  open_task_count?: number;
+  overdue_task_count?: number;
+}
+
+/**
+ * How someone reaches a project. `assigned` is the only source a partner grants (and
+ * the only one that can be revoked); `mandate` is the team that has been working the
+ * book all along; `creator` is whoever opened it.
+ */
+export type ProjectMemberSource = "assigned" | "mandate" | "creator";
+
+export interface ProjectMember {
+  id: number;
+  full_name: string;
+  email?: string | null;
+  source: ProjectMemberSource;
+  /** Every route this person has in — `source` is the headline one. */
+  sources?: ProjectMemberSource[];
 }
 
 export interface MandateEngagementStats {
@@ -343,6 +364,24 @@ export interface ProjectDetail extends Project {
     CAPITAL_RAISE: MandateEngagementStats[];
   };
   headline: ProjectHeadline;
+  tasks?: {
+    open: number;
+    overdue: number;
+    by_status: Record<TaskStatus, number>;
+  };
+}
+
+export interface ProjectDeletionPreview {
+  project: {
+    id: number;
+    name: string;
+    client_name: string;
+    archived_at: string | null;
+  };
+  counts: Record<string, number>;
+  total: number;
+  /** What survives — the dialog should say this as plainly as what does not. */
+  kept: string[];
 }
 
 // ── Project Analytics (Slice 5) ────────────────────────────────────────────────
@@ -496,6 +535,10 @@ export interface SourcingPoolItem {
   hq: string | null;
   website: string | null;
   linkedin: string | null;
+  /** Side of the market, true of the company itself (not of one placement). */
+  segment: "TARGET" | "BUYER" | "INVESTOR" | null;
+  /** The research bucket this company was sourced from; null = unclassified. */
+  sector: string | null;
   headcount: number | null;
   revenue_inr_cr: string | null;
   domain_key: string | null;
@@ -565,4 +608,155 @@ export interface AnalystOverlap {
   analyst_name: string;
   analyst_id: number | null;
   profiles: number;
+}
+
+
+// ── Tasks (PROJECTS_ACTIVITY_TASKS_PLAN) ─────────────────────────────────────
+
+export type TaskStatus = "BACKLOG" | "IN_PROGRESS" | "BLOCKED" | "DONE";
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
+export type TaskScope = "PROJECT" | "MANDATE" | "COMPANY" | "CONTACT" | "PERSONAL";
+
+export interface TaskAttachment {
+  type: Exclude<TaskScope, "PERSONAL">;
+  id: number;
+  label: string | null;
+}
+
+export interface Task {
+  id: number;
+  firm_id: number;
+  scope: TaskScope;
+  project_id: number | null;
+  mandate_id: number | null;
+  company_id: number | null;
+  contact_id: number | null;
+  title: string;
+  notes: string | null;
+  status: TaskStatus;
+  priority: TaskPriority;
+  due_date: string | null;
+  assignee_id: number | null;
+  created_by_id: number | null;
+  completed_at: string | null;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+  // Snapshotted server-side so the client never has to join /users to render a row.
+  assignee_name: string | null;
+  created_by_name: string | null;
+  project_name: string | null;
+  attached_to: TaskAttachment | null;
+  /** Computed against IST today, server-side (CLAUDE.md rule 2). */
+  is_overdue: boolean;
+}
+
+export interface TaskSummary {
+  total: number;
+  open: number;
+  overdue: number;
+  due_today: number;
+  due_this_week: number;
+  by_status: Record<TaskStatus, number>;
+  by_priority: Record<TaskPriority, number>;
+  assigned_to_me: number;
+  by_project?: {
+    project_id: number;
+    project_name: string | null;
+    open: number;
+    overdue: number;
+  }[];
+}
+
+export interface TaskListResponse {
+  items: Task[];
+  total: number;
+  page: number;
+  page_size: number;
+  summary: TaskSummary;
+}
+
+export interface TaskCreateInput {
+  title: string;
+  notes?: string | null;
+  priority?: TaskPriority;
+  due_date?: string | null;
+  assignee_id?: number | null;
+  status?: TaskStatus;
+  // At most ONE of these — the server derives the rest of the chain and 422s on two.
+  project_id?: number | null;
+  mandate_id?: number | null;
+  company_id?: number | null;
+  contact_id?: number | null;
+}
+
+export interface TaskUpdateInput {
+  title?: string;
+  notes?: string | null;
+  priority?: TaskPriority;
+  due_date?: string | null;
+  assignee_id?: number | null;
+  status?: TaskStatus;
+}
+
+// ── Activity ─────────────────────────────────────────────────────────────────
+
+export type ActivityVerb =
+  | "PROJECT_CREATED"
+  | "PROJECT_UPDATED"
+  | "PROJECT_ARCHIVED"
+  | "PROJECT_UNARCHIVED"
+  | "PROJECT_DELETED"
+  | "PROJECT_MEMBER_ADDED"
+  | "PROJECT_MEMBER_REMOVED"
+  | "MANDATE_CREATED"
+  | "MANDATE_UPDATED"
+  | "MANDATE_ARCHIVED"
+  | "MANDATE_UNARCHIVED"
+  | "MANDATE_ASSIGNED"
+  | "MANDATE_UNASSIGNED"
+  | "COMPANY_CREATED"
+  | "COMPANY_UPDATED"
+  | "COMPANY_ARCHIVED"
+  | "COMPANY_UNARCHIVED"
+  | "COMPANY_STATUS_CHANGED"
+  | "CONTACT_CREATED"
+  | "CONTACT_UPDATED"
+  | "CONTACT_ARCHIVED"
+  | "OUTREACH_LOGGED"
+  | "SCHEDULE_UPDATED"
+  | "SCHEDULE_RESTARTED"
+  | "EMAIL_SENT"
+  | "CANDIDATE_ADDED"
+  | "CANDIDATE_PUSHED"
+  | "CANDIDATE_STAGE_CHANGED"
+  | "IMPORT_APPLIED"
+  | "TASK_CREATED"
+  | "TASK_UPDATED"
+  | "TASK_ASSIGNED"
+  | "TASK_STATUS_CHANGED"
+  | "TASK_ARCHIVED";
+
+export interface ActivityEvent {
+  id: number;
+  firm_id: number;
+  project_id: number | null;
+  mandate_id: number | null;
+  company_id: number | null;
+  actor_id: number | null;
+  /** Snapshot taken at write time — a later rename does not rewrite history. */
+  actor_name: string | null;
+  verb: ActivityVerb;
+  object_type: string;
+  object_id: number | null;
+  object_label: string | null;
+  meta: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface ActivityListResponse {
+  items: ActivityEvent[];
+  total: number;
+  page: number;
+  page_size: number;
 }

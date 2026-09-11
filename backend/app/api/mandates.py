@@ -15,13 +15,14 @@ from sqlalchemy import select
 
 from app.core.deps import CurrentUser, PartnerDep, SessionDep, visible_mandate_ids
 from app.models.company import Company
-from app.models.enums import CompanyStatus, ScheduleStatus
+from app.models.enums import ActivityObjectType, ActivityVerb, CompanyStatus, ScheduleStatus
 from app.models.mandate import Mandate
 from app.models.mandate_assignment import MandateAssignment
 from app.models.outreach_schedule import OutreachSchedule
 from app.models.project import Project
 from app.models.user import User
 from app.schemas.mandate import MandateBase, MandateRead, MandateUpdate
+from app.services import activity
 
 router = APIRouter(prefix="/mandates", tags=["mandates"])
 
@@ -172,6 +173,17 @@ async def create_mandate(body: MandateBase, db: SessionDep, current_user: Curren
         assignee_ids.add(mandate.lead_owner_id)
     for user_id in assignee_ids:
         db.add(MandateAssignment(mandate_id=mandate.id, user_id=user_id))
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.MANDATE_CREATED,
+        object_type=ActivityObjectType.MANDATE,
+        object_id=mandate.id,
+        object_label=mandate.name,
+        project_id=mandate.project_id,
+        mandate_id=mandate.id,
+        meta={"type": mandate.type.value},
+    )
     await db.commit()
 
     return MandateRead.model_validate(mandate).model_dump()
@@ -283,6 +295,17 @@ async def assign_user(
         return {"detail": "Already assigned"}
 
     db.add(MandateAssignment(mandate_id=mandate_id, user_id=body.user_id))
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.MANDATE_ASSIGNED,
+        object_type=ActivityObjectType.MANDATE_ASSIGNMENT,
+        object_id=mandate.id,
+        object_label=mandate.name,
+        project_id=mandate.project_id,
+        mandate_id=mandate.id,
+        meta={"user_id": user.id, "user_name": user.full_name},
+    )
     await db.commit()
     return {"detail": "User assigned"}
 
@@ -291,7 +314,7 @@ async def assign_user(
 async def unassign_user(
     mandate_id: int, user_id: int, db: SessionDep, current_user: PartnerDep
 ):
-    await _get_visible_mandate(mandate_id, db, current_user, include_archived=True)
+    mandate = await _get_visible_mandate(mandate_id, db, current_user, include_archived=True)
     assignment = (await db.execute(
         select(MandateAssignment).where(
             MandateAssignment.mandate_id == mandate_id,
@@ -301,5 +324,16 @@ async def unassign_user(
     if not assignment:
         raise HTTPException(status_code=404, detail="Assignment not found")
     await db.delete(assignment)
+    await activity.log(
+        db,
+        actor=current_user,
+        verb=ActivityVerb.MANDATE_UNASSIGNED,
+        object_type=ActivityObjectType.MANDATE_ASSIGNMENT,
+        object_id=mandate.id,
+        object_label=mandate.name,
+        project_id=mandate.project_id,
+        mandate_id=mandate.id,
+        meta={"user_id": user_id},
+    )
     await db.commit()
     return {"detail": "User unassigned"}

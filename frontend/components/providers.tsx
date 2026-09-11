@@ -20,12 +20,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       }),
   );
 
-  // Theme lives in components/theme.ts (init script in the root layout <head>);
-  // no provider wrapper is needed for it.
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster richColors position="top-right" />
+      <Toaster position="top-right" />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

@@ -218,7 +218,9 @@ async def test_csv_export(client: AsyncClient, partner, mandate, db_session):
     resp = await client.get(f"/sourcing/candidates.csv?mandate_id={mandate.id}")
     assert resp.status_code == 200
     assert "Alpha Corp" in resp.text
-    assert "Company,HQ,Website" in resp.text
+    # Segment/sector ride with the identity columns, not bolted on the end: an analyst
+    # reading the export needs "who is this" before "how big are they".
+    assert "Company,HQ,Segment,Sector,Website" in resp.text
 
 
 # ── Discover lens: warm_only / rev_band filters + /sourcing/facets ────────────
