@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upstream · The operating workspace for relationship-driven advisory teams</title>
+<meta name="description" content="Upstream brings mandates, companies, contacts and outreach into one workspace, so your team knows what is happening, what needs attention and where to go next.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Relationships compound when your firm remembers them.">
+<meta property="og:description" content="Upstream brings mandates, companies, contacts and outreach into one workspace, so your team knows what is happening, what needs attention and where to go next.">
+<meta property="og:image" content="assets/product/home-1200.webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F4F7FB">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/images/still-water-hero-1920.webp" media="(min-width: 761px)">
+<style>
+/* ===== Tokens ===== */
+:root {
+  /* primitive: the product's blue family (#1769D2 / #0B2F52 / #E7F1FB), set in the landing's editorial register */
+  --navy: #10263D;
+  --deep: #0B2F52;
+  --slate: #34506D;
+  --soft-ink: #4A6580;
+  --soft: #8CA7C4;
+  --mist: #D9E3EC;
+  --line: #C3D1DF;
+  --fog: #E9EFF5;
+  --surface: #F4F7FB;
+  --paper: #FBFCFE;
+  --blue: #1769D2;
+  --blue-deep: #125AB5;
+  --blue-wash: #E7F1FB;
+  --blue-line: #BCD3F0;
+  --red: #B23A3A;
+
+  /* semantic */
+  --bg: var(--surface);
+  --bg-alt: var(--fog);
+  --ink: var(--navy);
+  --body: var(--slate);
+  --past: var(--soft-ink);
+  --rule: var(--mist);
+  --rule-strong: var(--line);
+  --action: var(--blue);
+  --action-hover: var(--blue-deep);
+
+  --display: "Libre Caslon Display", "Didot", "Bodoni 72", Georgia, serif;
+  --serif: "Libre Caslon Text", "Baskerville", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --gutter: clamp(22px, 5vw, 80px);
+  --maxw: 1320px;
+  --spread-y: clamp(80px, 9vw, 136px);
+  --ease-slow: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 2px;
+  --nav-h: 72px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 12px); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 18px/1.7 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+p, figure { margin: 0; }
+h1, h2, h3, h4 { margin: 0; font-weight: 400; }
+ul, ol, dl, dd { margin: 0; padding: 0; list-style: none; }
+button { font: inherit; color: inherit; }
+button, a, summary { touch-action: manipulation; -webkit-tap-highlight-color: rgba(23, 105, 210, 0.12); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 3px; }
+.wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 60; padding: 10px 14px; background: var(--ink); color: #fff; text-decoration: none; }
+.skip:focus { top: 12px; }
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#top-sentinel { position: absolute; top: 0; height: 1px; width: 1px; }
+
+/* ===== Type ===== */
+.kicker { font: 500 12.5px/1.5 var(--sans); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink); }
+.kicker::after { content: ""; display: block; width: 36px; height: 1px; margin-top: 14px; background: var(--blue); }
+.display { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.03; text-wrap: balance; }
+.h2 { font-family: var(--display); font-size: clamp(2.4rem, 4.6vw, 4.1rem); line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
+.read { color: var(--body); max-width: 62ch; text-wrap: pretty; }
+.cap { font-family: var(--serif); font-style: italic; font-size: 15px; line-height: 1.5; color: var(--past); }
+.pullline { font-family: var(--display); font-size: clamp(1.9rem, 3.2vw, 2.8rem); line-height: 1.15; text-wrap: balance; }
+
+/* ===== Buttons ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; min-height: 48px; padding: 0 22px; border-radius: var(--r); font: 500 15.5px/1 var(--sans); letter-spacing: 0.01em; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease; }
+.btn--primary { background: var(--action); color: #fff; }
+.btn--primary:hover { background: var(--action-hover); }
+.btn--quiet { border-color: var(--ink); color: var(--ink); background: transparent; }
+.btn--quiet:hover { background: var(--ink); color: #fff; }
+.btn--sm { min-height: 40px; padding: 0 16px; font-size: 14.5px; }
+.textlink { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.textlink:hover { color: var(--action-hover); }
+
+/* ===== Navigation ===== */
+.site-nav { position: absolute; inset: 0 0 auto 0; z-index: 40; height: var(--nav-h); border-bottom: 1px solid transparent; transition: border-color 250ms ease, background-color 250ms ease; }
+.site-nav.is-pinned { position: fixed; background: rgba(244, 247, 251, 0.97); }
+.site-nav.is-pinned.is-scrolled { border-bottom-color: var(--rule); }
+.site-nav .wrap { height: 100%; display: flex; align-items: center; gap: 36px; }
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.brand svg { width: 40px; height: 24px; }
+.brand span { font-family: var(--display); font-size: 27px; letter-spacing: -0.01em; }
+.nav-links { display: flex; gap: 28px; }
+.nav-links a { font-size: 15px; color: var(--ink); text-decoration: none; letter-spacing: 0.01em; }
+.nav-links a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.pill { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--soft); font-size: 13px; color: var(--ink); white-space: nowrap; }
+.nav-m { display: none; }
+@media (max-width: 1080px) { .nav-links { display: none; } }
+@media (max-width: 640px) { .nav-d { display: none; } .nav-m { display: inline-flex; } .brand span { font-size: 23px; } .site-nav .wrap { gap: 12px; } .pill { display: none; } }
+
+/* ===== Hero: the promise over still water; the product directly beneath it ===== */
+.hero { position: relative; isolation: isolate; overflow: hidden; }
+.hero-photo { position: absolute; inset: 0; z-index: -2; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 62%; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-photo img { animation: settle 2400ms var(--ease-slow) both; }
+  @keyframes settle { from { transform: scale(1.04); } to { transform: scale(1); } }
+}
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(244,247,251,.95) 0%, rgba(244,247,251,.88) 40%, rgba(244,247,251,.35) 68%, rgba(244,247,251,.15) 100%), linear-gradient(180deg, rgba(244,247,251,.45) 0%, rgba(244,247,251,0) 30%, rgba(244,247,251,0) 62%, var(--bg) 100%); }
+.hero-inner { padding-top: calc(var(--nav-h) + clamp(56px, 7vw, 112px)); padding-bottom: clamp(210px, 22vw, 330px); }
+.hero-copy { max-width: 700px; }
+.hero h1 { margin-top: 28px; font-size: clamp(3rem, 5.6vw, 5.4rem); max-width: 14ch; }
+.hero .support { margin-top: 28px; max-width: 52ch; color: var(--body); font-size: 19px; text-wrap: pretty; }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
+
+/* ===== Screenshots: the real product, framed like a document, never decorated ===== */
+.shot { position: relative; background: #fff; border: 1px solid var(--rule-strong); border-radius: 6px; overflow: hidden; box-shadow: 0 50px 90px -50px rgba(16, 38, 61, 0.45), 0 2px 8px rgba(16, 38, 61, 0.07); }
+.shot img { width: 100%; height: auto; }
+.shot a { display: block; }
+.shot a:focus-visible { outline-offset: -3px; }
+.shot-open { position: absolute; right: 10px; bottom: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(16, 38, 61, 0.82); color: #fff; font-size: 12.5px; opacity: 0; transition: opacity 200ms ease; pointer-events: none; }
+.shot a:hover .shot-open, .shot a:focus-visible .shot-open { opacity: 1; }
+@media (hover: none) { .shot-open { opacity: 1; } }
+.fig-cap { margin-top: 14px; display: flex; gap: 14px; }
+.fig-cap::before { content: ""; flex: none; width: 24px; height: 1px; margin-top: 11px; background: var(--past); }
+
+/* Home, overlapping the hero */
+.home { position: relative; margin-top: clamp(-300px, -20vw, -180px); padding-bottom: var(--spread-y); }
+.home-shot { position: relative; }
+.pin { position: absolute; z-index: 2; width: 30px; height: 30px; margin: -15px 0 0 -15px; display: grid; place-items: center; border-radius: 50%; background: var(--blue); color: #fff; font: 600 14px/1 var(--sans); box-shadow: 0 0 0 4px rgba(255,255,255,.9), 0 6px 16px rgba(16,38,61,.3); }
+.attention { margin-top: clamp(40px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 28px clamp(40px, 6vw, 96px); align-items: start; }
+.attention .read { margin-top: 18px; }
+.notes li { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 16px; padding: 18px 0; border-top: 1px solid var(--rule-strong); }
+.notes li:first-child { border-top-color: var(--ink); }
+.notes .n { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--blue); color: #fff; font: 600 14px/1 var(--sans); }
+.notes b { font-weight: 600; color: var(--ink); }
+.notes p { color: var(--body); font-size: 16.5px; }
+
+/* ===== Spreads ===== */
+.spread { padding: var(--spread-y) 0; }
+.spread--alt { background: var(--bg-alt); }
+.spread-head { max-width: 880px; }
+.spread-head .h2 { margin-top: 28px; }
+.spread-head .read { margin-top: 24px; }
+.h2--gap { margin-top: 28px; }
+.split-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px clamp(40px, 6vw, 96px); align-items: end; }
+.split-head .h2 { margin-top: 28px; }
+
+/* Problem: five rows, scannable as a ledger */
+.cost-list { margin-top: clamp(48px, 6vw, 72px); border-top: 1px solid var(--ink); }
+.cost-list li { display: grid; grid-template-columns: 230px minmax(0, 1fr) 250px; gap: 10px clamp(24px, 3.4vw, 56px); align-items: baseline; padding: 26px 0 28px; border-bottom: 1px solid var(--rule-strong); }
+.cost-tag { display: grid; gap: 4px; }
+.cost-n { font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--past); }
+.cost-l { font: 500 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.cost-list h3 { font-family: var(--display); font-size: clamp(1.6rem, 2.2vw, 2rem); line-height: 1.15; }
+.cost-list .read { margin-top: 8px; font-size: 17px; }
+.find { font-family: var(--serif); font-style: italic; font-size: 1.1rem; line-height: 1.4; color: var(--past); }
+.find--emph { color: var(--ink); font-style: normal; font-weight: 700; }
+.transition { padding-top: clamp(64px, 8vw, 104px); text-align: center; }
+.transition p { margin-inline: auto; max-width: 30ch; font-family: var(--display); font-size: clamp(2rem, 3.6vw, 3.1rem); line-height: 1.15; text-wrap: balance; }
+
+/* Workflow: six real screens behind one tab list */
+.tabs { margin-top: clamp(40px, 5vw, 64px); }
+.tablist { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--rule-strong); scrollbar-width: thin; position: relative; }
+.tab { flex: none; display: inline-flex; align-items: baseline; gap: 10px; min-height: 52px; padding: 12px 18px 14px; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; cursor: pointer; font: 500 15.5px/1.2 var(--sans); color: var(--past); white-space: nowrap; }
+.tab i { font-style: normal; font-family: var(--serif); font-size: 14px; color: var(--soft); }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--blue); }
+.tab[aria-selected="true"] i { color: var(--blue); }
+.panel { padding-top: clamp(28px, 3.4vw, 44px); }
+.tabs.is-tabbed .panel[hidden] { display: none; }
+.tabs:not(.is-tabbed) .panel + .panel { margin-top: 56px; border-top: 1px solid var(--rule-strong); }
+.tabs:not(.is-tabbed) .tablist { display: none; }
+.panel-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px clamp(40px, 6vw, 96px); align-items: baseline; margin-bottom: clamp(24px, 3vw, 36px); }
+.panel-head h3 { font-family: var(--display); font-size: clamp(1.9rem, 3vw, 2.6rem); line-height: 1.1; text-wrap: balance; }
+.panel-head p { color: var(--body); font-size: 17.5px; max-width: 52ch; }
+.panel-n { display: block; margin-bottom: 8px; font: 500 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--blue-deep); }
+
+/* Shared record and continuity: head, the screen, three points */
+.pts { margin-top: clamp(36px, 4.5vw, 56px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(28px, 4vw, 64px); }
+.pts li { padding: 22px 0 8px; border-top: 1px solid var(--ink); }
+.pts h3 { font-family: var(--serif); font-size: 1.35rem; line-height: 1.3; }
+.pts p { margin-top: 8px; color: var(--body); font-size: 16.5px; text-wrap: pretty; }
+.fig-wide { margin-top: clamp(40px, 5vw, 64px); }
+.continuity { position: relative; isolation: isolate; overflow: hidden; }
+.continuity-bg { position: absolute; inset: 0; z-index: -1; }
+.continuity-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 58%; opacity: 0.45; }
+.continuity-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, var(--bg) 0%, rgba(244,247,251,.75) 18%, rgba(244,247,251,.6) 60%, var(--bg) 100%); }
+.human { padding-top: clamp(64px, 8vw, 112px); text-align: center; }
+.human p { margin-inline: auto; max-width: 34ch; font-family: var(--display); font-size: clamp(1.9rem, 3.4vw, 2.9rem); line-height: 1.2; text-wrap: balance; }
+
+/* Bring the work */
+.rail { margin-top: clamp(40px, 5vw, 64px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: clamp(20px, 2.6vw, 40px); }
+.rail li { padding-top: 22px; border-top: 1px solid var(--ink); }
+.step-n { font-family: var(--display); font-size: 2.2rem; line-height: 1; color: var(--blue); }
+.rail h3 { margin-top: 12px; font-family: var(--serif); font-size: 1.28rem; line-height: 1.3; }
+.rail p { margin-top: 8px; color: var(--body); font-size: 16px; text-wrap: pretty; }
+.control { margin-top: clamp(56px, 7vw, 96px); display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 28px clamp(40px, 6vw, 96px); align-items: start; }
+.control-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(24px, 3vw, 48px); }
+.control-list li { padding: 18px 0 20px; border-top: 1px solid var(--rule-strong); }
+.control-list li:nth-child(-n+2) { border-top-color: var(--ink); }
+.control-list h4 { font-family: var(--serif); font-size: 1.22rem; line-height: 1.3; }
+.control-list p { margin-top: 6px; color: var(--body); font-size: 16px; text-wrap: pretty; }
+
+/* Roadmap */
+.roadmap { margin-top: clamp(40px, 5vw, 64px); background: #fff; border: 1px solid var(--rule-strong); }
+.road-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.road-cols > div { padding: clamp(22px, 3vw, 36px); }
+.road-cols > div + div { border-left: 1px solid var(--rule); background: var(--paper); }
+.st { display: inline-flex; align-items: center; gap: 10px; font: 600 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.st::before { content: ""; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.st--now::before { background: var(--blue); }
+.st--next::before { border: 1.5px dashed var(--ink); }
+.road-cols ul { margin-top: 14px; }
+.road-cols li { display: flex; gap: 12px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--fog); font-size: 17px; line-height: 1.4; }
+.road-cols li:first-child { border-top: 0; }
+.road-cols li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; transform: translateY(-3px); }
+.road-now li::before { background: var(--blue); }
+.road-next li { color: var(--body); }
+.road-next li::before { border: 1.2px solid var(--past); }
+.positions { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-top: 1px solid var(--rule); }
+.positions > div { padding: clamp(22px, 3vw, 36px); }
+.positions > div + div { border-left: 1px solid var(--rule); }
+.pos-l { font: 500 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--past); }
+.pos-line { margin-top: 10px; font-family: var(--display); font-size: clamp(1.5rem, 2.3vw, 2rem); line-height: 1.15; text-wrap: balance; }
+.pos-detail { margin-top: 10px; color: var(--body); font-size: 16px; max-width: 48ch; }
+.road-note { margin-top: 18px; }
+
+/* FAQ */
+.faq-wrap { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(40px, 7vw, 120px); align-items: start; }
+.faq { max-width: 720px; border-top: 1px solid var(--ink); }
+.faq details { border-bottom: 1px solid var(--rule-strong); }
+.faq summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 18px; align-items: baseline; padding: 18px 0; font-family: var(--serif); font-size: 1.22rem; line-height: 1.4; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary:hover { color: var(--action-hover); }
+.faq summary::after { content: ""; width: 9px; height: 9px; border-right: 1.3px solid var(--ink); border-bottom: 1.3px solid var(--ink); transform: rotate(45deg); justify-self: end; }
+.faq details[open] > summary::after { transform: translateY(4px) rotate(-135deg); }
+.faq .ans { padding: 0 34px 22px 0; color: var(--body); font-size: 17px; text-wrap: pretty; }
+.faq details.faq-more { border-bottom: 0; }
+.faq details.faq-more > summary { font-family: var(--sans); font-size: 15.5px; font-weight: 500; color: var(--ink); padding: 20px 0; }
+.faq-more-list { border-top: 1px solid var(--rule-strong); }
+
+/* Final ask */
+.spread--ask { padding-bottom: clamp(80px, 10vw, 140px); }
+.ask { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(40px, 7vw, 120px); align-items: start; }
+.ask .h2 { font-size: clamp(2.8rem, 5.4vw, 4.8rem); }
+.ask-lead { margin-top: 24px; font-family: var(--serif); font-size: 1.3rem; line-height: 1.5; color: var(--ink); max-width: 36ch; }
+.ask-note { margin-top: 20px; font-size: 15.5px; color: var(--body); }
+.ask-alt { margin-top: 26px; font-size: 16px; }
+.formbox { padding: clamp(22px, 3vw, 36px); background: #fff; border: 1px solid var(--rule-strong); }
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
+.fld { display: grid; gap: 6px; margin-top: 18px; align-content: start; }
+.fgrid .fld:nth-child(-n+2) { margin-top: 0; }
+.fld label, .fld legend { font-size: 14.5px; font-weight: 600; }
+.fld input[type="text"], .fld input[type="email"], .fld select { min-height: 46px; padding: 0 12px; border: 1px solid #8FA6BE; border-radius: var(--r); background: #fff; color: var(--ink); font: 400 16px var(--sans); }
+.fld input:focus-visible, .fld select:focus-visible { outline: 2px solid var(--action); outline-offset: 1px; }
+fieldset.fld { border: 0; padding: 0; margin: 18px 0 0; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.opts label { display: inline-flex; gap: 8px; align-items: center; font-weight: 400; font-size: 15.5px; min-height: 34px; }
+.opts input { width: 18px; height: 18px; accent-color: var(--action); }
+.priv { margin-top: 12px; font-size: 14px; color: var(--past); }
+.fld-err { font-size: 14px; font-weight: 500; color: var(--red); }
+.fld-err::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; background: var(--red); transform: translateY(-2px); }
+.fld-err[hidden] { display: none; }
+.fld input[aria-invalid="true"] { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); }
+.form-submit { margin-top: 24px; }
+.conf p:first-child { font-family: var(--display); font-size: 1.9rem; line-height: 1.25; }
+.conf[hidden] { display: none; }
+.proto { margin-top: 12px; display: inline-block; padding: 3px 10px; border: 1px dashed var(--soft); font-size: 13.5px; color: var(--past); }
+.signoff { position: relative; isolation: isolate; overflow: hidden; min-height: clamp(420px, 48vw, 680px); display: grid; place-items: center; text-align: center; }
+.signoff img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+.signoff::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 42%, rgba(244,247,251,.7) 0%, rgba(244,247,251,.3) 45%, rgba(244,247,251,0) 70%); }
+.signoff-a { font-family: var(--display); font-size: clamp(2.8rem, 6.6vw, 5.4rem); line-height: 1; letter-spacing: -0.012em; }
+.signoff-b { margin: 18px auto 0; max-width: 34ch; font-family: var(--serif); font-style: italic; font-size: clamp(1.25rem, 2.2vw, 1.8rem); line-height: 1.35; text-wrap: balance; }
+
+/* Footer */
+.footer { background: var(--deep); color: #D7E2EC; padding: clamp(72px, 9vw, 120px) 0 40px; }
+.footer a { color: #fff; text-decoration: none; }
+.footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.fg { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 0.5fr)); gap: 40px; }
+.fbrand { display: flex; align-items: center; gap: 12px; color: #fff; }
+.fbrand svg { width: 44px; height: 26px; }
+.fbrand span { font-family: var(--display); font-size: 30px; }
+.fline { margin-top: 22px; font-family: var(--display); font-size: 2rem; color: #fff; line-height: 1.1; }
+.fprod { margin-top: 10px; font-family: var(--serif); font-style: italic; color: #CAD7E4; max-width: 40ch; }
+.fcol h3 { font: 500 11.5px/1.4 var(--sans); letter-spacing: 0.22em; text-transform: uppercase; color: #AFC4DA; margin-bottom: 14px; }
+.fcol li { padding: 4px 0; font-size: 15px; }
+.fbottom { margin-top: 72px; padding-top: 24px; border-top: 1px solid rgba(215,226,236,.2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; font-size: 14px; color: #AFC4DA; }
+
+@media (prefers-reduced-motion: reduce) { .hero-photo img { animation: none; } }
+
+/* ===== Responsive ===== */
+@media (max-width: 1180px) {
+  .cost-list li { grid-template-columns: 220px minmax(0, 1fr); }
+  .cost-list .find { grid-column: 2; }
+  .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+}
+@media (max-width: 960px) {
+  .split-head, .attention, .panel-head, .control, .faq-wrap, .ask { grid-template-columns: minmax(0, 1fr); }
+  .pts { grid-template-columns: minmax(0, 1fr); }
+  .road-cols, .positions { grid-template-columns: minmax(0, 1fr); }
+  .road-cols > div + div, .positions > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+  .fg { grid-template-columns: 1fr 1fr; }
+  .fg > :first-child { grid-column: 1 / -1; }
+  .pin { width: 24px; height: 24px; margin: -12px 0 0 -12px; font-size: 12px; box-shadow: 0 0 0 3px rgba(255,255,255,.9); }
+}
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  .hero::before { display: none; }
+  .hero-photo { inset: 0 0 auto 0; aspect-ratio: 3 / 4; height: auto; }
+  .hero-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(244,247,251,.6) 0%, rgba(244,247,251,.3) 24%, rgba(244,247,251,.6) 42%, rgba(244,247,251,.92) 62%, var(--bg) 92%); }
+  .hero-photo img { object-position: center top; }
+  .hero-inner { padding-top: calc(var(--nav-h) + 40px); padding-bottom: 120px; }
+  .hero h1 { font-size: clamp(2.6rem, 11.4vw, 3.3rem); }
+  .hero .support { font-size: 17.5px; }
+  .home { margin-top: -80px; }
+  .pin { width: 20px; height: 20px; margin: -10px 0 0 -10px; font-size: 11px; box-shadow: 0 0 0 2px rgba(255,255,255,.9); }
+  .cost-list li { grid-template-columns: minmax(0, 1fr); padding: 22px 0 24px; }
+  .cost-list .find { grid-column: auto; margin-top: 4px; }
+  .cost-tag { display: flex; gap: 12px; align-items: baseline; }
+  .rail, .control-list { grid-template-columns: minmax(0, 1fr); }
+  .control-list li:nth-child(2) { border-top-color: var(--rule-strong); }
+  .tab { padding: 10px 14px 12px; font-size: 15px; }
+  /* more tabs lie to the right: fade the strip's edge so it reads as scrollable */
+  .tablist { -webkit-mask-image: linear-gradient(90deg, #000 82%, transparent); mask-image: linear-gradient(90deg, #000 82%, transparent); padding-right: 40px; }
+  .fgrid { grid-template-columns: minmax(0, 1fr); }
+  .fgrid .fld:nth-child(2) { margin-top: 18px; }
+  .fg { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<span id="top-sentinel" aria-hidden="true"></span>
+
+<!-- 0 · Navigation -->
+<header class="site-nav" id="site-nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Upstream, back to top">
+      <svg viewBox="0 0 120 72" aria-hidden="true"><defs><linearGradient id="ub" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#8FB1EE"/><stop offset=".55" stop-color="#3F7FDB"/><stop offset="1" stop-color="#1769D2"/></linearGradient><linearGradient id="un" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#2B4C74"/><stop offset="1" stop-color="#0B2F52"/></linearGradient></defs><path fill="url(#ub)" d="M2 58 C 24 57, 42 30, 62 15 C 78 4, 100 2, 116 20 C 104 14, 90 16, 78 24 C 58 37, 40 60, 2 58 Z"/><path fill="url(#un)" d="M14 68 C 38 68, 54 45, 73 33 C 90 22, 108 25, 119 42 C 108 37, 95 38, 85 44 C 66 56, 48 72, 14 68 Z"/></svg>
+      <span translate="no">Upstream</span>
+    </a>
+    <nav class="nav-links" aria-label="Page sections">
+      <a href="#attention">Product</a><a href="#workflow">Workflow</a><a href="#roadmap">Roadmap</a><a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-end">
+      <span class="pill">For advisory teams</span>
+      <a class="btn btn--primary btn--sm nav-d" href="#see" data-open-form>See Upstream in action</a>
+      <a class="btn btn--primary btn--sm nav-m" href="#see" data-open-form aria-label="See Upstream in action">See it in action</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<!-- 1 · Hero -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <picture class="hero-photo">
+    <source media="(max-width: 760px)" srcset="assets/images/still-water-hero-3x4.webp">
+    <source media="(max-width: 1100px)" srcset="assets/images/still-water-hero-960.webp 960w, assets/images/still-water-hero-1920.webp 1920w" sizes="100vw">
+    <img src="assets/images/still-water-hero-1920.webp" alt="A still lake at first light, mist lying over the water beneath forested hills and distant snow-capped peaks, in pale blue-grey." width="1920" height="1080" fetchpriority="high">
+  </picture>
+  <div class="wrap hero-inner">
+    <div class="hero-copy">
+      <p class="kicker">The operating workspace for relationship-driven advisory teams</p>
+      <h1 class="display" id="hero-title">Relationships compound when your firm remembers them.</h1>
+      <p class="support">Upstream helps advisory teams organise live mandates, manage outreach, keep track of the people behind every company and build a record of every interaction. More relationship intelligence arrives over time.</p>
+      <div class="ctas">
+        <a class="btn btn--primary" href="#see" data-open-form>See Upstream in action</a>
+        <a class="btn btn--quiet" href="#workflow">Explore the workflow</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Know what needs attention: the real Home screen -->
+<section class="home" id="attention" aria-labelledby="attention-title">
+  <div class="wrap">
+    <figure>
+      <div class="shot home-shot">
+        <a href="assets/product/home-2400.webp" target="_blank" rel="noopener">
+          <img src="assets/product/home-2400.webp" srcset="assets/product/home-1200.webp 1200w, assets/product/home-2400.webp 2400w" sizes="(min-width: 1320px) 1160px, 92vw" width="2400" height="1500" alt="The Upstream Home screen. A blue briefing card reads 73 follow-ups have slipped past due, with a Work the queue button and four figures: 73 overdue, 0 due today, 1 coming up, 30 intros not sent. Below, Today's focus lists companies with how many days late each follow-up is, beside a Team workload panel showing open and late work by analyst.">
+          <span class="shot-open" aria-hidden="true">Open full size</span>
+        </a>
+        <span class="pin" style="left: 19.5%; top: 10.6%" aria-hidden="true">1</span>
+        <span class="pin" style="left: 19.5%; top: 36.4%" aria-hidden="true">2</span>
+        <span class="pin" style="left: 72.6%; top: 36.3%" aria-hidden="true">3</span>
+      </div>
+      <figcaption class="fig-cap cap">Home in Upstream. The firm, people and companies shown are fictional.</figcaption>
+    </figure>
+    <div class="attention">
+      <div>
+        <h2 class="pullline" id="attention-title">Know what needs attention.</h2>
+        <p class="read">See overdue follow-ups, active outreach, team activity and mandate progress in one place.</p>
+      </div>
+      <ol class="notes">
+        <li><span class="n" aria-hidden="true">1</span><p><b>The verdict.</b> What has slipped past due, and the one button that starts the day.</p></li>
+        <li><span class="n" aria-hidden="true">2</span><p><b>Today's focus.</b> The companies to write to next, with how late each one is.</p></li>
+        <li><span class="n" aria-hidden="true">3</span><p><b>Team workload.</b> Who is carrying what across the firm, and what is late.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · The problem -->
+<section class="spread spread--alt" id="cost" aria-labelledby="cost-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">The problem</p>
+        <h2 class="h2" id="cost-title">Your firm already knows more than it can easily find.</h2>
+      </div>
+      <p class="read">Mandates live in spreadsheets, contacts in inboxes and follow-ups in someone’s calendar. On a live mandate, that split shows up in five ways.</p>
+    </div>
+    <ol class="cost-list">
+      <li><p class="cost-tag"><span class="cost-n">01</span><span class="cost-l">Duplicate outreach</span></p><div><h3>Two people email the same CFO.</h3><p class="read">Each mandate keeps its own list, and nothing checks across them. Each email makes sense on its own. Together, they make the firm look disconnected.</p></div><p class="find">You find out from the CFO.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">02</span><span class="cost-l">The unseen history</span></p><div><h3>Someone at the firm already spoke to them.</h3><p class="read">A colleague approached the company on last year’s mandate. The history exists, but the person about to reach out cannot see it.</p></div><p class="find find--emph">You never find out.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">03</span><span class="cost-l">The missed follow-up</span></p><div><h3>The follow-up date passes unnoticed.</h3><p class="read">Nobody had the schedule open. By the time someone does, the thread has been quiet for three weeks, and reopening it costs goodwill you were saving for the right moment.</p></div><p class="find">You find out three weeks late.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">04</span><span class="cost-l">The rebuilt list</span></p><div><h3>Every mandate rebuilds the same list.</h3><p class="read">The sector map, buyer universe and contact research are rebuilt from scratch, even when the firm did the work last year.</p></div><p class="find">You pay for the same research twice.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">05</span><span class="cost-l">The handover</span></p><div><h3>An analyst leaves.</h3><p class="read">Their spreadsheets, their follow-up dates and the reason a buyer took the last call leave with them.</p></div><p class="find">You find out on the next mandate.</p></li>
+    </ol>
+    <div class="transition"><p>These look like five problems. They share one cause: the work is spread across files nobody else can see.</p></div>
+  </div>
+</section>
+
+<!-- 4 · The workflow -->
+<section class="spread" id="workflow" aria-labelledby="workflow-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">The workflow</p>
+        <h2 class="h2" id="workflow-title">Run every mandate from one place.</h2>
+      </div>
+      <p class="read">Upstream replaces the master list, the email schedule and the contact sheet with one connected workspace, and gives each part of the day its own screen.</p>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <div class="tablist" role="tablist" aria-label="Upstream screens">
+        <button type="button" class="tab" role="tab" id="tab-projects" aria-controls="panel-projects" aria-selected="true"><i>1</i>Projects</button>
+        <button type="button" class="tab" role="tab" id="tab-master" aria-controls="panel-master" aria-selected="false" tabindex="-1"><i>2</i>Master List</button>
+        <button type="button" class="tab" role="tab" id="tab-sourcing" aria-controls="panel-sourcing" aria-selected="false" tabindex="-1"><i>3</i>Sourcing</button>
+        <button type="button" class="tab" role="tab" id="tab-desk" aria-controls="panel-desk" aria-selected="false" tabindex="-1"><i>4</i>Outreach desk</button>
+        <button type="button" class="tab" role="tab" id="tab-contacts" aria-controls="panel-contacts" aria-selected="false" tabindex="-1"><i>5</i>Contacts</button>
+        <button type="button" class="tab" role="tab" id="tab-analytics" aria-controls="panel-analytics" aria-selected="false" tabindex="-1"><i>6</i>Analytics</button>
+      </div>
+
+      <div class="panel" role="tabpanel" id="panel-projects" aria-labelledby="tab-projects">
+        <div class="panel-head"><h3><span class="panel-n">Projects</span>Every mandate has a place.</h3><p>Keep companies, engagements, progress, team members and next steps connected to the work that matters.</p></div>
+        <div class="shot"><a href="assets/product/projects-1800.webp" target="_blank" rel="noopener"><img src="assets/product/projects-1800.webp" srcset="assets/product/projects-900.webp 900w, assets/product/projects-1800.webp 1800w" sizes="(min-width: 1320px) 1160px, 92vw" width="1800" height="738" loading="lazy" alt="The Projects screen: four projects, each with a bar showing late, intro pending, replied and in-progress companies, and columns for companies, late follow-ups, intros pending, response rate, open work and team."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-master" aria-labelledby="tab-master">
+        <div class="panel-head"><h3><span class="panel-n">Master List</span>One shared record of the market.</h3><p>Keep the firm’s companies, locations, categories and the mandates each one has been on in one searchable record.</p></div>
+        <div class="shot"><a href="assets/product/master-1800.webp" target="_blank" rel="noopener"><img src="assets/product/master-1800.webp" srcset="assets/product/master-900.webp 900w, assets/product/master-1800.webp 1800w" sizes="(min-width: 1320px) 1160px, 92vw" width="1800" height="1125" loading="lazy" alt="The Master List firm database: one row per company with its city, the mandates it sits on, the analysts who worked it, revenue, staff and deal count. Two companies carry an amber Overlap mark."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-sourcing" aria-labelledby="tab-sourcing">
+        <div class="panel-head"><h3><span class="panel-n">Sourcing</span>Find the next right target.</h3><p>Discover, filter and score companies from the firm’s database before pushing them into an active mandate.</p></div>
+        <div class="shot"><a href="assets/product/sourcing-1800.webp" target="_blank" rel="noopener"><img src="assets/product/sourcing-1800.webp" srcset="assets/product/sourcing-900.webp 900w, assets/product/sourcing-1800.webp 1800w" sizes="(min-width: 1320px) 1160px, 92vw" width="1800" height="1125" loading="lazy" alt="The Sourcing screen for a sell-side engagement: a search across 353 companies with side, sector, size and worked-before filters, a Score matches button, and candidate rows marked target or buyer, each with a Push button."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-desk" aria-labelledby="tab-desk">
+        <div class="panel-head"><h3><span class="panel-n">Outreach desk</span>Keep every conversation moving.</h3><p>Work follow-ups in order of urgency, clear overdue touches first and make sure promising conversations do not go quiet.</p></div>
+        <div class="shot"><a href="assets/product/schedule-1800.webp" target="_blank" rel="noopener"><img src="assets/product/schedule-1800.webp" srcset="assets/product/schedule-900.webp 900w, assets/product/schedule-1800.webp 1800w" sizes="(min-width: 1320px) 1160px, 92vw" width="1800" height="1125" loading="lazy" alt="The Outreach desk: a horizon of late, today and the next six days; a Next action row for the most urgent company with a Log follow-up button; then an Overdue band listing companies by days late."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-contacts" aria-labelledby="tab-contacts">
+        <div class="panel-head"><h3><span class="panel-n">Contacts</span>Keep the people behind the companies visible.</h3><p>Organise the people your firm knows and connect them to the companies and mandates where they matter.</p></div>
+        <div class="shot"><a href="assets/product/contacts-1800.webp" target="_blank" rel="noopener"><img src="assets/product/contacts-1800.webp" srcset="assets/product/contacts-900.webp 900w, assets/product/contacts-1800.webp 1800w" sizes="(min-width: 1320px) 1160px, 92vw" width="1800" height="1125" loading="lazy" alt="The Contacts screen: an A to Z list of people with their role and company, and a reading pane that counts 256 people at 136 companies and lists the companies with the deepest benches."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      </div>
+      <div class="panel" role="tabpanel" id="panel-analytics" aria-labelledby="tab-analytics">
+        <div class="panel-head"><h3><span class="panel-n">Analytics</span>See what your outreach is producing.</h3><p>Understand reply rates, follow-up timing, sourcing activity and where the process loses momentum.</p></div>
+        <div class="shot"><a href="assets/product/analytics-1800.webp" target="_blank" rel="noopener"><img src="assets/product/analytics-1800.webp" srcset="assets/product/analytics-900.webp 900w, assets/product/analytics-1800.webp 1800w" sizes="(min-width: 1320px) 1160px, 92vw" width="1800" height="1125" loading="lazy" alt="The Analytics screen: a finding line about overdue companies, figures for emails sent, reply rate, interested and bounce rate, an outreach funnel that marks the biggest drop-off, weekly volume and replies charts, and reply timing."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      </div>
+    </div>
+    <p class="fig-cap cap">Screens from Upstream. The firm, people and companies shown are fictional.</p>
+  </div>
+</section>
+
+<!-- 5 · One shared record -->
+<section class="spread spread--alt" id="record" aria-labelledby="record-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">One shared record</p>
+        <h2 class="h2" id="record-title">Before you reach out, see what your team already knows.</h2>
+      </div>
+      <p class="read">Every company keeps its history across mandates. When a name you are about to approach is already on another live mandate, the company record says so, with the engagement, its status and the date of first contact.</p>
+    </div>
+    <figure class="fig-wide">
+      <div class="shot"><a href="assets/product/company-crop-1600.webp" target="_blank" rel="noopener"><img src="assets/product/company-crop-1600.webp" srcset="assets/product/company-crop-800.webp 800w, assets/product/company-crop-1600.webp 1600w" sizes="(min-width: 1320px) 1160px, 92vw" width="1600" height="773" loading="lazy" alt="A company record, not yet contacted on this engagement, with an amber banner: possible duplicate across mandates, the same company on Cedar infrastructure buyout, marked Interested, exact name match, first contact 2 July 2026. Advisory only."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      <figcaption class="fig-cap cap">A company record in Upstream, flagged because the same company is interested on another mandate.</figcaption>
+    </figure>
+    <ul class="pts">
+      <li><h3>Checked across live mandates.</h3><p>Companies are matched by domain, exact name and similar name, and flagged as advice, never blocked.</p></li>
+      <li><h3>Every touch, in order.</h3><p>Emails, replies, calls and meetings are logged as a history that is added to and never rewritten.</p></li>
+      <li><h3>The cadence does the counting.</h3><p>Follow-up dates are worked out from the first email, and stop when a company replies, bounces or declines.</p></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 6 · Continuity -->
+<section class="spread continuity" id="continuity" aria-labelledby="cont-title">
+  <div class="continuity-bg" aria-hidden="true"><img src="assets/images/lake-wash-1024.webp" alt="" width="1024" height="1024" loading="lazy"></div>
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">Continuity</p>
+        <h2 class="h2" id="cont-title">Keep the work moving, even when people move on.</h2>
+      </div>
+      <p class="read">Projects, contacts, follow-ups and activity stay in the firm’s workspace, not in someone’s personal files. When work changes hands, the next person opens the same record.</p>
+    </div>
+    <ul class="pts">
+      <li><h3>A trail of who did what.</h3><p>Each project keeps its activity: companies added, emails logged, replies recorded, tasks completed.</p></li>
+      <li><h3>Work that is declared, not remembered.</h3><p>Tasks sit beside the cadence, attached to a project, a company or a contact, with an owner and a due date.</p></li>
+      <li><h3>Archived before anything is deleted.</h3><p>Removing a record archives it first, so the history stays readable and can be restored.</p></li>
+    </ul>
+    <figure class="fig-wide">
+      <div class="shot"><a href="assets/product/activity-crop-1600.webp" target="_blank" rel="noopener"><img src="assets/product/activity-crop-1600.webp" srcset="assets/product/activity-crop-800.webp 800w, assets/product/activity-crop-1600.webp 1600w" sizes="(min-width: 1320px) 1160px, 92vw" width="1600" height="881" loading="lazy" alt="A project's activity tab: figures for engagements, companies, responded, late, intro pending and open work, then a dated history of who logged an initial email, recorded a reply, added a company or added a task, beside a note that the trail is added to and never edited."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      <figcaption class="fig-cap cap">A project’s activity trail in Upstream.</figcaption>
+    </figure>
+    <div class="human"><p>For the person leaving, their work stays credited to them. For the person arriving, they start with context, not a blank sheet.</p></div>
+  </div>
+</section>
+
+<!-- 7 · Bring the work -->
+<section class="spread spread--alt" id="start" aria-labelledby="start-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">Getting started</p>
+        <h2 class="h2" id="start-title">Bring the work into one shared record.</h2>
+      </div>
+      <p class="read">Start from the spreadsheets your team already keeps. Upstream reads the whole client workbook and shows you what it found before anything is written.</p>
+    </div>
+    <ol class="rail">
+      <li><span class="step-n">1</span><h3>Upload the workbooks</h3><p>Master sheets, the email schedule and the contact list, together.</p></li>
+      <li><span class="step-n">2</span><h3>Map the project</h3><p>Choose the project and engagements each sheet belongs to.</p></li>
+      <li><span class="step-n">3</span><h3>Review before applying</h3><p>See the companies, contacts and outreach history it found, and resolve anything it cannot safely match.</p></li>
+      <li><span class="step-n">4</span><h3>Keep working</h3><p>Log the outreach you already do. Follow-ups, history and reporting build from it.</p></li>
+    </ol>
+    <figure class="fig-wide">
+      <div class="shot"><a href="assets/product/import-crop-1600.webp" target="_blank" rel="noopener"><img src="assets/product/import-crop-1600.webp" srcset="assets/product/import-crop-800.webp 800w, assets/product/import-crop-1600.webp 1600w" sizes="(min-width: 1320px) 1160px, 92vw" width="1600" height="903" loading="lazy" alt="The Import from Excel screen: bring your existing workflow into Upstream, four steps from upload to apply, a drop zone with a Choose workbooks button, and a key saying master sheets become companies and engagements, the email schedule becomes the outreach log, and the contact list becomes the firm's contacts."><span class="shot-open" aria-hidden="true">Open full size</span></a></div>
+      <figcaption class="fig-cap cap">Import in Upstream.</figcaption>
+    </figure>
+    <div class="control" id="control">
+      <h3 class="pullline">Control stays with the firm.</h3>
+      <ul class="control-list">
+        <li><h4>Firm-scoped</h4><p>Every record belongs to your firm’s workspace and to nobody else’s.</p></li>
+        <li><h4>Visible by mandate</h4><p>Analysts see the mandates they are assigned to. Partners see every mandate.</p></li>
+        <li><h4>Sent from your own mailbox</h4><p>Outreach goes from a connected Gmail or Outlook account when a person chooses to send, or is logged from wherever it was sent.</p></li>
+        <li><h4>Revocable sessions</h4><p>Sign-in is held in secure cookies, and sessions can be revoked.</p></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · Roadmap -->
+<section class="spread" id="roadmap" aria-labelledby="road-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">What comes next</p>
+        <h2 class="h2" id="road-title">The next layer of Upstream.</h2>
+      </div>
+      <p class="read">Today, Upstream helps your team run the work. Over time, it will help your firm remember the relationships behind it.</p>
+    </div>
+    <div class="roadmap">
+      <div class="road-cols">
+        <div class="road-now">
+          <p class="st st--now">Available now</p>
+          <ul>
+            <li>Mandate management</li><li>Company database</li><li>Contact management</li><li>Outreach workflow</li>
+            <li>Duplicate checks across live mandates</li><li>Sourcing</li><li>Analytics</li><li>Excel import</li>
+          </ul>
+        </div>
+        <div class="road-next">
+          <p class="st st--next">Coming in future phases</p>
+          <ul>
+            <li>Relationship intelligence</li><li>Automatic memory from email and calendar</li><li>Warm introduction paths</li>
+            <li>Institutional knowledge across mandates</li><li>Smarter recommendations for the next opportunity</li>
+          </ul>
+        </div>
+      </div>
+      <div class="positions">
+        <div><p class="pos-l">Today</p><p class="pos-line">The operating workspace for relationship-driven advisory teams.</p></div>
+        <div><p class="pos-l">Over time</p><p class="pos-line">The relationship intelligence layer for your firm.</p><p class="pos-detail">As Upstream evolves, it will turn the firm’s accumulated communication and deal history into institutional memory, warm paths and better opportunities.</p></div>
+      </div>
+    </div>
+    <p class="road-note cap">Future capabilities will need each person’s permission, and are being shaped with the teams using Upstream today.</p>
+  </div>
+</section>
+
+<!-- 9 · FAQ -->
+<section class="spread spread--alt" id="faq" aria-labelledby="faq-title">
+  <div class="wrap faq-wrap">
+    <div>
+      <p class="kicker">FAQ</p>
+      <h2 class="h2 h2--gap" id="faq-title">Questions teams ask.</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>What does Upstream do today?</summary><p class="ans">It runs the work around a mandate: projects and engagements, the firm’s company database, contacts, sourcing, an outreach desk with follow-up dates worked out for you, analytics and Excel import.</p></details>
+      <details><summary>Does Upstream read our emails?</summary><p class="ans">No. Today it can send an email from a connected Gmail or Outlook account when a person chooses to, and it records the outreach your team logs. Reading email and calendar is a future phase, and will need each person’s permission.</p></details>
+      <details><summary>Can we start with one mandate?</summary><p class="ans">Yes, and we recommend it. Bring the spreadsheets for one live mandate, and the rest can follow when you are ready.</p></details>
+      <details><summary>Can we bring our existing spreadsheets?</summary><p class="ans">Yes. Upload the client workbooks, map each sheet to a project and its engagements, and review what Upstream found before anything is written.</p></details>
+      <details><summary>Who can see what?</summary><p class="ans">Analysts see the mandates they are assigned to. Partners see everything. Access is checked on every list, so a mandate you are not on does not load.</p></details>
+      <details class="faq-more"><summary>More questions about setup, sending and what comes next</summary>
+        <div class="faq-more-list">
+          <details><summary>What happens when someone leaves?</summary><p class="ans">Their projects, contacts, follow-ups and activity stay in the firm’s workspace, credited to them, and the next person is given access to the mandate.</p></details>
+          <details><summary>Does Upstream send sequences or mass email?</summary><p class="ans">No. Each email is written or reviewed and sent by a person, and the follow-up schedule tells them when.</p></details>
+          <details><summary>What is coming next?</summary><p class="ans">Relationship intelligence: memory drawn from email and calendar with each person’s permission, warm introduction paths and better recommendations. The <a class="textlink" href="#roadmap">roadmap above</a> lists what is available now and what comes later.</p></details>
+          <details><summary>Where is our data stored?</summary><p class="ans">We are confirming data residency and our position under India’s Digital Personal Data Protection Act with counsel, and will settle both with you before any firm pays.</p></details>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · See it in action -->
+<section class="spread spread--ask" id="see" aria-labelledby="ask-title">
+  <div class="wrap ask">
+    <div>
+      <p class="kicker">Work with us</p>
+      <h2 class="h2 h2--gap" id="ask-title">See Upstream in action.</h2>
+      <p class="ask-lead">We will walk you through Upstream on a workflow like yours, or set it up against one of your live mandates.</p>
+      <p class="ask-note">Working with a small number of advisory teams. No pricing page yet.</p>
+      <p class="ask-alt"><a class="textlink" href="#see" data-open-form data-intent="mandate">Bring one live mandate</a></p>
+    </div>
+    <div class="formbox" id="formbox">
+      <form id="pilot-form" novalidate>
+        <div class="fgrid">
+          <div class="fld"><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required><p class="fld-err" id="f-name-err" hidden>Enter your name.</p></div>
+          <div class="fld"><label for="f-firm">Firm</label><input id="f-firm" name="firm" type="text" autocomplete="organization" required><p class="fld-err" id="f-firm-err" hidden>Enter your firm’s name.</p></div>
+          <div class="fld"><label for="f-role">Role</label><select id="f-role" name="role"><option>Partner / MD</option><option>Principal</option><option>Associate</option><option>Analyst</option><option>Other</option></select></div>
+          <div class="fld"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" inputmode="email" autocomplete="email" spellcheck="false" required><p class="fld-err" id="f-email-err" hidden>Enter a work email, like name@firm.com.</p></div>
+        </div>
+        <fieldset class="fld"><legend>What would you like to do?</legend><div class="opts"><label><input type="radio" name="intent" value="walkthrough" checked>See a walkthrough</label><label><input type="radio" name="intent" value="mandate">Bring one live mandate</label></div></fieldset>
+        <fieldset class="fld"><legend>What do you run?</legend><div class="opts"><label><input type="checkbox" name="run" value="sell-side">Sell-side</label><label><input type="checkbox" name="run" value="buy-side">Buy-side</label><label><input type="checkbox" name="run" value="capital-raise">Capital raise</label></div></fieldset>
+        <div class="form-submit"><button type="submit" class="btn btn--primary">Send request</button></div>
+        <p class="priv">We’ll use these details to reply to you and for nothing else.</p>
+      </form>
+      <div class="conf" id="confirm" role="status" aria-live="polite" hidden><p>Thank you. We’ll be in touch to arrange a time.</p><p class="proto">Prototype. Nothing was sent.</p></div>
+    </div>
+  </div>
+</section>
+<section class="signoff" aria-label="Sign-off">
+  <img src="assets/images/still-water-signoff-1920.webp" srcset="assets/images/still-water-signoff-960.webp 960w, assets/images/still-water-signoff-1920.webp 1920w" sizes="100vw" alt="A misted forest lake at dawn, its trees mirrored in still water." width="1920" height="1088" loading="lazy" data-reveal>
+  <div class="wrap">
+    <p class="signoff-a">Relationships compound.</p>
+    <p class="signoff-b">Keep the work moving today. Build the firm’s memory over time.</p>
+  </div>
+</section>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="fg">
+      <div>
+        <p class="fbrand"><svg viewBox="0 0 120 72" aria-hidden="true"><path fill="#F4F7FB" d="M2 58 C 24 57, 42 30, 62 15 C 78 4, 100 2, 116 20 C 104 14, 90 16, 78 24 C 58 37, 40 60, 2 58 Z"/><path fill="#F4F7FB" d="M14 68 C 38 68, 54 45, 73 33 C 90 22, 108 25, 119 42 C 108 37, 95 38, 85 44 C 66 56, 48 72, 14 68 Z"/></svg><span translate="no">Upstream</span></p>
+        <p class="fline">Relationships compound.</p>
+        <p class="fprod">The operating workspace for relationship-driven advisory teams.</p>
+      </div>
+      <nav class="fcol" aria-labelledby="f1"><h3 id="f1">Product</h3><ul><li><a href="#workflow">Workflow</a></li><li><a href="#record">One shared record</a></li><li><a href="#continuity">Continuity</a></li><li><a href="#roadmap">Roadmap</a></li></ul></nav>
+      <nav class="fcol" aria-labelledby="f2"><h3 id="f2">Start</h3><ul><li><a href="#start">Bring your spreadsheets</a></li><li><a href="#control">Control</a></li><li><a href="#faq">FAQ</a></li></ul></nav>
+      <nav class="fcol" aria-labelledby="f3"><h3 id="f3">Company</h3><ul><li><a href="#see" data-open-form>See Upstream in action</a></li><li><a href="#see" data-open-form>Contact</a></li></ul></nav>
+    </div>
+    <div class="fbottom">
+      <p>People. Context. Opportunities. Over time.</p>
+      <p>© 2026 [Legal entity name] · Privacy · Terms</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  /* Nav: sits on the photograph, pins after the hero, a mist rule once scrolled */
+  var nav = document.getElementById('site-nav');
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (e) { nav.classList.toggle('is-scrolled', !e[0].isIntersecting); }).observe(document.getElementById('top-sentinel'));
+    new IntersectionObserver(function (e) { nav.classList.toggle('is-pinned', !e[0].isIntersecting); }, { rootMargin: '-72px 0px 0px 0px' }).observe(document.getElementById('top'));
+  }
+
+  /* Workflow tabs. Without script every panel stays visible, stacked. */
+  var tabs = document.getElementById('tabs');
+  var tabEls = Array.prototype.slice.call(tabs.querySelectorAll('[role="tab"]'));
+  function select(tab, focus) {
+    tabEls.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) tab.focus({ preventScroll: true });
+    /* keep the chosen tab inside the scrollable strip on phones, without moving the page */
+    var list = tab.parentElement;
+    if (tab.offsetLeft < list.scrollLeft) list.scrollLeft = tab.offsetLeft;
+    /* 56px clears the faded edge the strip wears on phones */
+    else if (tab.offsetLeft + tab.offsetWidth > list.scrollLeft + list.clientWidth - 56) list.scrollLeft = tab.offsetLeft + tab.offsetWidth - list.clientWidth + 56;
+  }
+  tabs.classList.add('is-tabbed');
+  select(tabEls[0], false);
+  tabEls.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(t, false); });
+    t.addEventListener('keydown', function (e) {
+      var next = null;
+      if (e.key === 'ArrowRight') next = tabEls[(i + 1) % tabEls.length];
+      else if (e.key === 'ArrowLeft') next = tabEls[(i - 1 + tabEls.length) % tabEls.length];
+      else if (e.key === 'Home') next = tabEls[0];
+      else if (e.key === 'End') next = tabEls[tabEls.length - 1];
+      if (next) { e.preventDefault(); select(next, true); }
+    });
+  });
+
+  /* Slow image reveal on the sign-off; always visible by default */
+  document.querySelectorAll('[data-reveal]').forEach(function (el) {
+    if (!('IntersectionObserver' in window) || reduce.matches || !el.animate) return;
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        el.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], { duration: 1400, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' });
+      });
+    }, { rootMargin: '0px 0px 5% 0px' });
+    io.observe(el);
+  });
+
+  /* Every call to action goes to the form, with the matching intent chosen */
+  document.querySelectorAll('[data-open-form]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      var intent = el.getAttribute('data-intent') || 'walkthrough';
+      var radio = document.querySelector('input[name="intent"][value="' + intent + '"]');
+      if (radio) radio.checked = true;
+      document.getElementById('see').scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth' });
+      setTimeout(function () { document.getElementById('f-name').focus({ preventScroll: true }); }, reduce.matches ? 0 : 800);
+    });
+  });
+
+  /* Inline errors: shown on submit, cleared as each field becomes valid; focus goes to the first invalid field */
+  var form = document.getElementById('pilot-form'), conf = document.getElementById('confirm');
+  var required = ['f-name', 'f-firm', 'f-email'].map(function (id) { return document.getElementById(id); });
+  function showError(input, on) {
+    var err = document.getElementById(input.id + '-err');
+    err.hidden = !on;
+    if (on) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', err.id); }
+    else { input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); }
+  }
+  required.forEach(function (input) {
+    input.addEventListener('input', function () { if (input.getAttribute('aria-invalid') === 'true' && input.checkValidity()) showError(input, false); });
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var first = null;
+    required.forEach(function (input) { var bad = !input.value.trim() || !input.checkValidity(); showError(input, bad); if (bad && !first) first = input; });
+    if (first) { first.focus(); return; }
+    form.hidden = true; conf.hidden = false; conf.tabIndex = -1; conf.focus();
+  });
+})();
+</script>
+</body>
+</html>
