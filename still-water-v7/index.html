@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Upstream · Relationship memory and origination for advisory firms</title>
+<meta name="description" content="Upstream gives your firm one record of who it knows, who it has approached, and what happened, so every mandate starts with what the firm already knows.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Relationships compound when your firm remembers them.">
+<meta property="og:description" content="Upstream gives your firm one record of who it knows, who it has approached, and what happened, so every mandate starts with what the firm already knows.">
+<meta property="og:image" content="assets/images/social-07-still-water-v4.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#F4F7FB">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Caslon+Display&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="assets/images/still-water-hero-1920.webp" media="(min-width: 761px)">
+<style>
+/* ===== Tokens ===== */
+:root {
+  /* primitive */
+  --navy: #0B2A4A;
+  --slate: #34506D;
+  --soft-ink: #46637F;
+  --soft: #8CA7C4;
+  --mist: #D7E2EC;
+  --line: #C3D1DF;
+  --fog: #E9EFF5;
+  --surface: #F4F7FB;
+  --paper: #FBFCFE;
+  --blue: #2563EB;
+  --blue-deep: #1D4ED8;
+  --blue-wash: #EAF1FE;
+  --blue-line: #BFD3FA;
+
+  /* semantic */
+  --bg: var(--surface);
+  --bg-alt: var(--fog);
+  --ink: var(--navy);
+  --body: var(--slate);
+  --past: var(--soft-ink);
+  --rule: var(--mist);
+  --rule-strong: var(--line);
+  --action: var(--blue);
+  --action-hover: var(--blue-deep);
+
+  --display: "Libre Caslon Display", "Didot", "Bodoni 72", Georgia, serif;
+  --serif: "Libre Caslon Text", "Baskerville", "Iowan Old Style", Georgia, serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  --gutter: clamp(22px, 5vw, 80px);
+  --maxw: 1320px;
+  /* v7: tighter rhythm for explanatory sections; the hero, memory and sign-off keep their air */
+  --spread-y: clamp(80px, 9vw, 136px);
+  --ease-slow: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 2px;
+  --nav-h: 72px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 12px); }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 18px/1.7 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+p, figure { margin: 0; }
+h1, h2, h3, h4 { margin: 0; font-weight: 400; }
+ul, ol, dl, dd { margin: 0; padding: 0; list-style: none; }
+button { font: inherit; color: inherit; }
+button, a, summary { touch-action: manipulation; -webkit-tap-highlight-color: rgba(37, 99, 235, 0.12); }
+:focus-visible { outline: 2px solid var(--action); outline-offset: 3px; }
+.wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 60; padding: 10px 14px; background: var(--ink); color: #fff; text-decoration: none; }
+.skip:focus { top: 12px; }
+.vh { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#top-sentinel { position: absolute; top: 0; height: 1px; width: 1px; }
+
+/* ===== Type ===== */
+.kicker { font: 500 12.5px/1.5 var(--sans); letter-spacing: 0.24em; text-transform: uppercase; color: var(--ink); }
+.kicker::after { content: ""; display: block; width: 36px; height: 1px; margin-top: 14px; background: var(--ink); opacity: 0.55; }
+.display { font-family: var(--display); font-weight: 400; letter-spacing: -0.012em; line-height: 1.03; text-wrap: balance; }
+.h2 { font-family: var(--display); font-size: clamp(2.4rem, 4.6vw, 4.1rem); line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
+.read { color: var(--body); max-width: 62ch; text-wrap: pretty; }
+.read + .read { margin-top: 1em; }
+.cap { font-family: var(--serif); font-style: italic; font-size: 15px; line-height: 1.5; color: var(--past); }
+.pullline { font-family: var(--display); font-size: clamp(1.9rem, 3.2vw, 2.8rem); line-height: 1.15; text-wrap: balance; }
+
+/* ===== Buttons ===== */
+.btn { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; min-height: 48px; padding: 0 22px; border-radius: var(--r); font: 500 15.5px/1 var(--sans); letter-spacing: 0.01em; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease; }
+.btn--primary { background: var(--action); color: #fff; }
+.btn--primary:hover { background: var(--action-hover); }
+.btn--quiet { border-color: var(--ink); color: var(--ink); background: transparent; }
+.btn--quiet:hover { background: var(--ink); color: #fff; }
+.btn--sm { min-height: 40px; padding: 0 16px; font-size: 14.5px; }
+.textlink { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.textlink:hover { color: var(--action-hover); }
+
+/* ===== Navigation ===== */
+.site-nav { position: absolute; inset: 0 0 auto 0; z-index: 40; height: var(--nav-h); border-bottom: 1px solid transparent; transition: border-color 250ms ease, background-color 250ms ease; }
+.site-nav.is-pinned { position: fixed; background: rgba(244, 247, 251, 0.97); }
+.site-nav.is-pinned.is-scrolled { border-bottom-color: var(--rule); }
+.site-nav .wrap { height: 100%; display: flex; align-items: center; gap: 36px; }
+.brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+.brand svg { width: 40px; height: 24px; }
+.brand span { font-family: var(--display); font-size: 27px; letter-spacing: -0.01em; }
+.nav-links { display: flex; gap: 28px; }
+.nav-links a { font-size: 15px; color: var(--ink); text-decoration: none; letter-spacing: 0.01em; }
+.nav-links a:hover { text-decoration: underline; text-underline-offset: 5px; }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+.pill { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--soft); font-size: 13px; color: var(--ink); white-space: nowrap; }
+.nav-m { display: none; }
+@media (max-width: 1080px) { .nav-links { display: none; } }
+@media (max-width: 640px) { .nav-d { display: none; } .nav-m { display: inline-flex; } .brand span { font-size: 23px; } .site-nav .wrap { gap: 12px; } .pill { display: none; } }
+
+/* ===== Hero: promise on the left, one readable product moment on the right ===== */
+.hero { position: relative; isolation: isolate; overflow: hidden; }
+.hero-photo { position: absolute; inset: 0; z-index: -2; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 60% 62%; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-photo img { animation: settle 2400ms var(--ease-slow) both; }
+  @keyframes settle { from { transform: scale(1.04); } to { transform: scale(1); } }
+}
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(244,247,251,.96) 0%, rgba(244,247,251,.9) 38%, rgba(244,247,251,.35) 62%, rgba(244,247,251,.12) 100%), linear-gradient(180deg, rgba(244,247,251,.5) 0%, rgba(244,247,251,0) 30%, rgba(244,247,251,0) 80%, var(--bg) 100%); }
+.hero-inner { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: clamp(40px, 5vw, 88px); align-items: center; padding-top: calc(var(--nav-h) + clamp(44px, 5vw, 80px)); padding-bottom: clamp(56px, 6vw, 88px); }
+.hero h1 { margin-top: 28px; font-size: clamp(2.9rem, 4.6vw, 4.5rem); max-width: 13ch; }
+.hero .support { margin-top: 26px; max-width: 46ch; color: var(--body); font-size: 18px; text-wrap: pretty; }
+.hero .proof { margin-top: 18px; font-family: var(--serif); font-style: italic; font-size: 1.2rem; color: var(--ink); }
+.hero .ctas { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; }
+.hero .kicker { letter-spacing: 0.16em; }
+
+/* ===== App panels: the product, legible at 100% ===== */
+.app { position: relative; background: #fff; border: 1px solid var(--rule-strong); box-shadow: 0 40px 80px -44px rgba(11, 42, 74, 0.38), 0 2px 6px rgba(11, 42, 74, 0.07); color: var(--ink); font-size: 15px; line-height: 1.5; text-align: left; }
+.app-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 16px; padding: 10px 22px; border-bottom: 1px solid var(--rule); background: var(--surface); font-size: 13.5px; color: var(--body); }
+.app-bar b { font-weight: 600; color: var(--ink); }
+.app-head { display: flex; align-items: center; gap: 16px; padding: 20px 22px 18px; }
+.app-head > div { min-width: 0; }
+.app-name { font-family: var(--display); font-size: 30px; line-height: 1.12; }
+.app-meta { margin-top: 2px; font-size: 14.5px; color: var(--body); }
+.app-sec { padding: 16px 22px 18px; border-top: 1px solid var(--rule); }
+.app-label { display: block; font: 600 12px/1.4 var(--sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--past); }
+.mark { width: 44px; height: 44px; display: grid; place-items: center; flex: none; background: var(--navy); color: #fff; font: 400 15px/1 var(--serif); letter-spacing: 0.04em; }
+.mark--sm { width: 36px; height: 36px; font-size: 13px; }
+.ini { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--rule-strong); display: grid; place-items: center; flex: none; font: 500 13px/1 var(--serif); letter-spacing: 0.04em; color: var(--ink); background: var(--surface); }
+.ini--ink { background: var(--navy); border-color: var(--navy); color: #fff; }
+.ini.is-left { border-style: dashed; color: var(--past); background: #fff; }
+.alert { display: flex; gap: 12px; align-items: baseline; padding: 12px 22px; background: var(--blue-wash); border-top: 1px solid var(--blue-line); border-bottom: 1px solid var(--blue-line); font-size: 14.5px; color: var(--ink); }
+.alert::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); transform: translateY(-1px); }
+.alert b { font-weight: 600; color: var(--blue-deep); }
+.ui-btn { display: inline-flex; align-items: center; min-height: 34px; padding: 0 13px; font-size: 14px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; }
+.ui-btn--p { background: var(--action); color: #fff; }
+.ui-btn--g { background: #fff; border-color: var(--rule-strong); color: var(--ink); }
+.tag { display: inline-flex; align-items: center; gap: 7px; padding: 2px 9px; font-size: 13px; white-space: nowrap; border: 1px solid var(--rule-strong); color: var(--ink); background: #fff; }
+.tag--firm { background: var(--blue-wash); border-color: var(--blue-line); color: var(--blue-deep); }
+.tag--wait::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--ink); }
+.tag[hidden] { display: none; }
+
+/* who knows them */
+.knows li { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 0 14px; align-items: center; padding: 11px 0; border-top: 1px solid var(--fog); }
+.knows li:first-child { border-top: 0; }
+.k-name { font-weight: 600; font-size: 15px; }
+.k-name small { font: inherit; font-weight: 400; color: var(--body); }
+.k-why { font-size: 14px; color: var(--body); }
+.meter { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.meter-bars { display: flex; gap: 3px; }
+.meter-bars i { width: 14px; height: 6px; background: var(--mist); }
+.meter-bars i.on { background: var(--ink); }
+.meter-l { font-size: 14px; min-width: 70px; color: var(--ink); }
+
+/* strength popover */
+.pop-wrap { position: relative; display: inline-block; }
+button.str { position: relative; display: inline-flex; align-items: center; min-width: 70px; min-height: 32px; border: 0; background: none; padding: 0 2px; cursor: pointer; text-align: left; font-size: 14px; color: var(--ink); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
+button.str::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 7px; border-right: 1.3px solid currentColor; border-bottom: 1.3px solid currentColor; transform: translateY(-3px) rotate(45deg); }
+button.str::before { content: ""; position: absolute; inset: -12px -8px; }
+button.str[aria-expanded="true"]::after { transform: translateY(0) rotate(-135deg); }
+.why { position: absolute; z-index: 10; right: 0; top: calc(100% + 12px); width: 270px; padding: 14px 16px 15px; background: var(--paper); border: 1px solid var(--ink); box-shadow: 0 18px 40px -24px rgba(11, 42, 74, 0.4); }
+.why--start { right: auto; left: 0; }
+.why[hidden] { display: none; }
+.why-t, .why-l { display: block; }
+.why-t { font-family: var(--serif); font-style: italic; font-size: 15.5px; margin-bottom: 6px; }
+.why-l { font-size: 14px; padding: 5px 0; border-top: 1px solid var(--fog); }
+
+/* ===== Spreads ===== */
+.spread { padding: var(--spread-y) 0; }
+.spread--alt { background: var(--bg-alt); }
+.spread-head { max-width: 880px; }
+.spread-head .h2 { margin-top: 28px; }
+.spread-head .read { margin-top: 24px; }
+.h2--gap { margin-top: 28px; }
+.split-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px clamp(40px, 6vw, 96px); align-items: end; }
+.split-head .h2 { margin-top: 28px; }
+.fig-cap { margin-top: 14px; display: flex; gap: 14px; }
+.fig-cap::before { content: ""; flex: none; width: 24px; height: 1px; margin-top: 11px; background: var(--past); }
+
+/* Problem: five rows, scannable as a ledger */
+.cost-list { margin-top: clamp(48px, 6vw, 72px); border-top: 1px solid var(--ink); }
+.cost-list li { display: grid; grid-template-columns: 230px minmax(0, 1fr) 250px; gap: 10px clamp(24px, 3.4vw, 56px); align-items: baseline; padding: 28px 0 30px; border-bottom: 1px solid var(--rule-strong); }
+.cost-tag { display: grid; gap: 4px; }
+.cost-n { font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--past); }
+.cost-l { font: 500 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.cost-list h3 { font-family: var(--display); font-size: clamp(1.65rem, 2.3vw, 2.05rem); line-height: 1.15; }
+.cost-list .read { margin-top: 8px; font-size: 17px; }
+.find { font-family: var(--serif); font-style: italic; font-size: 1.1rem; line-height: 1.4; color: var(--past); }
+.find--emph { color: var(--ink); font-style: normal; font-weight: 700; }
+.transition { padding-top: clamp(64px, 8vw, 112px); text-align: center; }
+.transition p { margin-inline: auto; max-width: 28ch; font-family: var(--display); font-size: clamp(2rem, 3.8vw, 3.2rem); line-height: 1.15; text-wrap: balance; }
+
+/* The firm-first record: before and after */
+.ba { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 4vw, 64px); align-items: start; }
+.ba-col > .app-label { margin-bottom: 14px; }
+.silos { display: grid; gap: 10px; }
+.silos li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: baseline; padding: 14px 18px; background: #fff; border: 1px solid var(--rule-strong); font-size: 15px; }
+.silos .sm { color: var(--body); }
+.silos .sc { font-weight: 600; }
+.silos .sh { grid-column: 1 / -1; font-size: 14px; color: var(--past); }
+.ba-note { margin-top: 16px; font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--past); }
+.ba-note--ink { color: var(--ink); }
+.mandates li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding: 10px 0; border-top: 1px solid var(--fog); }
+.mandates li:first-child { border-top: 0; }
+.mandates b { font-weight: 600; white-space: nowrap; }
+.mandates span { font-size: 14px; color: var(--body); text-align: right; }
+.shared { display: flex; flex-wrap: wrap; gap: 8px; }
+.ways { margin-top: clamp(64px, 8vw, 112px); padding-top: clamp(40px, 5vw, 64px); border-top: 1px solid var(--ink); display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 32px clamp(40px, 6vw, 96px); align-items: start; }
+.ways .read { margin-top: 18px; }
+.ways-list li { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 6px 24px; align-items: baseline; padding: 20px 0; border-top: 1px solid var(--rule-strong); }
+.ways-list li:first-child { border-top: 0; padding-top: 6px; }
+.ways-list .app-label { color: var(--ink); }
+.ways-list p { font-family: var(--serif); font-size: clamp(1.25rem, 1.8vw, 1.5rem); line-height: 1.35; }
+
+/* Relationships */
+.rel-grid { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: clamp(36px, 6vw, 96px); align-items: start; }
+.subs > div { padding: 24px 0 28px; border-top: 1px solid var(--ink); }
+.subs > div + div { border-top-color: var(--rule-strong); }
+.subs h3 { font-family: var(--display); font-size: clamp(1.6rem, 2.2vw, 2rem); line-height: 1.15; }
+.subs .read { margin-top: 10px; font-size: 17px; }
+.pair { display: flex; align-items: center; gap: 14px; padding: 20px 22px 18px; }
+.pair-p { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pair-p > div > b { display: block; font-weight: 600; }
+.pair-p > div > span { display: block; font-size: 14px; color: var(--body); }
+.pair-line { flex: 1 1 24px; min-width: 24px; height: 3px; background: var(--ink); }
+.reasons > div { display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 16px; padding: 9px 0; border-top: 1px solid var(--fog); }
+.reasons > div:first-child { border-top: 0; }
+.reasons dt { color: var(--body); font-size: 14.5px; }
+.reasons dd { font-size: 15px; }
+.strength-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; margin-bottom: 10px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.alert-body { display: grid; gap: 2px; }
+
+/* Sourcing */
+.src-grid { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); gap: clamp(36px, 6vw, 96px); align-items: start; }
+.steps li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 12px; padding: 22px 0 24px; border-top: 1px solid var(--rule-strong); }
+.steps li:first-child { border-top-color: var(--ink); }
+.step-n { font-family: var(--display); font-size: 2.2rem; line-height: 1; color: var(--past); }
+.steps h3 { font-family: var(--serif); font-size: 1.3rem; line-height: 1.35; }
+.steps p { grid-column: 2; color: var(--body); font-size: 16.5px; }
+.clist { width: 100%; border-collapse: collapse; font-size: 15px; }
+.clist td { padding: 14px 22px; border-top: 1px solid var(--fog); vertical-align: middle; }
+.clist tr:first-child td { border-top: 0; }
+.clist td:first-child { width: 210px; }
+.clist .nm { font-weight: 600; display: block; white-space: nowrap; }
+.clist .hq { font-size: 14px; color: var(--body); }
+.clist .bd { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.clist .note { display: block; margin-top: 4px; font-size: 14px; color: var(--body); }
+.clist .ac { text-align: right; }
+.clist tr.is-known td { background: #FAFCFF; }
+.accept { min-height: 36px; padding: 0 14px; font-size: 14px; }
+.accept[aria-disabled="true"] { background: var(--fog); color: var(--past); pointer-events: none; }
+.toast { margin: 0 22px 18px; padding: 12px 16px; background: var(--ink); color: #fff; font-size: 14.5px; }
+.toast[hidden] { display: none; }
+
+/* Memory */
+.memory { position: relative; isolation: isolate; overflow: hidden; padding-block: clamp(96px, 11vw, 168px); }
+.memory-bg { position: absolute; inset: 0; z-index: -1; }
+.memory-bg img { width: 100%; height: 100%; object-fit: cover; object-position: center 58%; opacity: 0.5; }
+.memory-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, var(--bg) 0%, rgba(244,247,251,.72) 18%, rgba(244,247,251,.55) 60%, var(--bg) 100%); }
+.pts { margin-top: clamp(48px, 6vw, 72px); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: clamp(28px, 4vw, 64px); }
+.pts li { padding: 22px 0 8px; border-top: 1px solid var(--ink); }
+.pts h3 { font-family: var(--serif); font-size: 1.4rem; line-height: 1.3; }
+.pts p { margin-top: 8px; color: var(--body); font-size: 16.5px; text-wrap: pretty; }
+.ribbon-fig { margin-top: clamp(48px, 6vw, 80px); }
+.ribbon-scroll { position: relative; overflow-x: auto; }
+.ribbon { min-width: 860px; padding: 20px 24px 14px; }
+.ribbon svg { width: 100%; height: auto; overflow: visible; }
+.rb-lane { stroke: var(--fog); }
+.rb-name { font: 500 12.5px var(--sans); fill: var(--body); }
+.rb-dot { fill: var(--ink); }
+.rb-init circle { fill: #fff; stroke: var(--ink); stroke-width: 1; }
+.rb-init text { font: 400 12px var(--serif); fill: var(--ink); text-anchor: middle; }
+.rb-init.is-left circle { stroke: var(--soft-ink); stroke-dasharray: 2 2; }
+.rb-init.is-left text { fill: var(--past); }
+.rb-band { fill: var(--fog); stroke: var(--rule-strong); }
+.rb-band-t { font: 500 12.5px var(--sans); fill: var(--ink); }
+.rb-note { font: 500 13.5px var(--sans); fill: var(--ink); }
+.rb-note-line { stroke: var(--past); stroke-dasharray: 2 3; }
+.human { padding-top: clamp(72px, 9vw, 128px); text-align: center; }
+.human p { margin-inline: auto; max-width: 34ch; font-family: var(--display); font-size: clamp(1.9rem, 3.4vw, 2.9rem); line-height: 1.2; text-wrap: balance; }
+
+/* Partners */
+.pt-grid { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(36px, 6vw, 96px); align-items: start; }
+.pb li { padding: 22px 0 24px; border-top: 1px solid var(--rule-strong); }
+.pb li:first-child { border-top-color: var(--ink); }
+.pb h3 { font-family: var(--serif); font-size: 1.35rem; line-height: 1.3; }
+.pb p { margin-top: 6px; color: var(--body); font-size: 16.5px; }
+.table-scroll { position: relative; overflow-x: auto; }
+.mt { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 15px; }
+.mt th { text-align: left; padding: 12px 18px; font: 600 12px/1.4 var(--sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--past); border-bottom: 1px solid var(--rule); white-space: nowrap; }
+.mt td { padding: 14px 18px; border-bottom: 1px solid var(--fog); white-space: nowrap; }
+.mt tr:last-child td { border-bottom: 0; }
+.mt .n { text-align: right; font-variant-numeric: tabular-nums; }
+.mt th.n { text-align: right; }
+.mt .late { font-weight: 600; color: var(--blue-deep); }
+.cta-line { margin-top: clamp(40px, 5vw, 64px); display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; }
+.cta-line p { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--body); }
+
+/* Trust */
+.trust-grid { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(36px, 6vw, 96px); align-items: start; }
+.stage { background: var(--fog); padding: clamp(24px, 3.4vw, 44px); display: grid; place-items: center; }
+.consent { width: min(100%, 440px); }
+.dlg-head { display: flex; gap: 14px; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--rule); }
+.gm { width: 30px; height: 30px; border: 1px solid var(--rule-strong); display: grid; place-items: center; flex: none; font: 600 13px var(--sans); color: var(--body); }
+.dlg-head h3 { font-family: var(--serif); font-size: 1.2rem; line-height: 1.3; }
+.switches { padding: 4px 22px; }
+.switches li { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--fog); font-size: 15px; }
+.switches li:last-child { border-bottom: 0; }
+.sw { position: relative; flex: none; width: 38px; height: 22px; border-radius: 999px; background: var(--line); }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(11, 42, 74, 0.25); }
+.sw--on { background: var(--blue); }
+.sw--on::after { left: 19px; }
+.sw-note { font-size: 14px; color: var(--body); }
+.consent-foot { padding: 14px 22px 16px; border-top: 1px solid var(--rule); background: var(--surface); font-size: 14px; color: var(--body); }
+.tpts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(24px, 3vw, 48px); }
+.tpts li { padding: 20px 0 22px; border-top: 1px solid var(--rule-strong); }
+.tpts li:nth-child(-n+2) { border-top-color: var(--ink); }
+.tpts h3 { font-family: var(--serif); font-size: 1.3rem; line-height: 1.3; }
+.tpts p { margin-top: 6px; color: var(--body); font-size: 16px; text-wrap: pretty; }
+.more { margin-top: 12px; border-top: 1px solid var(--rule-strong); border-bottom: 1px solid var(--rule-strong); }
+.more > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 56px; padding: 12px 0; font-size: 16px; font-weight: 500; color: var(--ink); }
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary:hover { color: var(--action-hover); }
+.more > summary::after { content: ""; flex: none; width: 9px; height: 9px; border-right: 1.3px solid currentColor; border-bottom: 1.3px solid currentColor; transform: rotate(45deg); }
+.more[open] > summary::after { transform: translateY(4px) rotate(-135deg); }
+.capture-dl { padding-bottom: 18px; }
+.capture-dl > div { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 20px; padding: 10px 0; border-top: 1px solid var(--rule); font-size: 15.5px; }
+.capture-dl dt { font-weight: 600; }
+.capture-dl dd { color: var(--body); }
+
+/* How it works */
+.rail { margin-top: clamp(48px, 6vw, 80px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: clamp(20px, 2.6vw, 40px); }
+.rail li { padding-top: 22px; border-top: 1px solid var(--ink); }
+.rail h3 { margin-top: 14px; font-family: var(--serif); font-size: 1.3rem; line-height: 1.3; }
+.rail p { margin-top: 8px; color: var(--body); font-size: 16px; text-wrap: pretty; }
+.for { margin-top: clamp(64px, 8vw, 112px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px clamp(40px, 6vw, 96px); align-items: start; }
+.for .pullline + .read { margin-top: 18px; }
+.roles li { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 24px; padding: 16px 0; border-top: 1px solid var(--rule-strong); }
+.roles li:first-child { border-top-color: var(--ink); }
+.roles b { font-weight: 600; font-size: 16px; }
+.roles span { color: var(--body); font-size: 16.5px; }
+.focus { margin-top: 18px; font-family: var(--serif); font-style: italic; color: var(--past); }
+.status { margin-top: clamp(64px, 8vw, 112px); background: #fff; border: 1px solid var(--rule-strong); }
+.status-head { padding: 22px 26px; border-bottom: 1px solid var(--rule); }
+.status-head h3 { font-family: var(--display); font-size: clamp(1.6rem, 2.4vw, 2.1rem); line-height: 1.15; }
+.status-cols { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); }
+.status-cols > div { padding: 20px 26px 24px; }
+.status-cols > div + div { border-left: 1px solid var(--rule); }
+.st { display: inline-flex; align-items: center; gap: 10px; font: 600 12px/1.4 var(--sans); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.st::before { content: ""; width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.st--live::before { background: var(--ink); }
+.st--build::before { border: 1.5px solid var(--ink); }
+.status ul { margin-top: 12px; }
+.status li { padding: 9px 0; border-top: 1px solid var(--fog); font-size: 16px; line-height: 1.45; }
+.status li:first-child { border-top: 0; }
+.status-cols .two-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 32px; }
+.status-cols .two-col li:nth-child(2) { border-top: 0; }
+
+/* FAQ */
+.faq-wrap { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: clamp(40px, 7vw, 120px); align-items: start; }
+.faq { max-width: 720px; border-top: 1px solid var(--ink); }
+.faq details { border-bottom: 1px solid var(--rule-strong); }
+.faq summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 18px; align-items: baseline; padding: 18px 0; font-family: var(--serif); font-size: 1.22rem; line-height: 1.4; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary:hover { color: var(--action-hover); }
+.faq summary::after { content: ""; width: 9px; height: 9px; border-right: 1.3px solid var(--ink); border-bottom: 1.3px solid var(--ink); transform: rotate(45deg); justify-self: end; }
+.faq details[open] > summary::after { transform: translateY(4px) rotate(-135deg); }
+.faq .ans { padding: 0 34px 22px 0; color: var(--body); font-size: 17px; text-wrap: pretty; }
+.faq details.faq-more { border-bottom: 0; }
+.faq details.faq-more > summary { font-family: var(--sans); font-size: 15.5px; font-weight: 500; color: var(--ink); padding: 20px 0; }
+.faq-more-list { border-top: 1px solid var(--rule-strong); }
+
+/* Final ask */
+.spread--ask { padding-bottom: clamp(80px, 10vw, 140px); }
+.ask { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(40px, 7vw, 120px); align-items: start; }
+.ask .h2 { font-size: clamp(2.8rem, 5.4vw, 4.8rem); }
+.ask-lead { margin-top: 24px; font-family: var(--serif); font-size: 1.3rem; line-height: 1.5; color: var(--ink); max-width: 36ch; }
+.ask-note { margin-top: 20px; font-size: 15.5px; color: var(--body); }
+.ask-alt { margin-top: 26px; font-size: 16px; }
+.formbox { padding: clamp(22px, 3vw, 36px); background: #fff; border: 1px solid var(--rule-strong); }
+.fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; align-items: start; }
+.fld { display: grid; gap: 6px; margin-top: 18px; align-content: start; }
+.fgrid .fld:nth-child(-n+2) { margin-top: 0; }
+.fld label, .fld legend { font-size: 14.5px; font-weight: 600; }
+.fld input[type="text"], .fld input[type="email"], .fld select { min-height: 46px; padding: 0 12px; border: 1px solid #8FA6BE; border-radius: var(--r); background: #fff; color: var(--ink); font: 400 16px var(--sans); }
+.fld input:focus-visible, .fld select:focus-visible { outline: 2px solid var(--action); outline-offset: 1px; }
+fieldset.fld { border: 0; padding: 0; margin: 18px 0 0; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.opts label { display: inline-flex; gap: 8px; align-items: center; font-weight: 400; font-size: 15.5px; min-height: 34px; }
+.opts input { width: 18px; height: 18px; accent-color: var(--action); }
+.priv { margin-top: 12px; font-size: 14px; color: var(--past); }
+.fld-err { font-size: 14px; font-weight: 500; color: var(--ink); }
+.fld-err::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%; background: var(--ink); transform: translateY(-2px); }
+.fld-err[hidden] { display: none; }
+.fld input[aria-invalid="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.form-submit { margin-top: 24px; }
+.conf p:first-child { font-family: var(--display); font-size: 1.9rem; line-height: 1.25; }
+.conf[hidden] { display: none; }
+.proto { margin-top: 12px; display: inline-block; padding: 3px 10px; border: 1px dashed var(--soft); font-size: 13.5px; color: var(--past); }
+.signoff { position: relative; isolation: isolate; overflow: hidden; min-height: clamp(420px, 48vw, 680px); display: grid; place-items: center; text-align: center; }
+.signoff img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 45%; }
+.signoff::after { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(ellipse at 50% 42%, rgba(244,247,251,.66) 0%, rgba(244,247,251,.28) 45%, rgba(244,247,251,0) 70%); }
+.signoff-a { font-family: var(--display); font-size: clamp(2.8rem, 6.6vw, 5.4rem); line-height: 1; letter-spacing: -0.012em; }
+.signoff-b { margin: 18px auto 0; max-width: 34ch; font-family: var(--serif); font-style: italic; font-size: clamp(1.25rem, 2.2vw, 1.8rem); line-height: 1.35; text-wrap: balance; }
+
+/* Footer */
+.footer { background: var(--ink); color: #D7E2EC; padding: clamp(72px, 9vw, 120px) 0 40px; }
+.footer a { color: #fff; text-decoration: none; }
+.footer a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.fg { display: grid; grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 0.5fr)); gap: 40px; }
+.fbrand { display: flex; align-items: center; gap: 12px; color: #fff; }
+.fbrand svg { width: 44px; height: 26px; }
+.fbrand span { font-family: var(--display); font-size: 30px; }
+.fline { margin-top: 22px; font-family: var(--display); font-size: 2rem; color: #fff; line-height: 1.1; }
+.fprod { margin-top: 10px; font-family: var(--serif); font-style: italic; color: #C9D6E3; max-width: 40ch; }
+.fcol h3 { font: 500 11.5px/1.4 var(--sans); letter-spacing: 0.22em; text-transform: uppercase; color: #A9BFD6; margin-bottom: 14px; }
+.fcol li { padding: 4px 0; font-size: 15px; }
+.fbottom { margin-top: 72px; padding-top: 24px; border-top: 1px solid rgba(215,226,236,.2); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; font-size: 14px; color: #A9BFD6; }
+
+@media (prefers-reduced-motion: reduce) { .hero-photo img { animation: none; } }
+
+/* ===== Responsive ===== */
+@media (max-width: 1180px) {
+  .cost-list li { grid-template-columns: 220px minmax(0, 1fr); }
+  .cost-list .find { grid-column: 2; }
+  .rail { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+}
+@media (max-width: 960px) {
+  .hero-inner, .split-head, .ba, .ways, .rel-grid, .src-grid, .pt-grid, .trust-grid, .for, .faq-wrap, .ask { grid-template-columns: minmax(0, 1fr); }
+  .hero h1 { max-width: 15ch; }
+  .pts { grid-template-columns: minmax(0, 1fr); }
+  .status-cols { grid-template-columns: minmax(0, 1fr); }
+  .status-cols > div + div { border-left: 0; border-top: 1px solid var(--rule); }
+  .fg { grid-template-columns: 1fr 1fr; }
+  .fg > :first-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  body { font-size: 17px; }
+  /* the wash belongs to the photo, not the hero: the hero is much taller than the photo once the record stacks */
+  .hero::before { display: none; }
+  .hero-photo { inset: 0 0 auto 0; aspect-ratio: 3 / 4; height: auto; }
+  .hero-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(244,247,251,.6) 0%, rgba(244,247,251,.2) 24%, rgba(244,247,251,.55) 42%, rgba(244,247,251,.9) 62%, var(--bg) 92%); }
+  .hero-photo img { object-position: center top; }
+  .hero-inner { padding-top: calc(var(--nav-h) + 36px); padding-bottom: 56px; }
+  .hero h1 { font-size: clamp(2.6rem, 11.4vw, 3.3rem); }
+  .cost-list li { grid-template-columns: minmax(0, 1fr); padding: 24px 0 26px; }
+  .cost-list .find { grid-column: auto; margin-top: 4px; }
+  .cost-tag { display: flex; gap: 12px; align-items: baseline; }
+  .ways-list li { grid-template-columns: minmax(0, 1fr); }
+  .rail, .tpts { grid-template-columns: minmax(0, 1fr); }
+  .tpts li:nth-child(2) { border-top-color: var(--rule-strong); }
+  .roles li, .capture-dl > div, .reasons > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .status-cols .two-col { grid-template-columns: minmax(0, 1fr); }
+  .status-cols .two-col li:nth-child(2) { border-top: 1px solid var(--fog); }
+  .fgrid { grid-template-columns: minmax(0, 1fr); }
+  .fgrid .fld:nth-child(2) { margin-top: 18px; }
+  .app-head, .app-sec, .pair { padding-left: 16px; padding-right: 16px; }
+  .alert, .app-bar { padding-left: 16px; padding-right: 16px; }
+  .app-name { font-size: 25px; }
+  .knows li { grid-template-columns: 38px minmax(0, 1fr); row-gap: 6px; }
+  .knows .meter { grid-column: 2; justify-content: flex-start; }
+  .why { right: auto; left: 0; width: min(270px, 78vw); }
+  .pair { flex-wrap: wrap; }
+  .pair-line { flex-basis: 40px; }
+  .clist, .clist tbody, .clist tr, .clist td { display: block; width: 100%; }
+  .clist tr { padding: 14px 16px; border-top: 1px solid var(--fog); }
+  .clist tr:first-child { border-top: 0; }
+  .clist td, .clist td:first-child { padding: 3px 0; border: 0; width: 100%; }
+  .clist tr.is-known { background: #FAFCFF; }
+  .clist tr.is-known td { background: none; }
+  .clist .ac { text-align: left; padding-top: 10px; }
+  .toast { margin: 0 16px 16px; }
+  .fg { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<span id="top-sentinel" aria-hidden="true"></span>
+
+<!-- 0 · Navigation -->
+<header class="site-nav" id="site-nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Upstream, back to top">
+      <svg viewBox="0 0 120 72" aria-hidden="true"><defs><linearGradient id="ub" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#8FB1EE"/><stop offset=".55" stop-color="#3B74E6"/><stop offset="1" stop-color="#2563EB"/></linearGradient><linearGradient id="un" x1="0" x2="1" y1="1" y2="0"><stop offset="0" stop-color="#2B4C74"/><stop offset="1" stop-color="#0B2A4A"/></linearGradient></defs><path fill="url(#ub)" d="M2 58 C 24 57, 42 30, 62 15 C 78 4, 100 2, 116 20 C 104 14, 90 16, 78 24 C 58 37, 40 60, 2 58 Z"/><path fill="url(#un)" d="M14 68 C 38 68, 54 45, 73 33 C 90 22, 108 25, 119 42 C 108 37, 95 38, 85 44 C 66 56, 48 72, 14 68 Z"/></svg>
+      <span translate="no">Upstream</span>
+    </a>
+    <nav class="nav-links" aria-label="Page sections">
+      <a href="#product">Product</a><a href="#how">How it works</a><a href="#trust">Trust</a><a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-end">
+      <span class="pill">For advisory firms</span>
+      <a class="btn btn--primary btn--sm nav-d" href="#mandate" data-open-form>Bring one live mandate</a>
+      <a class="btn btn--primary btn--sm nav-m" href="#mandate" data-open-form aria-label="Bring one live mandate">Bring a mandate</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<!-- 1 · Hero -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <picture class="hero-photo">
+    <source media="(max-width: 760px)" srcset="assets/images/still-water-hero-3x4.webp">
+    <source media="(max-width: 1100px)" srcset="assets/images/still-water-hero-960.webp 960w, assets/images/still-water-hero-1920.webp 1920w" sizes="100vw">
+    <img src="assets/images/still-water-hero-1920.webp" alt="A still lake at first light, mist lying over the water beneath forested hills and distant snow-capped peaks, in pale blue-grey." width="1920" height="1080" fetchpriority="high">
+  </picture>
+  <div class="wrap hero-inner">
+    <div>
+      <p class="kicker">Relationship memory and origination for advisory firms</p>
+      <h1 class="display" id="hero-title">Relationships compound when your firm remembers them.</h1>
+      <p class="support">Upstream gives your firm one record of who it knows, who it has approached, and what happened. Built from the tools your team already uses, it brings warm relationships, new sourcing and follow-ups into the same place.</p>
+      <p class="proof">Built around the mandate. Owned by the firm.</p>
+      <div class="ctas">
+        <a class="btn btn--primary" href="#mandate" data-open-form>Bring one live mandate</a>
+        <a class="btn btn--quiet" href="#how">See how it works</a>
+      </div>
+    </div>
+    <figure>
+      <div class="app">
+        <div class="app-bar"><span>Companies / <b>Kestrel Components</b></span><span>Firm record</span></div>
+        <div class="app-head"><span class="mark" aria-hidden="true">KC</span><div><p class="app-name">Kestrel Components</p><p class="app-meta">Precision components · Pune · On 2 mandates since 2024</p></div></div>
+        <p class="alert"><span><b>In play on Project Birch.</b> A. Mehta is running outreach. Check with them before another approach.</span></p>
+        <div class="app-sec">
+          <p class="app-label">Who at the firm knows them</p>
+          <ul class="knows">
+            <li><span class="ini ini--ink" aria-hidden="true">RI</span><div><p class="k-name">R. Iyer <small>· Partner</small></p><p class="k-why">6 meetings, replies both ways, last met 2 Jun</p></div><div class="meter"><span class="meter-bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="pop-wrap"><button type="button" class="str" aria-expanded="false" aria-controls="why-1" data-why>Strong</button><span class="why" id="why-1" role="note" hidden><span class="why-t">Why strong</span><span class="why-l">Meetings count for more than emails</span><span class="why-l">Replies count for more than sends</span><span class="why-l">Recent contact counts for more than old</span></span></span></div></li>
+            <li><span class="ini is-left" aria-hidden="true">SK</span><div><p class="k-name">S. Kapoor <small>· left the firm</small></p><p class="k-why">Led outreach on Project Alder, 2024</p></div><div class="meter"><span class="meter-bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span><span class="meter-l">Medium</span></div></li>
+            <li><span class="ini" aria-hidden="true">NR</span><div><p class="k-name">N. Rao <small>· Associate</small></p><p class="k-why">2 emails sent, no reply yet</p></div><div class="meter"><span class="meter-bars" aria-hidden="true"><i class="on"></i><i></i><i></i></span><span class="meter-l">Light</span></div></li>
+          </ul>
+        </div>
+        <div class="app-sec"><p class="app-label">Prior mandate</p><p>Project Alder, 2024 · Responded, met twice</p></div>
+      </div>
+      <figcaption class="fig-cap cap">Illustrative record.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 2 · The problem -->
+<section class="spread" id="cost" aria-labelledby="cost-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">The problem</p>
+        <h2 class="h2" id="cost-title">Your firm knows more than anyone in it remembers.</h2>
+      </div>
+      <p class="read">Relationships live in inboxes, prospects in research lists and follow-ups in spreadsheets. On a live mandate, that split shows up in five ways.</p>
+    </div>
+    <ol class="cost-list">
+      <li><p class="cost-tag"><span class="cost-n">01</span><span class="cost-l">Duplicate outreach</span></p><div><h3>Two people email the same CFO.</h3><p class="read">Each mandate keeps its own list, and nothing checks across them. Each email makes sense on its own. Together, they make the firm look disconnected.</p></div><p class="find">You find out from the CFO.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">02</span><span class="cost-l">The unseen warm path</span></p><div><h3>Someone at the firm already knows them.</h3><p class="read">A partner worked with the buyer two years ago. An associate met their head of M&amp;A at a conference. The history exists, but the person about to reach out cannot see it.</p></div><p class="find find--emph">You never find out.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">03</span><span class="cost-l">The missed follow-up</span></p><div><h3>The follow-up date passes unnoticed.</h3><p class="read">Nobody had the schedule open. By the time someone does, the thread has been quiet for three weeks, and reopening it costs goodwill you were saving for the right moment.</p></div><p class="find">You find out three weeks late.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">04</span><span class="cost-l">The rebuilt list</span></p><div><h3>Every mandate rebuilds the same list.</h3><p class="read">The sector map, buyer universe and contact research are rebuilt from scratch, even when the firm did the work last year.</p></div><p class="find">You pay for the same research twice.</p></li>
+      <li><p class="cost-tag"><span class="cost-n">05</span><span class="cost-l">The handover</span></p><div><h3>An analyst leaves.</h3><p class="read">Their contacts, their context and the reason a buyer took the last call leave with them. The firm paid for that knowledge and kept none of it.</p></div><p class="find">You find out on the next mandate.</p></li>
+    </ol>
+    <div class="transition"><p>These look like five problems. They are one: the firm does not hold its own memory.</p></div>
+  </div>
+</section>
+
+<!-- 3 · The firm-first record, and the three ways in -->
+<section class="spread spread--alt" id="product" aria-labelledby="product-title">
+  <div class="wrap">
+    <div class="split-head">
+      <div>
+        <p class="kicker">The firm-first record</p>
+        <h2 class="h2" id="product-title">Your firm has the relationships. It just doesn’t hold them.</h2>
+      </div>
+      <div>
+        <p class="read">Relationships are built one email, meeting and mandate at a time. But most tools leave that history attached to a person or a project. When the project closes or the person moves on, the context becomes difficult to find.</p>
+        <p class="read">Upstream keeps the company record at the centre. Each mandate adds to the same history, so the next conversation starts with what the firm already knows.</p>
+      </div>
+    </div>
+
+    <div class="ba">
+      <figure class="ba-col">
+        <figcaption class="app-label">Without Upstream</figcaption>
+        <ul class="silos">
+          <li><span class="sm">Project Alder</span><span class="sc">Kestrel Components</span><span class="sh">Sheet kept by S. Kapoor</span></li>
+          <li><span class="sm">Project Birch</span><span class="sc">Kestrel Components</span><span class="sh">Sheet kept by A. Mehta</span></li>
+          <li><span class="sm">Project Cedar</span><span class="sc">Kestrel Components</span><span class="sh">Sheet kept by N. Rao</span></li>
+        </ul>
+        <p class="ba-note">Three separate records.</p>
+      </figure>
+      <figure class="ba-col">
+        <figcaption class="app-label">With Upstream</figcaption>
+        <div class="app">
+          <div class="app-head"><span class="mark" aria-hidden="true">KC</span><div><p class="app-name">Kestrel Components</p><p class="app-meta">One firm record</p></div></div>
+          <div class="app-sec">
+            <ul class="mandates">
+              <li><b>Project Alder</b><span>2024 · responded, met twice</span></li>
+              <li><b>Project Birch</b><span>Live · A. Mehta</span></li>
+              <li><b>Project Cedar</b><span>Live · N. Rao</span></li>
+            </ul>
+          </div>
+          <div class="app-sec shared"><span class="tag tag--firm">Shared history</span><span class="tag tag--firm">Shared relationship context</span></div>
+        </div>
+        <p class="ba-note ba-note--ink">One record, every mandate.</p>
+      </figure>
+    </div>
+
+    <div class="ways">
+      <div>
+        <h3 class="pullline">One record. Three ways in.</h3>
+        <p class="read">Relationships, sourcing and outreach usually live in separate places. Upstream brings them into the same company record, so what the firm learns in one workflow is available in the next.</p>
+      </div>
+      <ul class="ways-list">
+        <li><span class="app-label">Relationships</span><p>See who already knows them.</p></li>
+        <li><span class="app-label">Sourcing</span><p>Find the ones the firm does not.</p></li>
+        <li><span class="app-label">Outreach</span><p>Keep every approach and follow-up in view.</p></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · Relationships -->
+<section class="spread" id="relationships" aria-labelledby="rel-title">
+  <div class="wrap">
+    <div class="spread-head">
+      <p class="kicker">Relationships</p>
+      <h2 class="h2" id="rel-title">Before you reach out cold, see who already knows them.</h2>
+    </div>
+    <div class="rel-grid">
+      <figure>
+        <div class="app">
+          <div class="app-bar"><span>Kestrel Components / <b>Relationship</b></span><span>Firm record</span></div>
+          <div class="pair">
+            <div class="pair-p"><span class="ini ini--ink" aria-hidden="true">RI</span><div><b>R. Iyer</b><span>Partner</span></div></div>
+            <span class="pair-line" aria-hidden="true"></span>
+            <div class="pair-p"><span class="ini" aria-hidden="true">VM</span><div><b>V. Menon</b><span>CFO, Kestrel Components</span></div></div>
+          </div>
+          <div class="app-sec">
+            <div class="strength-row"><span class="app-label">Why this relationship is strong</span><span class="meter"><span class="meter-bars" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="pop-wrap"><button type="button" class="str" aria-expanded="false" aria-controls="why-2" data-why>Strong</button><span class="why" id="why-2" role="note" hidden><span class="why-t">How strength works</span><span class="why-l">Meetings count for more than emails</span><span class="why-l">Replies count for more than sends</span><span class="why-l">Recent contact counts for more than old</span></span></span></span></div>
+            <dl class="reasons">
+              <div><dt>Meetings</dt><dd>6 in 18 months, 1 recurring</dd></div>
+              <div><dt>Replies</dt><dd>Both ways</dd></div>
+              <div><dt>Last contact</dt><dd>Meeting, 2 Jun</dd></div>
+              <div><dt>Mandates</dt><dd>Project Alder, 2024</dd></div>
+            </dl>
+          </div>
+          <div class="alert"><span class="alert-body"><span><b>Already in play on Project Birch.</b> A. Mehta is running outreach.</span><span class="acts"><span class="ui-btn ui-btn--p">Ask R. Iyer for an introduction</span><span class="ui-btn ui-btn--g">Message A. Mehta</span></span></span></div>
+        </div>
+        <figcaption class="fig-cap cap">Illustrative record.</figcaption>
+      </figure>
+      <div class="subs">
+        <div><h3>See the reason behind the relationship.</h3><p class="read">Who spoke to them, how often, how recently and on which mandate.</p></div>
+        <div><h3>Find the warm path before the cold email.</h3><p class="read">The firm’s history appears before anyone reaches out.</p></div>
+        <div><h3>Know when a name is already in play.</h3><p class="read">Upstream checks live mandates and gives the team context before another approach.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Sourcing -->
+<section class="spread spread--alt" id="sourcing" aria-labelledby="src-title">
+  <div class="wrap">
+    <div class="spread-head">
+      <p class="kicker">Sourcing</p>
+      <h2 class="h2" id="src-title">New names become part of the firm’s history.</h2>
+      <p class="read">A sourced name does not disappear into a spreadsheet. Once accepted onto a mandate, it becomes part of the firm’s memory.</p>
+    </div>
+    <div class="src-grid">
+      <ol class="steps">
+        <li><span class="step-n">1</span><h3>Start with the mandate</h3><p>Define the sector, geography and size.</p></li>
+        <li><span class="step-n">2</span><h3>Find new names, starting with your own history</h3><p>Existing firm knowledge comes first. New candidates come next.</p></li>
+        <li><span class="step-n">3</span><h3>Keep every accepted company in the record</h3><p>The company joins the mandate with its history, owner and follow-up attached.</p></li>
+      </ol>
+      <figure>
+        <div class="app">
+          <div class="app-bar"><span><b>Project Cedar</b> · Candidates</span><span>Precision engineering · India · Mid-market</span></div>
+          <table class="clist">
+            <tbody>
+              <tr class="is-known">
+                <td><span class="nm">Kestrel Components</span><span class="hq">Pune</span></td>
+                <td><span class="bd"><span class="tag tag--firm">In the firm record</span><span class="tag tag--wait" id="added-kestrel" hidden>Awaiting first email</span></span><span class="note">3 colleagues know them · Project Alder, 2024</span></td>
+                <td class="ac"><button type="button" class="btn btn--primary accept" data-added="added-kestrel" data-toast="Added to Project Cedar. Kestrel Components is also live on Project Birch.">Add to Project Cedar</button></td>
+              </tr>
+              <tr class="is-known">
+                <td><span class="nm">Anvaya Precision</span><span class="hq">Coimbatore</span></td>
+                <td><span class="bd"><span class="tag tag--firm">In the firm record</span><span class="tag tag--wait" id="added-anvaya" hidden>Awaiting first email</span></span><span class="note">Responded on Project Alder</span></td>
+                <td class="ac"><button type="button" class="btn btn--primary accept" data-added="added-anvaya" data-toast="Added to Project Cedar and checked against every live mandate.">Add to Project Cedar</button></td>
+              </tr>
+              <tr>
+                <td><span class="nm">Sarthi Forge</span><span class="hq">Rajkot</span></td>
+                <td><span class="bd"><span class="tag">New to the firm</span><span class="tag tag--wait" id="added-sarthi" hidden>Awaiting first email</span></span></td>
+                <td class="ac"><button type="button" class="btn btn--primary accept" data-added="added-sarthi" data-toast="Added to Project Cedar and checked against every live mandate.">Add to Project Cedar</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+        </div>
+        <figcaption class="fig-cap cap">Illustrative. Names the firm already knows are listed ahead of new ones.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Institutional memory -->
+<section class="memory" id="memory" aria-labelledby="mem-title">
+  <div class="memory-bg" aria-hidden="true"><img src="assets/images/lake-wash-1024.webp" alt="" width="1024" height="1024" loading="lazy"></div>
+  <div class="wrap">
+    <div class="spread-head">
+      <p class="kicker">Institutional memory</p>
+      <h2 class="h2" id="mem-title">People move on. The record stays.</h2>
+    </div>
+    <ul class="pts">
+      <li><h3>The work stays with the firm.</h3><p>Every mandate adds to the same company history.</p></li>
+      <li><h3>The history stays intact.</h3><p>Recorded touches remain in order. Nothing is quietly overwritten.</p></li>
+      <li><h3>The credit stays with the person.</h3><p>When someone leaves, their work remains attributed to them, while the next person inherits the context.</p></li>
+    </ul>
+    <figure class="ribbon-fig">
+      <div class="app">
+        <div class="app-bar"><span>Kestrel Components / <b>History</b></span><span>2022 to today</span></div>
+        <div class="ribbon-scroll" tabindex="0" role="region" aria-label="Kestrel Components interaction history">
+          <div class="ribbon">
+            <svg id="ribbon" viewBox="0 0 1000 270" role="img" aria-labelledby="rb-desc"><desc id="rb-desc">Interactions with Kestrel Components by four colleagues across two mandates. One colleague leaves and every interaction they recorded stays; another picks up the relationship.</desc></svg>
+            <ul class="vh"><li>Left the firm. Their history stays.</li><li>A colleague picks up the thread.</li><li>Project Alder</li><li>Project Birch</li></ul>
+          </div>
+        </div>
+      </div>
+      <figcaption class="fig-cap cap">Illustrative record.</figcaption>
+    </figure>
+    <div class="human"><p>For the person leaving, their work stays credited to them. For the person arriving, they start with context, not a blank sheet.</p></div>
+  </div>
+</section>
+
+<!-- 7 · For partners -->
+<section class="spread spread--alt" id="partners" aria-labelledby="pt-title">
+  <div class="wrap">
+    <div class="spread-head">
+      <p class="kicker">For partners</p>
+      <h2 class="h2" id="pt-title">A firm that remembers what it has paid to learn.</h2>
+      <p class="read">Partners see the same record the team works in, across every live mandate. No more collecting updates from separate spreadsheets, inboxes and people.</p>
+    </div>
+    <div class="pt-grid">
+      <ul class="pb">
+        <li><h3>See every mandate together.</h3><p>Know what is moving, what is late and who is working what.</p></li>
+        <li><h3>Catch overlap before it becomes awkward.</h3><p>See when a company or buyer appears on more than one live mandate.</p></li>
+        <li><h3>Keep the value after the handover.</h3><p>The firm retains the history behind every relationship and approach.</p></li>
+      </ul>
+      <figure>
+        <div class="app">
+          <div class="app-bar"><span><b>Live mandates</b></span><span>Partner view</span></div>
+          <div class="table-scroll" tabindex="0" role="region" aria-label="Illustrative partner view of live mandates">
+            <table class="mt">
+              <thead><tr><th scope="col">Mandate</th><th scope="col">Owner</th><th scope="col" class="n">Contacted</th><th scope="col" class="n">Responded</th><th scope="col" class="n">Overdue</th></tr></thead>
+              <tbody>
+                <tr><td>Project Birch</td><td>A. Mehta</td><td class="n">38</td><td class="n">11</td><td class="n late">2</td></tr>
+                <tr><td>Project Cedar</td><td>N. Rao</td><td class="n">24</td><td class="n">6</td><td class="n late">1</td></tr>
+                <tr><td>Project Elm</td><td>P. Shah</td><td class="n">17</td><td class="n">5</td><td class="n">0</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="alert"><span><b>Overlap.</b> Kestrel Components is on Project Birch and Project Cedar.</span></p>
+        </div>
+        <figcaption class="fig-cap cap">Illustrative.</figcaption>
+      </figure>
+    </div>
+    <div class="cta-line"><a class="btn btn--primary" href="#mandate" data-open-form>Bring one live mandate</a><p>See it against one of your own processes.</p></div>
+  </div>
+</section>
+
+<!-- 8 · Trust -->
+<section class="spread" id="trust" aria-labelledby="trust-title">
+  <div class="wrap">
+    <div class="spread-head">
+      <p class="kicker">Trust and control</p>
+      <h2 class="h2" id="trust-title">Nothing is captured quietly.</h2>
+      <p class="read">Each person connects their own account, chooses exclusions before any sync runs, and can see what Upstream records. By default, we use email and calendar metadata, not message bodies.</p>
+    </div>
+    <div class="trust-grid">
+      <figure>
+        <div class="stage">
+          <div class="app consent">
+            <div class="dlg-head"><span class="gm" aria-hidden="true">G</span><h3>Connect your Google Workspace account</h3></div>
+            <ul class="switches">
+              <li><span>Email headers</span><span class="sw sw--on" role="img" aria-label="On"></span></li>
+              <li><span>Calendar events</span><span class="sw sw--on" role="img" aria-label="On"></span></li>
+              <li><span>Message bodies</span><span class="sw" role="img" aria-label="Off"></span></li>
+              <li><span>Excluded domains</span><span class="sw-note">Set before sync</span></li>
+            </ul>
+            <p class="consent-foot">See everything captured, and switch it off at any time.</p>
+          </div>
+        </div>
+        <figcaption class="fig-cap cap">Illustrative.</figcaption>
+      </figure>
+      <div>
+        <ul class="tpts">
+          <li><h3>Permissioned per person</h3><p>Each person connects, or does not connect, their own account.</p></li>
+          <li><h3>Headers by default</h3><p>Message bodies need a separate, explicit permission.</p></li>
+          <li><h3>Exclusions before sync</h3><p>Domains and contacts are left out before anything is read.</p></li>
+          <li><h3>Visible and revocable</h3><p>See what was recorded from your account, and switch it off.</p></li>
+        </ul>
+        <details class="more" id="capture">
+          <summary>See exactly what we capture</summary>
+          <dl class="capture-dl">
+            <div><dt>From email</dt><dd>Sender, recipients, timestamp, thread, direction and subject.</dd></div>
+            <div><dt>From calendar</dt><dd>Meeting time and attendees.</dd></div>
+            <div><dt>Not by default</dt><dd>Message bodies and attachments.</dd></div>
+            <div><dt>Never</dt><dd>Anything from an excluded domain or contact.</dd></div>
+            <div id="permissions"><dt>Who can see it</dt><dd>People on the mandate. Partners see every mandate. An analyst cannot open a mandate they are not on.</dd></div>
+            <div><dt>Switching it off</dt><dd>Revoking access stops future capture. Interactions already recorded for the firm remain.</dd></div>
+          </dl>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · How it works, who it is for, what is available today -->
+<section class="spread spread--alt" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="spread-head">
+      <p class="kicker">How it works</p>
+      <h2 class="h2" id="how-title">Useful on the mandate you are running now.</h2>
+    </div>
+    <ol class="rail">
+      <li><span class="step-n">1</span><h3>Bring the work you already have</h3><p>Upload the spreadsheets your team already uses.</p></li>
+      <li><span class="step-n">2</span><h3>Connect the people and companies</h3><p>Upstream matches the records and asks you to resolve the decisions it cannot safely guess.</p></li>
+      <li><span class="step-n">3</span><h3>Start with one live mandate</h3><p>Your lists, contacts, follow-ups and history become one working record.</p></li>
+      <li><span class="step-n">4</span><h3>Keep working</h3><p>Log the outreach you already do. The follow-ups, history and reporting build from it.</p></li>
+    </ol>
+
+    <div class="for" id="who">
+      <div>
+        <h3 class="pullline">Built for small advisory teams where relationships return again and again.</h3>
+        <p class="read">For boutique investment banks, M&amp;A advisors, corporate finance teams and capital advisory firms running several mandates at once.</p>
+      </div>
+      <div>
+        <ul class="roles">
+          <li><b>Partners</b><span>One view across live mandates</span></li>
+          <li><b>Analysts</b><span>Less retyping, fewer repeated lists, clearer follow-ups</span></li>
+          <li><b>Origination teams</b><span>Warm history and new sourcing in one record</span></li>
+        </ul>
+        <p class="focus">Upstream is not built for mass email or sequenced campaigns.</p>
+      </div>
+    </div>
+
+    <div class="status" id="status">
+      <div class="status-head"><h3>What is available today, and what we are building with design partners.</h3></div>
+      <div class="status-cols">
+        <div>
+          <p class="st st--live">Available today</p>
+          <ul class="two-col">
+            <li>Firm-owned company records</li>
+            <li>Mandate lists, imported from your spreadsheets</li>
+            <li>Outreach log and follow-ups</li>
+            <li>Duplicate checks across live mandates</li>
+            <li>Sourcing candidates onto a mandate</li>
+            <li>Analytics</li><li>Sending from connected Gmail or Outlook</li>
+            <li>Permissions and archive history</li>
+          </ul>
+        </div>
+        <div>
+          <p class="st st--build">Building with design partners</p>
+          <ul>
+            <li>Email and calendar capture</li>
+            <li>Relationship strength and warm paths</li>
+            <li>One record per person across mandates</li>
+            <li>Stronger company and contact matching</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · FAQ -->
+<section class="spread" id="faq" aria-labelledby="faq-title">
+  <div class="wrap faq-wrap">
+    <div>
+      <p class="kicker">FAQ</p>
+      <h2 class="h2 h2--gap" id="faq-title">Questions partners ask.</h2>
+    </div>
+    <div class="faq">
+      <details open><summary>Does Upstream read our emails?</summary><p class="ans">No. By default it records headers: sender, recipients, time, subject and thread. Message bodies stay out unless a person gives separate, explicit permission.</p></details>
+      <details><summary>What exactly is captured?</summary><p class="ans">From each connected account: email headers and calendar meeting times and attendees. Excluded domains and contacts are set before any sync runs, and everyone can see what was recorded from their account.</p></details>
+      <details><summary>Can we start with one mandate?</summary><p class="ans">Yes, and we recommend it. Bring the spreadsheets for one live mandate, and the rest can follow when you are ready.</p></details>
+      <details><summary>Does Upstream send emails for us?</summary><p class="ans">Not on its own. An analyst can send an approach from their connected Gmail or Outlook account, or log one sent elsewhere. Upstream does not run sequences or mass email.</p></details>
+      <details><summary>Is Upstream available now?</summary><p class="ans">Yes, for a small number of advisory firms working with us on live mandates. What is available today, and what we are building with those firms, is listed under <a class="textlink" href="#status">How it works</a>.</p></details>
+      <details class="faq-more"><summary>More questions about trust, permissions and setup</summary>
+        <div class="faq-more-list">
+          <details><summary>Who can see what?</summary><p class="ans">Analysts see the mandates they are on. Partners see everything. Access is enforced at the query, so a mandate you are not on never loads.</p></details>
+          <details><summary>What happens when someone leaves?</summary><p class="ans">Their work stays. Their contacts and history remain on the company records, credited to them, and the next person is given access to the mandate.</p></details>
+          <details><summary>How is relationship strength worked out?</summary><p class="ans">A meeting counts for more than an email, a reply for more than a send, and recent contact for more than old. Every score shows the reasons behind it.</p></details>
+          <details><summary>Where is our data stored?</summary><p class="ans">We are confirming data residency and our position under India’s Digital Personal Data Protection Act with counsel, and will settle both with you before any firm pays.</p></details>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · Bring one live mandate -->
+<section class="spread spread--alt spread--ask" id="mandate" aria-labelledby="ask-title">
+  <div class="wrap ask">
+    <div>
+      <p class="kicker">Work with us</p>
+      <h2 class="h2 h2--gap" id="ask-title">Bring one live mandate.</h2>
+      <p class="ask-lead">See what Upstream finds in the relationships your firm already has. We are working with a small number of advisory firms on real processes, and we would like yours to be one of them.</p>
+      <p class="ask-note">A pilot on one real process. No pricing page yet.</p>
+      <p class="ask-alt"><a class="textlink" href="#mandate" data-open-form data-intent="talk">Talk through your workflow first</a></p>
+    </div>
+    <div class="formbox" id="formbox">
+      <form id="pilot-form" novalidate>
+        <div class="fgrid">
+          <div class="fld"><label for="f-name">Name</label><input id="f-name" name="name" type="text" autocomplete="name" required><p class="fld-err" id="f-name-err" hidden>Enter your name.</p></div>
+          <div class="fld"><label for="f-firm">Firm</label><input id="f-firm" name="firm" type="text" autocomplete="organization" required><p class="fld-err" id="f-firm-err" hidden>Enter your firm’s name.</p></div>
+          <div class="fld"><label for="f-role">Role</label><select id="f-role" name="role"><option>Partner / MD</option><option>Principal</option><option>Associate</option><option>Analyst</option><option>Other</option></select></div>
+          <div class="fld"><label for="f-email">Work email</label><input id="f-email" name="email" type="email" inputmode="email" autocomplete="email" spellcheck="false" required><p class="fld-err" id="f-email-err" hidden>Enter a work email, like name@firm.com.</p></div>
+        </div>
+        <fieldset class="fld"><legend>What would you like to do?</legend><div class="opts"><label><input type="radio" name="intent" value="mandate" checked>Bring one live mandate</label><label><input type="radio" name="intent" value="talk">Talk through our workflow first</label></div></fieldset>
+        <fieldset class="fld"><legend>What do you run?</legend><div class="opts"><label><input type="checkbox" name="run" value="sell-side">Sell-side</label><label><input type="checkbox" name="run" value="buy-side">Buy-side</label><label><input type="checkbox" name="run" value="capital-raise">Capital raise</label></div></fieldset>
+        <div class="form-submit"><button type="submit" class="btn btn--primary">Send request</button></div>
+        <p class="priv">We’ll use these details to reply to you and for nothing else.</p>
+      </form>
+      <div class="conf" id="confirm" role="status" aria-live="polite" hidden><p>Thank you. We’ll be in touch to arrange a time.</p><p class="proto">Prototype. Nothing was sent.</p></div>
+    </div>
+  </div>
+</section>
+<section class="signoff" aria-label="Sign-off">
+  <img src="assets/images/still-water-signoff-1920.webp" srcset="assets/images/still-water-signoff-960.webp 960w, assets/images/still-water-signoff-1920.webp 1920w" sizes="100vw" alt="A misted forest lake at dawn, its trees mirrored in still water." width="1920" height="1088" loading="lazy" data-reveal>
+  <div class="wrap">
+    <p class="signoff-a">Relationships compound.</p>
+    <p class="signoff-b">Keep what your firm knows, find what it does not, and carry both into the next mandate.</p>
+  </div>
+</section>
+</main>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="wrap">
+    <div class="fg">
+      <div>
+        <p class="fbrand"><svg viewBox="0 0 120 72" aria-hidden="true"><path fill="#F4F7FB" d="M2 58 C 24 57, 42 30, 62 15 C 78 4, 100 2, 116 20 C 104 14, 90 16, 78 24 C 58 37, 40 60, 2 58 Z"/><path fill="#F4F7FB" d="M14 68 C 38 68, 54 45, 73 33 C 90 22, 108 25, 119 42 C 108 37, 95 38, 85 44 C 66 56, 48 72, 14 68 Z"/></svg><span translate="no">Upstream</span></p>
+        <p class="fline">Relationships compound.</p>
+        <p class="fprod">Relationship memory and origination for advisory firms.</p>
+      </div>
+      <nav class="fcol" aria-labelledby="f1"><h3 id="f1">Product</h3><ul><li><a href="#product">The firm record</a></li><li><a href="#relationships">Relationships</a></li><li><a href="#sourcing">Sourcing</a></li><li><a href="#memory">Memory</a></li></ul></nav>
+      <nav class="fcol" aria-labelledby="f2"><h3 id="f2">Trust</h3><ul><li><a href="#capture">What we capture</a></li><li><a href="#permissions">Permissions</a></li><li><a href="#faq">FAQ</a></li></ul></nav>
+      <nav class="fcol" aria-labelledby="f3"><h3 id="f3">Company</h3><ul><li><a href="#mandate" data-open-form>Bring one live mandate</a></li><li><a href="#status">Available today</a></li><li><a href="#mandate" data-open-form data-intent="talk">Contact</a></li></ul></nav>
+    </div>
+    <div class="fbottom">
+      <p>People. Context. Opportunities. Over time.</p>
+      <p>© 2026 [Legal entity name] · Privacy · Terms</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function onApproach(el, fn, margin) {
+    if (!el || !('IntersectionObserver' in window)) return;
+    if (el.getBoundingClientRect().top < window.innerHeight) return;
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { io.disconnect(); fn(el); } }); }, { rootMargin: margin || '0px 0px 10% 0px' });
+    io.observe(el);
+  }
+
+  /* Nav: sits on the photograph, pins after the hero, mist rule once scrolled */
+  var nav = document.getElementById('site-nav');
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (e) { nav.classList.toggle('is-scrolled', !e[0].isIntersecting); }).observe(document.getElementById('top-sentinel'));
+    new IntersectionObserver(function (e) { nav.classList.toggle('is-pinned', !e[0].isIntersecting); }, { rootMargin: '-72px 0px 0px 0px' }).observe(document.getElementById('top'));
+  }
+
+  /* Strength popovers: a plain state change, no choreography */
+  var whys = Array.prototype.slice.call(document.querySelectorAll('[data-why]'));
+  function setWhy(b, open) {
+    b.setAttribute('aria-expanded', String(open));
+    document.getElementById(b.getAttribute('aria-controls')).hidden = !open;
+  }
+  var fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+  whys.forEach(function (b) {
+    b.addEventListener('click', function () { setWhy(b, fine.matches ? true : b.getAttribute('aria-expanded') !== 'true'); });
+    b.parentElement.addEventListener('mouseenter', function () { if (fine.matches) setWhy(b, true); });
+    b.parentElement.addEventListener('mouseleave', function () { if (fine.matches) setWhy(b, false); });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') whys.forEach(function (b) { if (b.getAttribute('aria-expanded') === 'true') { setWhy(b, false); b.focus(); } }); });
+  document.addEventListener('click', function (e) { whys.forEach(function (b) { if (!b.parentElement.contains(e.target)) setWhy(b, false); }); });
+
+  /* Accept onto the mandate: the row waits for its first email; the duplicate check reports */
+  var toast = document.getElementById('toast'), tt;
+  document.querySelectorAll('.accept').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (btn.getAttribute('aria-disabled') === 'true') return;
+      btn.setAttribute('aria-disabled', 'true');
+      btn.textContent = 'Added to Project Cedar';
+      document.getElementById(btn.getAttribute('data-added')).hidden = false;
+      toast.textContent = btn.getAttribute('data-toast');
+      toast.hidden = false; clearTimeout(tt); tt = setTimeout(function () { toast.hidden = true; }, 4200);
+    });
+  });
+
+  /* Memory ribbon: four colleagues, two mandates, one record */
+  (function () {
+    var svg = document.getElementById('ribbon'), NS = 'http://www.w3.org/2000/svg';
+    var X0 = 130, X1 = 970, T0 = 2022, T1 = 2026.95;
+    function x(t) { return X0 + (t - T0) / (T1 - T0) * (X1 - X0); }
+    function mk(tag, at, txt, parent) { var n = document.createElementNS(NS, tag); for (var k in at) n.setAttribute(k, at[k]); if (txt) n.textContent = txt; (parent || svg).appendChild(n); return n; }
+    var lanes = [
+      { id: 'RI', name: 'R. Iyer', y: 120, dots: [2022.2, 2022.7, 2023.1, 2023.6, 2024.0, 2024.45, 2024.95, 2025.2, 2025.45, 2025.7, 2025.95, 2026.2, 2026.42] },
+      { id: 'SK', name: 'S. Kapoor', y: 146, dots: [2023.85, 2024.1, 2024.18, 2024.26, 2024.34, 2024.42, 2024.5, 2024.58, 2024.66, 2024.74, 2024.82, 2024.9, 2025.02, 2025.1], left: true },
+      { id: 'NR', name: 'N. Rao', y: 172, dots: [2025.36, 2025.8, 2026.05, 2026.3, 2026.5], start: 2025.25 },
+      { id: 'AM', name: 'A. Mehta', y: 198, dots: [2026.635, 2026.672] }
+    ];
+    lanes.forEach(function (l) {
+      mk('line', { x1: X0, x2: X1, y1: l.y, y2: l.y, class: 'rb-lane' });
+      mk('text', { x: X0 - 22, y: l.y + 4, class: 'rb-name', 'text-anchor': 'end' }, l.name);
+      l.dots.forEach(function (d) { mk('circle', { cx: x(d), cy: l.y, r: 4.5, class: 'rb-dot' }); });
+      var cx = x(l.start || l.dots[0]);
+      mk('line', { x1: cx, x2: cx, y1: 46, y2: l.y - 6, class: 'rb-note-line' });
+      var g = mk('g', { class: 'rb-init' + (l.left ? ' is-left' : '') });
+      mk('circle', { cx: cx, cy: 32, r: 14 }, null, g); mk('text', { x: cx, y: 36 }, l.id, g);
+    });
+    mk('text', { x: x(2023.72), y: 72, class: 'rb-note', 'text-anchor': 'end' }, 'Left the firm. Their history stays.');
+    mk('text', { x: x(2025.3), y: 90, class: 'rb-note' }, 'A colleague picks up the thread.');
+    mk('line', { x1: x(2025.2), x2: x(2025.2), y1: 60, y2: 214, class: 'rb-note-line' });
+    [[2023.8, 2025.15, 'Project Alder'], [2026.15, 2026.95, 'Project Birch']].forEach(function (b) {
+      mk('rect', { x: x(b[0]), y: 226, width: x(b[1]) - x(b[0]), height: 28, class: 'rb-band' });
+      mk('text', { x: x(b[0]) + 10, y: 245, class: 'rb-band-t' }, b[2]);
+    });
+  })();
+
+  /* Slow image reveal on the sign-off; always visible by default */
+  document.querySelectorAll('[data-reveal]').forEach(function (el) {
+    onApproach(el, function () {
+      if (reduce.matches || !el.animate) return;
+      el.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)' }], { duration: 1400, easing: 'cubic-bezier(0.77, 0, 0.175, 1)' });
+    }, '0px 0px 5% 0px');
+  });
+
+  /* Every "Bring one live mandate" goes to the form, with the matching intent chosen */
+  document.querySelectorAll('[data-open-form]').forEach(function (el) {
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      var intent = el.getAttribute('data-intent') || 'mandate';
+      var radio = document.querySelector('input[name="intent"][value="' + intent + '"]');
+      if (radio) radio.checked = true;
+      document.getElementById('mandate').scrollIntoView({ behavior: reduce.matches ? 'auto' : 'smooth' });
+      setTimeout(function () { document.getElementById('f-name').focus({ preventScroll: true }); }, reduce.matches ? 0 : 800);
+    });
+  });
+  /* Inline errors: shown on submit, cleared as each field becomes valid; focus goes to the first invalid field */
+  var form = document.getElementById('pilot-form'), conf = document.getElementById('confirm');
+  var required = ['f-name', 'f-firm', 'f-email'].map(function (id) { return document.getElementById(id); });
+  function showError(input, on) {
+    var err = document.getElementById(input.id + '-err');
+    err.hidden = !on;
+    if (on) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', err.id); }
+    else { input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); }
+  }
+  required.forEach(function (input) {
+    input.addEventListener('input', function () { if (input.getAttribute('aria-invalid') === 'true' && input.checkValidity()) showError(input, false); });
+  });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var first = null;
+    required.forEach(function (input) { var bad = !input.value.trim() || !input.checkValidity(); showError(input, bad); if (bad && !first) first = input; });
+    if (first) { first.focus(); return; }
+    form.hidden = true; conf.hidden = false; conf.tabIndex = -1; conf.focus();
+  });
+})();
+</script>
+</body>
+</html>
