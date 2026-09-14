@@ -1647,3 +1647,1114 @@ sweep, a focus walk and a reduced-motion pass (the same method as L5).
 - Archived contact rows still dim with `opacity-55`. axe doesn't see them (they only appear behind
   "show archived") and the meaning of the dimming is different from thin-sample recession, so it
   wants a deliberate design decision rather than a blind sweep.
+
+---
+
+## Track WB — WB-1: Workbook import — the client's real Excel becomes the app ✅ complete
+
+**Goal:** the app is populated from the client's three actual workbooks
+(`phase_2/Investors outreach.xlsx`, `PE related buyers.xlsx`, `Contact list.xlsx`), not from
+Faker. This is the real onboarding path; `seed.py` stays as the dev/test fixture.
+
+**The gap this closes.** `services/imports.py` (SL-2) already ingests a CSV — but only into
+`company_profiles`, i.e. the sourcing *pool*. The client's workbooks carry a whole engagement's
+history, so one row has to resolve to a profile **and** a per-mandate `companies` row, its inline
+contacts, its cadence, and a backdated chain of `outreach_events`. The CSV importer is untouched
+and still serves long-list enrichment.
+
+### Why the existing tables, widened — not a parallel set
+`import_batches` / `import_rows` already are the audit + idempotency envelope, and the CSV wizard's
+error-review UX is built on them. A second table set would have meant a second reviewer UI for the
+same job. So WB-1 **widens** them (`b2e4f6a8c0d1`, additive + reversible):
+- `import_batches.project_id` — the project every sheet lands under · `.summary` — the applied
+  per-entity outcome, so the summary step renders from the persisted batch.
+- `import_rows.sheet_name` (a workbook batch spans tabs) + `resolved_company_id` /
+  `resolved_contact_id` / `resolved_schedule_id` beside the existing `resolved_profile_id` —
+  one workbook row resolves to a whole slice of the graph, not just a profile.
+- `ImportSource.WORKBOOK` needs no DDL: the enum column is a plain VARCHAR (`native_enum=False`).
+
+### Parsing the real files, not a tidy table (`services/workbook_parse.py`)
+Nothing about these sheets is regular, so the parser does exactly three things and no interpretation:
+- [x] **Locates the header row** — every sheet has a *header block* above it (`"[Client] target/buyer
+      name"`, `"Exchange rate as on date = X"`, a running count). It sits at row **6** in
+      `Company list 1`, **5** in `PE names final`, **7** in `PE porfolio names final`, **5** in
+      `Contacts list`. Row 1 is never it.
+- [x] **Classifies each tab** — MASTER / SCHEDULE / CONTACTS / LONGLIST / IGNORE, from which column
+      dictionary its header row matches. The nav dividers (`Master sheets and emailers >>>`) and
+      pivots (`PE summary analysis`) fall out as IGNORE; `PE names` and `Remaining PE companies` are
+      recognised as research long-lists and are **opt-in only**, never swept into a master list.
+- [x] **Maps cells** using §2.2 / §2.3 / §2.4 verbatim, with the repeated `Bi-weekly follow up` ×4 and
+      the trailing `Done`/days block read *positionally* (they share one header).
+- [x] `Exchange rate as on date | 90.26` no longer eats the running count — the rate's value cell is
+      skipped when scanning for the count (that bug read `declared_count` as 90 instead of 60).
+
+### What the importer refuses to do (`services/workbook_import.py`)
+- **Never invents an anchor.** A row whose *Initial email* cell is a text token ("Priya Mam reach
+  out", "Contact not found" — 5 of GAIL's 70) logs **no events at all**; its schedule stays
+  AWAITING_INITIAL. Rule 3: the clock never ticks before the first email is sent.
+- **Never fakes precision.** A text-token Status ("Got response") has no date in Excel. The terminal
+  event is dated to the last known follow-up, else the anchor, and flagged `APPROXIMATE_DATE` (18
+  rows on the GAIL sheet) so an analyst can correct it.
+- **Never guesses a meaning it doesn't have.** "Vishnu reached out" is neither a response nor a
+  bounce, so it becomes a **NOTE** carrying the verbatim token, the cadence is left where the
+  evidence put it, and the row is flagged `UNCLASSIFIED_STATUS`.
+- **Never mutates history.** Events are appended; `initial_date` is written once, by
+  `activate_schedule`. A corrected re-upload with a different first-email date does not move it and
+  does not append a second INITIAL_EMAIL.
+
+### Rebuilding the real cadence
+Follow-ups come from the scheduler's own **`Done` cells** — not from the four computed dates, which
+are all present up front whether or not anything was sent. Trunorth (initial 12 Jan, four Done)
+lands as INITIAL_EMAIL + 4 FOLLOW_UPs on the sheet's exact dates and stops EXHAUSTED = cold, which
+is §2.3's "4 follow-ups then cold". Sharrp Ventures (`Done | Done | 10 | 24`) lands 2 follow-ups,
+stays ACTIVE, and `compute_cadence` puts next-due at 29 June — the sheet's own third bi-weekly date.
+Imported schedules use the Excel interval of **14 days**.
+
+### Project + engagement are a wizard step, not an inference
+One workbook = one client, and tab names don't encode the deal. So the partner picks/creates the
+**project**, then maps each tab to a **mandate**. One `Emailing schedule` can serve several master
+sheets (the PE workbook's does), so the suggested plan resolves each sheet's slice by **company-name
+overlap**, landing `PE names final → Regarding "PE"` and `PE porfolio names final → "Portfolio"`.
+For the Contact List, its `Reason` column *is* the client, so each distinct Reason maps to an
+engagement; unmapped Reasons **skip**, never guess.
+
+### Classification (§7.2 / §7.3)
+`PE → Private Equity`, `FO → Family Office`, `PMS`, `PE/PC → Private Credit`, `VC`, `Strategic`,
+`Investment bank` all land via an explicit alias table (fuzzy string metrics score "PE" against
+"Private Equity" terribly), with rapidfuzz only for lightly-renamed labels. `PE/VC` has no
+vocabulary entry of its own → nearest match + `CATEGORY_APPROXIMATE`. Anything unknown ("PE
+potfolio") → **Other + `CATEGORY_UNMAPPED`**, never silently dropped. `Bucket` becomes the
+engagement's sourcing layers in first-seen order — including GAIL's two rows where a stray `Yes`
+leaked into that column, imported faithfully and flagged `BUCKET_SUSPICIOUS` for the analyst.
+
+### Idempotency
+profile → domain then name (`upsert_profile`) · company → (mandate, profile) then (mandate,
+name_key) · contact → (company, email) then (company, person) · layer → (mandate, lower(name)) ·
+event → **(schedule, type, occurred_on, contact)**. The contact is in the event key on purpose: the
+Contact List has ten companies where two different people replied, and on the same day those two
+real touches would otherwise collapse into one.
+
+### Backend surface
+- [x] `services/workbook_parse.py`, `services/workbook_import.py` (new) · `openpyxl>=3.1` added
+      (no `.xlsx` reader existed — the CSV importer is text-only)
+- [x] `api/workbook_imports.py` (new) — `/imports/workbook/{inspect,preview,apply,targets,flags,{id}}`,
+      **partner-only**. Mounted before `imports_router` so `/imports/workbook/*` isn't swallowed by
+      `/imports/{batch_id}`. The file is uploaded once at *inspect* and every later step replays the
+      staged rows, so the browser never re-uploads — and can't swap the file underneath the preview.
+
+### Verification — against the real files, not fixtures
+- [x] **`tests/test_workbook_import.py` — 28 tests** loading all three actual workbooks: header-row
+      and tab classification, the named-row cross-check (**Mandala Capital**, read by hand off row 7:
+      HQ, rationale, relevant investments, Direct layer, Aditya Mody as primary contact,
+      INITIAL_EMAIL + RESPONSE both on 18 May), Trunorth's four-follow-up cadence math, Sharrp's
+      partial chain and next-due, the anchor-less row logging nothing, dry-run purity (all 8 tables
+      byte-identical after a preview), preview counts equalling what apply writes, re-apply as a
+      true no-op (130 → 0 created / 130 updated / 0 events), the immutable anchor under a corrected
+      file, one shared profile across two projects (200 company rows → 188 profiles), the Contact
+      List's context landing on the **event** with the contact row as the latest-touch cache, POC →
+      firm user, and firm-scoping.
+- [x] **`tests/test_workbook_import_api.py` — 8 tests** for the wizard over HTTP incl. the
+      partner-only gate and the applied-batch no-op.
+- [x] **`alembic upgrade → downgrade → upgrade`** green, asserted at the *column* level
+      (`test_wb1_upgrade_downgrade_upgrade`) since WB-1 widens tables rather than adding them.
+- [x] **Backend 307/307 ✅** (`pytest`) — 270 prior + 37 new (28 + 8 + 1).
+- [x] Frontend: `tsc --noEmit` clean · eslint clean on touched files · Vitest **7 new**
+      (`tests/workbook-import-plan.test.ts`) · **Playwright 2/2 ✅** driving the real GAIL workbook
+      through upload → map → preview → apply → deal room.
+- [x] **Confirmed in the running app**, not just in tests: 70 companies, 66 contacts, 143 events,
+      4 sourcing layers; Mandala Capital STOPPED/RESPONDED on 18 May; Sharrp ACTIVE with 2
+      follow-ups at a 14-day interval; Anicut Capital AWAITING_INITIAL with 0 events.
+
+### Frontend
+- [x] `app/(app)/import/page.tsx` (new, partner-only) — upload → project & engagements → review →
+      apply, modelled on the CSV wizard's step shape. The review step states counts per entity,
+      per-sheet engagement and cadence-match, and a flag roll-up with an expandable list of exactly
+      the rows the importer had to make a call on. Analysts get an explanation, not a disabled form.
+- [x] `hooks/use-workbook-import.ts` (new) — kept separate from `use-imports.ts` because the two
+      wizards write different things.
+- [x] `app/(app)/projects/page.tsx` — **"Import from Excel"** on the empty state (partner only); this
+      is effectively firm onboarding, so it belongs where a partner first finds nothing.
+
+### Flagged, not fixed
+- **`Holding company` (+ website), `Previous contact` and `Cheque size` have no field in the data
+  model.** They are parsed, preserved verbatim on `import_rows.raw`, and reported per sheet as
+  unmapped columns in the preview — explicitly *not* stuffed into `rationale` or the dead `bucket`
+  column. `Previous contact = Yes` additionally raises a `PREVIOUSLY_CONTACTED` warm flag. Giving
+  the portfolio→owner cross-link a real home is §2.2's own "❌ missing (secondary)" and wants its
+  own slice.
+- **Pre-existing SQLite migration defect (`c1d2e3f4a5b6`, Phase 8 Slice 1).** The initial schema's
+  *inline* `UNIQUE (company_id)` on `outreach_schedules` survives that migration's constraint swap
+  on SQLite, so a migrated SQLite DB carries both it and `uq_outreach_schedules_company_cycle` — and
+  `seed.py --reset` fails on the restarted-company fixture (`UNIQUE constraint failed`). PostgreSQL
+  names the constraint, so the drop works there, and the pytest suite builds from
+  `Base.metadata.create_all`, which is why nothing caught it. Unrelated to WB-1; needs its own
+  corrective migration.
+- **Pre-existing frontend test failure:** `tests/candidate-card.test.ts` expects `scoreTone(65)` to
+  contain `"lime"` but it now returns an emerald token. Fails on a clean checkout; untouched here.
+
+---
+
+## Track WB — WB-2: Empty canvas → real data, end to end, every feature ✅ complete
+
+**Goal:** stop testing against Faker. Walk the whole product from a genuinely empty firm,
+seed the sourcing database with real companies, bring the client's three workbooks in
+through the wizard, and then exercise **every** feature against that data.
+
+### The empty canvas is now a real starting point
+- [x] `app/seed/bootstrap.py` (new) — the opposite of `seed.py`: a firm, its category
+      vocabulary, its funnel stages and its users, and *nothing else*. This is what a real
+      firm starts with, and it is the precondition for judging an empty state honestly.
+- [x] `tests/e2e/audit.spec.ts` (new) — a diagnostic harness that walks all 16 routes as
+      **both roles**, recording console errors, failed requests, the heading, the visible
+      empty-state wording and a screenshot per route into `tests/e2e/.audit/<label>/`.
+      Fails only on real breakage; the report is the point.
+
+**Empty-canvas result: 29 route visits · 0 console errors · 0 failed requests.** Every
+page already had a real, specific empty state ("Desk clear. No outreach due in the next
+7 days.", "The rolodex is empty", "You're clear. Nothing's slipped and nothing's due.").
+
+### The gap that audit found: the company database was unreachable
+`/sourcing` refused to open without an engagement — `usePool` was hard-gated on
+`mandate_id > 0` and the page returned "No engagements to source for yet". But the pool
+**is** the firm's standing company database (`company_profiles`, firm-wide by design);
+it is worth searching on day one, before any deal exists. A brand-new firm therefore had
+no way to see or search its own inventory.
+
+- [x] `api/sourcing.py` — `mandate_id` on `/sourcing/candidates` is now **optional**.
+      Without one the candidate join is skipped entirely and rows come back as plain pool
+      inventory; with one, nothing changes. Score-sort degrades to name-sort rather than
+      ordering by a column that isn't joined.
+- [x] `app/(app)/sourcing/page.tsx` — a **"Company database"** mode: the full query deck,
+      search and facets, with the engagement switch replaced by a line that says what a
+      deal would add. The deal-only actions (Shortlist, Push, Score matches, the bulk bar,
+      row selection) are withheld — `Score matches` stays visible but **disabled with a
+      reason**, because a fit score is a score *against a thesis*.
+- [x] `hooks/use-candidates.ts` — `mandate_id` optional; `buildPoolQS` omits it.
+
+### A real sourcing database, not Faker
+- [x] `app/seed/pool_dataset.py` (new) — **164 real companies** in the firm's actual deal
+      space, name/HQ/website taken from public sources (cited in the module docstring:
+      Wikipedia's IT-consulting and private-equity lists, CRN MSP 500 2026 press coverage,
+      company profile pages). Two segments matching the two sides of the deal flow: IT
+      services / product engineering / managed services & security, and PE / growth / VC
+      (global, Asia-Pacific and India).
+      **Only verified fields are recorded.** `website` is filled in only where the official
+      domain is unambiguous — it is the primary dedup key, so a guessed domain is worse
+      than none. Headcount and revenue are left to the client's own researched figures.
+- [x] `app/seed/sourcing_pool.py` (new) — loads that dataset **plus** the client
+      workbooks' research long-lists (`PE names`, `Remaining PE companies` — the tabs the
+      importer deliberately leaves alone because they are staging, which is exactly what
+      the pool is for) **plus** every master-sheet company. All through `upsert_profile`,
+      so it is additive and idempotent: **338 profiles, and a second run adds 0.**
+
+### Bringing the client's book in
+All three workbooks went in through the real `/imports/workbook` wizard:
+
+| Workbook | Companies | Contacts | Events | Layers |
+|---|---|---|---|---|
+| Investors outreach (GAIL) | 70 | 66 | 143 | 4 |
+| PE related buyers (22by7 — 2 master sheets, 1 shared scheduler) | 130 | 134 | 496 | 9 |
+| Contact list (firm-wide, Reason → engagement) | 59 new / 45 matched | 70 new / 34 enriched | 98 | — |
+
+Landed: **2 projects · 3 engagements · 259 companies · 381 profiles · 270 contacts ·
+737 events · 13 sourcing layers**, with 49 live cadences, 205 stopped and 5 still
+Awaiting-initial — those 5 being exactly the GAIL rows whose Initial-email cell is a text
+token, visible on the pipeline board under *Not contacted* rather than invented into a
+cadence.
+
+### A preview/apply divergence the real data exposed
+The Contact List preview predicted **65 company creates / 39 updates**; the apply did
+**59 / 45**. Ten companies on that sheet have two people each — apply creates the company
+on the first row and updates it on the second, but the preview forgot what it had already
+decided and counted two creates. The split is what the partner approves, so it has to
+match.
+- [x] `_Resolver.would_create_company` — the preview-side counterpart of the apply's
+      insert, remembering pending creations within the run (the same shape as the existing
+      `would_create_layer`).
+- [x] `test_contact_list_preview_split_matches_what_apply_does` — a regression test on the
+      real file; the master-sheet parity test never hit this because one sheet has one row
+      per company.
+
+### Then every feature, against that data
+- [x] `tests/e2e/feature-sweep.spec.ts` (new) — **14 tests** that *use* the app rather
+      than just loading it: pool search by name / city / domain; the deal-free database
+      view and its withheld actions; shortlisting a pool company onto a deal and finding
+      it on the funnel board; all three Master List views; a company dossier's Overview /
+      Timeline / Contacts tabs and its cross-mandate duplicate notice; the outreach queue
+      and logging a touch; the rolodex and a person's touch context; both imported projects
+      and their engagements; analytics computed from the real event log; the settings
+      vocabulary the import used; the command palette finding an imported company; and an
+      assigned analyst seeing their own book.
+
+**Full Playwright suite: 41/41 green** — including the whole pre-existing suite (cadence,
+grid, pipeline board, projects, outreach timeline, command palette, login, smoke), which
+had only ever run against the Faker seed and now passes against real client data.
+
+### Performance — measured, not asserted
+The first audit showed 8–10s page loads, which looked alarming and was not the app:
+- **API: 0.22–0.44s** for every major endpoint (`/analytics/overview` 0.27s,
+  `/sourcing/candidates` 0.27s, `/my-book` 0.44s, `/schedule/due` 0.26s) against the full
+  259-company / 737-event dataset.
+- **Warm client navigation: 468–600ms** across dashboard, master, schedule, contacts,
+  sourcing and analytics — asserted under 6s in the sweep so the number stays honest.
+- The 8–10s figures were Next's **dev-server on-demand compilation** on first visit.
+
+### Fixed on the way
+- [x] `/companies` empty state said "Add the first company to **this mandate**" on a page
+      that spans every engagement — and said it on a firm with no mandates at all.
+- [x] **The workbook importer had no standing home.** `/import` was reachable from exactly
+      one place — the `/projects` **empty state** — which disappears the moment the first
+      project exists. But onboarding is not a one-off: a firm brings a workbook per client
+      and the contact list arrives separately, so every import after the first had no route
+      but typing the URL. Added `Import` to the sidebar under **Pipeline** (which also makes
+      it findable in the command palette, reading the same nav list) and a persistent
+      **Import from Excel** action in the `/projects` header beside *New project*.
+
+### WB-3 — the import is open to analysts, scoped instead of gated
+
+The wizard was partner-only on the reasoning that it "creates projects and engagements and
+writes across the whole graph". But `create_project` and `create_mandate` are both
+`CurrentUser` — **an analyst can already open a project and an engagement by hand**, so
+importing the book they keep in a spreadsheet is the same act performed faster. The gate
+was protecting nothing an analyst couldn't do through the UI; what it actually did was
+force every analyst's book through a partner.
+
+So the gate is replaced by the app's normal visibility rule — the role now changes *reach*,
+not permission:
+- [x] All six `/imports/workbook/*` routes: `PartnerDep` → `CurrentUser`.
+- [x] `/targets` is **scoped** — an analyst is offered their assigned engagements and the
+      projects holding them (plus projects they created, still empty), not a firm-wide
+      picker whose entries apply would then refuse. Mirrors `projects._visible_project_ids`.
+- [x] `_assert_plan_writable` on **preview and apply** — the target list is scoped but the
+      plan is posted back as JSON, so an analyst naming a colleague's `mandate_id`
+      directly is refused 403. Partners short-circuit. Newly created projects/engagements
+      are unconstrained, matching what the hand-built path already allows.
+- [x] **`resolve_mandate` now writes a `MandateAssignment` for the actor** — the real bug
+      under the gate. Visibility runs off `mandate_assignments`, not `lead_owner_id`, so
+      without it an analyst would import a whole book and then not be able to see it.
+      `create_mandate` has always auto-assigned its creator; an import is the same act.
+- [x] **Batch ownership** — a staged batch holds the verbatim rows of someone's client
+      workbook, and `_get_batch` was firm-scoped only. Now a non-partner reaches only
+      batches they uploaded, on read *and* on preview/apply, so an analyst can neither
+      read a partner's staged book nor apply it on their behalf.
+- [x] Frontend: the "Partners run the workbook import" lock screen is gone; nav entry and
+      both `/projects` buttons un-gated.
+
+Tests: `test_wizard_is_partner_only` replaced by
+`test_analyst_can_run_the_wizard_and_owns_what_they_import` (analyst walks inspect →
+preview → apply on the real GAIL workbook, and the created engagement is assigned to them)
+`test_analyst_cannot_import_into_a_book_they_are_not_on` (403 at preview *and* apply, with
+nothing written on the way to the refusal) and
+`test_analyst_cannot_touch_someone_elses_staged_batch` (404 on read, preview and apply).
+The Playwright analyst spec now asserts the uploader is reachable from the sidebar rather
+than that it is withheld.
+
+**Verification:** backend **310/310 ✅** · ruff + eslint clean on every touched file ·
+`tsc --noEmit` clean.
+
+---
+
+## Track WB — WB-4: the whole client book in one run, and what was actually broken
+
+### Three reported "bugs", two of which were a stale process
+
+Reported: analysts can't upload, partners can't either, and old companies are still
+everywhere after the reset. Reproduced against the running app rather than the code:
+
+- A backend was still listening on **:8010 running pre-WB-3 code** — analyst `targets`
+  and `inspect` returned **403** there (the old partner-only gate). That was the whole of
+  "analyst unable to upload".
+- That same process was bound to **`upstream_e2e.db`**, not the cleaned `upstream.db` —
+  the 332 "old companies".
+- The frontend was on **:3010** (a stale `next dev`), pointing at `localhost:8000`, where
+  **nothing was listening**. That was "can't upload even for partner".
+
+Nothing in the code was wrong. Confirmed by driving the real UI: with clean processes both
+roles reach the map step (`inspect` → **201**), and the `Import` nav entry is present for
+an analyst (`["Dashboard","Projects","Import","Sourcing",…]`).
+
+### `scripts/reset_to_pool.py` (new)
+Strips a dev DB back to *empty canvas + sourcing pool*: keeps the firm, its users, the 384
+`company_profiles`, and the category/stage/source vocabulary; wipes every trace of an
+import. This is the state a new client firm starts from — **the pool is the constant, the
+workbooks are the variable**. `companies` must be deleted *before* `sourcing_layers`
+(a company points at its layer), which the first draft got wrong and SQLite caught.
+
+### The real gap: a client's book is not one file
+`/import` took one workbook at a time, so three files meant three separate runs and the
+project re-chosen each time. Now:
+- [x] The dropzone takes **many** `.xlsx` at once; the queue is walked in order, and files
+      matching `/contact/i` are **sorted last** — the contact list has to land after the
+      engagements its `Reason` column maps onto, and a file picker's order is arbitrary.
+- [x] The project is decided on the **first** file and then **locked** (`locked-project`),
+      read from the server's `summary.project_id` rather than from what the form guessed.
+- [x] Per-file mapping is kept (each workbook has different tabs, scheduler and flags);
+      a `file-progress` strip says which workbook of how many, and the Apply button reads
+      *"Apply and continue to the next workbook"* until the last one.
+- [x] The done step aggregates across the run ("from 3 workbooks").
+
+### The bug the multi-file run exposed
+`useApplyWorkbook` **invalidated nothing**. Within one run that is fatal, not cosmetic:
+files 1–2 create the engagements, but the wizard's target list was fetched once at page
+load, so file 3's Reason dropdown offered only *"— skip these rows —"*. Every row silently
+skipped, `willWrite` fell to 0 and **Apply was disabled with no explanation**. Found by the
+E2E timing out on a disabled button, not by reading the code. Apply now invalidates
+`workbook-import/targets` plus `projects` / `companies` / `mandates`.
+
+### Verification — an analyst, all three real workbooks, one run
+`tests/e2e/workbook-import.spec.ts` gains *"an analyst takes the client's whole book"*:
+drops all three `phase_2/` files at once, names the client once, maps each file in turn,
+and asserts the project stays locked across them. Result on a pool-only DB:
+**272 companies · 283 contacts · 737 outreach events · 3 engagements**, 0 console errors,
+all three engagements assigned to the analyst, and `company_profiles` still **384** —
+untouched by the import, exactly as intended.
+
+- [x] Playwright `workbook-import.spec.ts` **3/3 ✅** · Vitest **156/157** (the 1 failure is
+      the pre-existing `scoreTone` case) · `tsc --noEmit` + eslint clean.
+
+### Flagged, not fixed
+- **`/master?view=firm` is not a valid view value** (`my-book` / `firm-wide` / `board`
+  are). An unknown value silently falls back to the role default rather than correcting
+  the URL, so a wrong link looks like it worked. Cosmetic, but it made two of these specs
+  pass for the wrong reason before it was spotted.
+- **The dev seed still can't run on a migrated SQLite database** — the pre-existing
+  `c1d2e3f4a5b6` constraint defect recorded under WB-1. The E2E database is built from
+  `bootstrap.py` (models, not migrations), which sidesteps it; a corrective migration is
+  still owed.
+- **`tests/candidate-card.test.ts`** still fails on a clean checkout (`scoreTone(65)`
+  expects `"lime"`, returns an emerald token). Untouched here.
+
+### Verification
+- [x] Backend **308/308 ✅** (`pytest`) — 307 + the new preview-parity regression.
+- [x] Playwright **41/41 ✅** against the real client data.
+- [x] Vitest **156/157** (the one failure is the pre-existing `scoreTone` case above).
+- [x] `tsc --noEmit` clean · ruff clean on every touched file · eslint clean on every
+      touched file (two pre-existing unused-import warnings in `sourcing/page.tsx` remain,
+      unchanged from `HEAD`).
+- [x] Route audit run twice — **empty canvas 29/29 clean, loaded canvas 29/29 clean**, both
+      roles, screenshots and JSON reports under `frontend/tests/e2e/.audit/`.
+
+---
+
+## Empty deployment + real Discover database (2026-08-06)
+
+The deployed app was running the Faker demo seed: 118 invented companies with invented
+revenue in Discover, 962 rows of fabricated book. Replaced with the state the product
+actually claims — every screen empty until the firm imports its own workbooks, and Discover
+opening on real research.
+
+### The three tiers (now explicit, see CLAUDE.md)
+1. **Configuration** — users, vocabulary, funnel stages, sources. Kept by everything.
+2. **The company database** — `app/data/company_pool.py`, 164 real organisations with
+   verified name/HQ/domain and, new here, `segment` (Target/Investor) + `sector` (the
+   research bucket they came from). Deliberately **no revenue or headcount**: those are the
+   client's researched figures and arrive with an import. Planted per firm by
+   `services/pool.seed_firm_pool` (async, used by `/auth/signup`) and its sync twin used by
+   `app.seed.bootstrap`.
+3. **The book** — never seeded. Arrives from `/import`; cleared by `POST /workspace/reset`.
+
+### Shipped
+- **Migration `c4f6a8b0d2e3`** — `company_profiles.segment` / `.sector`, both indexed and
+  nullable. Profile-level classification is what lets Discover be sliced before any deal
+  exists; `companies.type`/`category_id` can only describe a placement.
+- **`/workspace`** (GET) and **`/workspace/reset`** (POST, partner-only, firm-name
+  confirmed) — the one hard-delete in a soft-delete app, scoped to the imported book, so the
+  same workbooks can be re-imported clean. `Settings → Workspace` states the blast radius
+  in three tiers before anyone confirms.
+- **`/signup` page** — a firm is the workspace, so multi-tenancy needed a front door, not
+  new machinery. New firm = the company database + an empty book, invisible to other firms.
+- **Discover redesign** — the lens rail became an instrument: total, a stacked segment
+  composition bar cross-highlighting with the Side rows, a coverage strip (domain/revenue/
+  staff filled %), then Signals / Side / Sector / Category / HQ / Size. Groups and deck
+  controls render only where the data can answer them, so a fresh firm sees no dead selects
+  and no four zeroed revenue bands. Rows carry the segment token in the fit column while
+  unscored (58px that used to hold an em dash), real facts on the meta line (city · sector ·
+  domain), and a blanks-included record card when expanded. Active criteria are finally
+  rendered as removable chips — the array was computed and never displayed.
+- **Deploy fix** — Railway resolves `railway.toml`, and the only copy of
+  `preDeployCommand = "alembic upgrade head"` lived in a `railway.json` Railway ignored. So
+  a deploy shipped code querying a column no migration had added (500s on `/sourcing/facets`
+  until spotted). One config file now; the JSON is deleted.
+- **Login/signup forms** now `method="post"`: a submit landing before hydration was doing a
+  GET, putting the password in the URL bar and history.
+- `app.seed.seed` (Faker) refuses to run against a non-SQLite database — how the demo data
+  reached production in the first place.
+
+### Verification
+- [x] Backend **318/318 ✅** (`pytest`), including `tests/test_workspace.py` — signup plants
+      the database and nothing else, tenants can't see each other's book, reset keeps the
+      pool and configuration, partner-only, name-confirmed.
+- [x] Playwright **42/42 ✅** against real client data, on the documented onboarding
+      (bootstrap → the three phase_2 workbooks as projects "GAIL" and "22by7" → analyst1
+      assigned, analyst2 deliberately not).
+- [x] Vitest **159/159 ✅** — including the `scoreTone` case that had been red on a clean
+      checkout since the score ramp was retuned (it asserted the retired lime/orange hues).
+- [x] `tsc --noEmit` clean · eslint clean (the two unused-import warnings in
+      `sourcing/page.tsx` are gone too).
+- [x] Reset → re-import → reset verified end to end: 2,690 book rows → 0 → 2,690, with the
+      381-company database untouched throughout.
+- [x] **Live deployment walked**: UI login, all nine routes on the clean canvas, and a real
+      `Investors outreach.xlsx` upload parsed to 70 rows — no console or network errors.
+
+---
+
+## Track M — Landing page, second cut: "The register of record" (2026-08-11)
+
+The `marketing/` app's landing page was rewritten end to end. The previous cut (Track L,
+"console register") was a good page with three structural holes, and this one is built
+around closing them rather than restyling what was there.
+
+### What was actually wrong with the previous cut
+- **It never showed the product.** Nine thousand pixels arguing about a dense operational
+  tool, with three real screenshots of the running app sitting unused in `public/product/`.
+  "I can picture myself using this" was left to the reader's imagination.
+- **Its choreography was CSS scroll timelines** (`animation-timeline: view()`), which do
+  nothing at all in a browser without them. Half the entrances were a no-op for a large
+  share of visitors, and there were two competing animation systems for the same 14px.
+- **Uniform density.** Every fold was a heading, a lede and a grid at `py-24 md:py-32`.
+  Nowhere to breathe, and no moment that owned the screen.
+
+### The direction
+An operations console became **a register of record**: the page is set like a financial
+document, because the product is a book of business. Ruled ledger columns instead of the
+dot grid; a **serif of record** (Newsreader) for the argument, which also rejoins the
+marketing site to the product app, whose own page titles are serif; Geist for what you
+operate and Geist Mono for anything the server computed. Obsidian + one amber signal kept
+(identity preservation beats any reflex-reject list). Every fold carries a mono stamp in a
+left rail, and the header reports which entry you are in.
+
+### Sections (`app/page.tsx`, in order)
+`hero` (the promise, over a live queue that runs off the right edge) → `ledger` (the four
+failures as a ruled table whose third column, "how you find out", reads straight down) →
+a one-sentence turn → `desk` (**new** — the three real screenshots, tabbed, plus the 164
+shipped organisations) → `clock` (the cadence calculator, kept and redressed) → `record`
+(the moat, on a scroll-filled spine) → `secret` (**new** — a buyer list that redacts itself
+as you change *who is looking*) → `faq` → `closing`.
+
+### Motion
+`motion` (the current Motion package, `motion/react`) replaced the CSS scroll-timeline
+system. `components/motion/primitives.tsx` decides the whole vocabulary once: one arrival
+curve, 16px of travel, entrances fire once, springs for input and curves for scroll.
+`<MotionConfig reducedMotion="user">` at the root means no component has to remember.
+Deliberate uses: the masked line reveal on the two display headings, the hero queue's
+count-ups and stagger, `layoutId` indicators on the nav / desk tabs / interval selector,
+`AnimatePresence` on the FAQ and the security panel, a scroll-linked spine in `record` that
+says the same thing as the words beside it, and exactly one magnetic button, on the last ask.
+
+### Also
+- Three unused dependencies dropped (`dotted-map`, `shadcn`, `tw-animate-css`); one added.
+- A bespoke share card at `public/og.jpg`, rendered from the page's own tokens, with
+  `NEXT_PUBLIC_SITE_URL` wired through the Pages export so the absolute URL is right.
+- New token `--destructive-ink`, mirroring `--primary-ink`: red text on a red tint over a
+  card composite failed contrast on warm paper.
+
+### Verification
+- [x] `tsc --noEmit` clean · `next build` prerenders all three routes static.
+- [x] `PAGES_EXPORT=1 npm run build` clean; `basePath` reaches the screenshots and the
+      share card.
+- [x] **axe-core: 0 violations**, dark and light, at 390 / 768 / 1440.
+- [x] No horizontal overflow 320px → 1728px. Zero console errors.
+- [x] Reduced motion: nothing left hidden, no surviving infinite loops.
+- [x] Focus ring present on every tab stop (the one exception is a sub-stop inside
+      Chrome's own `input[type=date]` shadow tree).
+- [x] Every interactive control exercised in a real browser: desk tabs, cadence controls
+      and the stop-on-reply path, all three security viewers.
+
+---
+
+## Track L · L6 — The landing page rebuilt as "The current" (2026-08-24)
+
+The previous public site (the "register of record": obsidian ground, Newsreader, one amber
+signal) is gone, kept only in git history. It was a good page and it was also, by its own
+admission, the third-most-common thing an AI reaches for when told "dark, rich, cinematic".
+The rebuild starts from the product's own name instead.
+
+**The premise.** Upstream is a river word, in an industry that speaks nothing but river
+words and stopped hearing them: deal *flow*, the *pipeline*, the *source*. So the page is
+the river, and the one idea it teaches is `you type one word, sent, and everything else is
+derived`. That is the honest answer to the objection the research turned up first, which is
+not "we have no CRM" but "we bought one and nobody updated it".
+
+Full creative brief, including every line of copy and the measurements below:
+[`docs/landing-v2-design-package.md`](docs/landing-v2-design-package.md).
+
+### What changed
+- **New everything.** Palette (cool mist over deep water, one warm `--late` accent used six
+  times and only ever meaning *overdue*), type trio (Bricolage Grotesque on its width axis,
+  Onest, Spline Sans Mono), structure, copy, and assets. No light/dark toggle: the direction
+  is one committed thing and the dark act is a place inside it, two folds long, on the two
+  subjects that are actually about what is hidden.
+- **The hero is a canvas film, not a video.** `lib/flow.ts` renders four beats of a flow
+  field as a pure function of scroll progress: an uncountable current, walls dividing it
+  into one sheet per mandate (with the duplicate approach drawn as two dashes that burn),
+  the walls dissolving, and the dashes landing on the row grid where the real queue panel
+  then resolves. Deterministic, so scrubbing is exact both ways, there is no Range/seek/
+  keyframe problem, and it is the screen's own resolution at a few KB.
+- **The signature is the channel**: one drawn line down the left of every fold, self-drawing
+  on scroll, stamped with dates that agree with each other, forking at the record fold.
+- **The one interactive moment**: hold to log an email, and four consequences derive
+  themselves in sequence. Releasing early eases back; Enter or a click completes it for
+  anyone who cannot hold; reduced motion gets it already done.
+- **Assets are rendered from the page's own code.** `app/render` is a bench and
+  `scripts/render-assets.mjs` photographs it, producing the share card, the still hero, the
+  closing fold's frame and a 12-second clip recorded straight off the canvas with
+  MediaRecorder. No image model, no encoder install, nothing to drift when the palette moves.
+
+### Verification
+- [x] `tsc --noEmit` clean · `next build` prerenders all four routes static.
+- [x] **axe-core: 0 violations** at 1440 and 375.
+- [x] Flick test (120/240/360px): every beat holds six normal flicks, none skippable. This
+      is what moved the hero from 420vh to 540vh.
+- [x] Contrast walk over every visible text node: zero real failures.
+- [x] Zero console errors and zero 404s at both widths; no horizontal overflow at 1024,
+      1280, 1440, 1600 or 375.
+- [x] All five static-hero gates verified live, in CSS and JS, with the canvas never armed
+      behind them.
+- [x] Complete without the canvas: the poster sits under it as a CSS background.
+- [x] Copy gate: zero em dashes, zero stock words in rendered copy.
+
+### L6a — the hero rebuilt on the generated footage (2026-08-24, same day)
+
+The abstract canvas read thin against the AI imagery once it was in the page, so the hero
+film is now the generated frames, sequenced: the current, the eddy, the confluence, the
+drop, each carrying the band of copy it was generated for, each crossfading in the gap
+between two bands and each carrying a continuous scroll-driven scale and drift so no frame
+is ever a photograph sitting still. The deterministic filament field survives as a
+transparent overlay (`ground: false`), which is what keeps the frame alive between
+crossfades and still resolves into the queue's rows at the settle. Lane walls are suppressed
+over footage: three hairlines drawn across a photograph read as a rendering fault.
+
+### The end-to-end validation pass
+
+38 checks across every component, animation and effect. Everything below was run in a real
+browser, not reasoned about.
+
+**Found and fixed, real:**
+- **The nav floated as a dark bar over a light page** on the way out of the deep act. The
+  surfacing gradient fades the last deep fold to mist over its final 160px, so the fold
+  stops LOOKING dark before it stops BEING dark, and the nav's probe counted those pixels.
+  It now discounts the surfacing tail, and its colour transitions with its ground.
+- **Hero sublines measured 3.5 to 3.9:1 over the film**, against a 4.5 floor. Fixed by
+  holding the mist wash at full strength across the whole reading lane before letting the
+  picture through, and by adding `--ink-onfilm`, a darker muted ink for the one place muted
+  text sits on a photograph. Now 5.7 to 6.0:1.
+- **Standalone text links were 21px targets on a phone.** Nav, footer and the FAQ's side
+  link now clear 44px under `(pointer: coarse)`. Links inline inside a sentence are exempt
+  by the guideline and were deliberately left alone.
+
+**Found and dismissed, with the reason:** four "failures" were the harness, not the page.
+`html { scroll-behavior: smooth }` makes any timed read after `scrollTo` land mid-animation;
+Motion draws SVG paths with `stroke-dasharray`, not `stroke-dashoffset`; Tailwind v4 writes
+`rotate`, not `transform`; and a worst-pixel box that includes a panel's rounded corners
+finds the page behind the panel, not the ground under the glyphs.
+
+**Verified green:** hero load ramp, film sequencing and camera moves, band ownership, the
+drive loop resting, the scroll cue, one pulsing row, canvas resize, the channel drawing with
+scroll on every fold, every entrance ending at full opacity, no stagger delay surviving, the
+desk's held frame following the caption, the disclosure list, the pointer-light layer, the
+clip mounting client-side and playing once, every in-page link resolving clear of the header,
+all four nav states, the hold interaction in all four of its paths, reduced motion in full,
+every tab stop's focus ring, the skip link, and the phone layout. axe: 0 violations at 1440
+and 390. Flick test: six full flicks per beat. Zero console errors, zero 4xx, zero
+horizontal overflow at 375, 1024, 1280, 1440 and 1600.
+
+
+## Track T — Tasks, activity, project members, permanent delete (2026-09-06) ✅ complete
+
+Upstream could say what state the book was in. It could not say what the team was *doing*
+about it: no task existed anywhere in the codebase, nothing carried `updated_by_id`, and
+assignment lived only at the engagement level behind one partner-only menu. This track is
+that missing half — plan in `PROJECTS_ACTIVITY_TASKS_PLAN.md`.
+
+### What shipped
+
+**Tasks** — four states (BACKLOG → IN_PROGRESS → BLOCKED → DONE), an assignee, a due date
+and a priority, attached to a project / engagement / company / contact, or PERSONAL.
+`/tasks` (List + Board), a Tasks tab in the deal room, a section on the company dossier, a
+quick-add on the contact page, "Add task" in the Master List / Schedule / book-grid row
+menus, and a ⌘K action. The inline add row — type a title, press Enter — is the whole
+"analysts can write to-dos" ask; the dialog exists for everything else.
+
+**Activity** — an append-only `activity_events` log written at 12 curated call sites, read
+firm-wide (`/activity`), per project and per company. Phrased as sentences: *"Rhea Kapoor
+logged an initial email · Acme Industries"*.
+
+**Project members** — `project_assignments`, a Team view, and a `/members` union tagged
+`assigned | mandate | creator`.
+
+**Archive + permanent delete** — un-gated (visibility, not role), with the rails below.
+
+### Decisions worth keeping
+
+- **Tasks use four real FKs + a stored `scope`; activity uses `object_type` + `object_id`.**
+  Opposite requirements. Tasks get filtered, joined and cascaded, so a generic `object_id`
+  would make "tasks on this project" four unindexable ORs and force RBAC post-filtering in
+  Python — which makes `total` in the list envelope a lie. Activity rows are only displayed,
+  over a growing object set, so they carry **snapshots** (`actor_name`, `object_label`)
+  instead. After a project delete those objects no longer exist to join to.
+- **`project_id` is denormalised onto every task and activity row**, so the sidebar counts
+  are one `GROUP BY` and the delete cascade is one predicate. Safe only because neither hop
+  is ever reassigned — pinned by a canary test asserting `project_id` is not in
+  `MandateUpdate.model_fields`.
+- **Activity is written by hand, not by a session listener.** `session.execute(delete(...))`
+  fires no ORM events, so a differ would silently miss the workspace reset and the project
+  delete — the two paths a partner most wants recorded. Completeness is bought instead by
+  `tests/test_activity_coverage.py`, which walks the live route table and fails until every
+  mutating endpoint is either instrumented or declined *with a written reason*.
+- **`log()` never commits.** The caller's own commit carries the row, so an activity entry
+  and the mutation it describes land together or not at all. A test asserts that a request
+  ending in 422 leaves the activity count unchanged.
+- **A project assignment grants the project, not its engagements.** Widening
+  `visible_mandate_ids` from it would turn one partner click into a backdoor to every
+  company (rule 5). The consequence — an assigned-but-unmandated analyst sees the project
+  shell with an empty engagements list — is a decision, pinned by a test.
+- **Permanent delete has no role gate, deliberately.** The rails instead: it must already be
+  archived (409), the name must be typed back (422), a dry-run preview states the counts,
+  and a `PROJECT_DELETED` tombstone is written *after* the loop with `project_id=NULL` (written
+  before, step 4 deletes it) plus a `logger.warning` that outlives a workspace reset.
+  `tests/test_project_delete.py` builds **its own engine with `PRAGMA foreign_keys=ON`**,
+  because nothing else in this backend enforces FKs — a mis-ordered delete otherwise passes
+  every test on SQLite and fails only in production.
+
+### Bugs found by driving the real app, not by tests
+
+- **Naive UTC timestamps rendered as local time.** `created_at` is a naive column holding
+  UTC, and the JSON carries no offset, so `new Date(...)` read it as the browser's zone. In
+  IST a row written one second ago displayed as **"5h"**, and a row just past midnight UTC
+  landed under "Yesterday". Fixed with `parseServerDate` in `lib/format.ts` (appends `Z`
+  only when there is genuinely no designator, so the tz-aware `archived_at` / `completed_at`
+  are untouched); regression tests in `tests/activity.test.ts`.
+- **`No projects match ""`** on the archived filter with an empty search box — the empty
+  state named the wrong control. It now names whichever filter is actually hiding things.
+
+### Also cleaned up on the way through
+
+`_visible_project_ids` existed in two copies that **disagreed** (one filtered archived
+mandates, one did not); hoisted to `deps.visible_project_ids` with an explicit
+`include_archived` flag so the narrowing is a decision rather than an accident. `BookGrid`
+moved to `components/features/book-grid.tsx`, taking the deal room from 1438 lines to a
+shell that composes views. The deal room's hand-rolled `history.replaceState` — the last
+holdout — now goes through `useTableUrlState`. Three hand-rolled avatar stacks and two
+copies of `fmtDate`/`initials` collapsed into `ui/avatar.tsx` and `lib/format.ts`.
+
+### Verification
+
+Backend `pytest -q`: **378 passed** (318 before; 60 new across `test_tasks.py`,
+`test_activity.py`, `test_activity_coverage.py`, `test_project_delete.py`,
+`test_project_members.py`, plus migration parity and workspace-reset extensions).
+Frontend `vitest run`: **190 passed** (31 new). `npx playwright test`: green, including new
+`tasks.spec.ts` and `activity.spec.ts`, the extended `projects.spec.ts` delete path, and the
+route audit walking `/tasks`, `/tasks?view=board` and `/projects?scope=archived` as both
+roles with zero console errors. Driven live: created a task from the dashboard, watched the
+sidebar count move, opened a deal room, moved a task across the board, read the Activity tab,
+then archived and permanently deleted a throwaway project and confirmed the siblings survived.
+
+**Known gap, deliberate:** `feature-sweep.spec.ts` needs the `bootstrap` seed plus the three
+phase-2 workbooks; it fails against the Faker `seed.py` book used for this run. Unrelated to
+this track.
+
+---
+
+## Track P — The Project workspace (redesign)
+
+The deal room was one 927-line page switching between five modes on `?view=`. That
+shape had three costs: "the project's analytics" and "the project's activity" were the
+same URL, every mode paid for every other mode's fetch, and the Book view could only
+ever show **one** engagement — so the question a lead actually asks ("where in this
+project is the work piling up?") had no screen that could answer it.
+
+### What the project is now
+
+`app/(app)/projects/[id]/layout.tsx` is a **shell** that owns exactly three things: the
+project record (fetched once, read from `components/project/project-context.tsx`), the
+header, and the dialogs. Six real routes sit under it:
+
+| Route | Question it answers |
+| --- | --- |
+| `/projects/{id}` | What needs my attention, how is it going, what changed |
+| `…/workspace` | The whole book — every engagement, banded and categorised |
+| `…/work` | Declared work, by due date / board / list |
+| `…/analytics` | Is outreach converting, and where does it leak |
+| `…/activity` | The append-only trail, filtered server-side by verb group |
+| `…/details` | The record, the team, the engagements, the firm's vocabulary |
+
+Old links still work: `?view=book|board|tasks|activity|team` and `/grid?mandate_id=` both
+forward to the route that replaced them, carrying the engagement across.
+
+### The hierarchy
+
+`components/project/project-workspace.tsx` renders **Project → Engagement → Band →
+Category → Company** in one table. Every level above a company carries a count, a health
+bar and an attention mark, which is what makes collapsing safe: a closed group still tells
+you whether opening it is urgent. Grouping is switchable (band→category, band, category,
+status, none), expansion is keyed by a stable path so filtering never closes what you had
+open, and a leaf renders 40 rows before offering the rest — a 274-company project mounts a
+few hundred rows without a virtualization dependency.
+
+`components/project/health-bar.tsx` is the signature instrument: width ∝ size against the
+widest sibling, segments in a fixed order (late → intro pending → replied → cold → the
+working remainder) so the same colour sits in the same place on every row.
+
+### Navigation
+
+The global sidebar lost **My work → Backlog / In progress / Blocked / Done** entirely —
+task status is a project concern, and four global status links let you filter every firm's
+work by a state without ever saying whose work it was. Declared work now lives at
+`…/work`. `/tasks` survives as a route (personal tasks belong to no project and would
+otherwise be unreachable) and is reachable from the command palette; the route audit still
+walks it. `nav.ts` is now strictly global product areas; project-context navigation is
+`components/project/project-nav.tsx`.
+
+### Backend
+
+Two additions, both reads, both reusing what exists:
+
+- `GET /companies?project_id=` — the project's whole book in one request, composed with
+  the visibility predicate rather than replacing it.
+- `GET /projects/{id}/analytics` — the firm-wide `services/analytics` functions called
+  with this project's visible mandate ids. **No new query layer**: one definition of
+  "replied" for the product, so a project page and the firm page cannot disagree. Not
+  partner-gated (unlike `/analytics/projects`, which spans the firm).
+
+### Numbers that were quietly disagreeing
+
+The header said "Reply rate 11% (5 of 47)" while the page under it said "25% replied (9 of
+36 contacted)" — two different, both-correct measures wearing the same name. The header
+metric is now **Responded** (status `RESPONDED` over the whole book, the server's rollup);
+**reply rate** means any answer over the contacted subset, everywhere. The analytics
+"gone cold" row was reading `NOT_CONTACTED` under a label that said cold; it now reads the
+same per-engagement rollup the header does.
+
+### Bugs found by driving the real app
+
+- **Invisible primary action in dark mode.** The outline Button carries
+  `dark:bg-input/30`, and Tailwind sorts that single-variant utility *after* a bare
+  `group-hover:` — so a hovered row's "Follow-up" button kept a 3%-white fill while its
+  text switched to `--primary-foreground` (near-black ink). Measured: `rgba(255,255,255,
+  0.033)` behind `lab(9.4 …)`. Stacking the variant (`dark:group-hover:bg-primary`) fixes
+  it; carried over from the old `book-grid.tsx`, so it had shipped.
+- **Clipped Y-axis on every trend chart.** `TrendPanel`'s `left: -22` margin against a
+  34px `YAxis` left 12px for the ticks, so two-digit labels rendered as a sliver of their
+  last glyph. Pre-existing on the firm-wide Analytics page too; `-10` fixes both.
+
+### Verification
+
+Backend `pytest -k "project or compan or activity or analytics"`: **125 passed**. Frontend
+`vitest run`: **216 passed** (26 new in `tests/project-workspace.test.ts`, covering
+attention ranking, vitals arithmetic, tree nesting/ordering/stability, filtering,
+progression and work bucketing). `tsc --noEmit` and `next build` clean. Driven live against
+the seeded book as a partner: walked all six views on a 47-company project and a
+274-company one, checked both legacy redirects land, applied `?attention=late` from the
+header and watched the tree roll up to 21 of 47, and read every panel in both themes.
+
+`npx playwright test` over the specs this track touches — `projects`, `grid`, `tasks`,
+`activity`, `pipeline-board`, `cadence`, `command-palette`, `smoke`, `outreach-timeline`:
+**27 passed**. Four specs needed updating for the new IA, and each change is itself a
+finding:
+
+- `grid.spec.ts` / `activity.spec.ts` / `tasks.spec.ts` addressed the deal room's views as
+  `getByRole("tab")`. They are routes now, and they are addressed **by href** — because
+  `getByRole(name:)` matches substrings, and "Work" also matches "Workspace", while
+  "Workspace" also matches the overview's "Open the workspace" link.
+- Three `tasks.spec.ts` assertions read the sidebar's `a[href="/tasks?status=BACKLOG"]`
+  children, which this track removed on purpose. They moved to the status rail on
+  `/tasks` — the same figure from the same `summary.by_status`, on the page the test is
+  actually exercising. `/tasks/summary` is no longer fetched on that navigation (the
+  sidebar was its only caller there; the dashboard still reads it), so the spec now waits
+  on the list response instead.
+- The same helper was reading a missing count as **0** rather than "not yet". With the
+  sidebar gone the race got wider, and a baseline of 0 against a real 22 made the
+  assertion fail loudly rather than pass quietly — it now polls for a figure first.
+
+**Known gap, not a regression:** two `pipeline-board.spec.ts` cases fail when the whole
+batch runs in one process and pass when the spec runs on its own. They mutate company
+status on shared
+seed rows that `cadence.spec.ts` and `grid.spec.ts` also move; the board spec is serial by
+design and wants its own fixture. Unrelated to this track — neither `pipeline-board.tsx`
+nor `/master` was touched.
+
+---
+
+## Track PX — The Project as an operating surface (2026-09-09) ✅ complete
+
+The previous track split the deal room into six routes and gave the project a shell. That
+was the structural half. This one is the half that decides whether an analyst can actually
+work inside it: the **Workspace** stopped being a hierarchy with dropdowns bolted on, and
+**Analytics** stopped being a grid of panels.
+
+Nothing about the data model moved. Cadence is still computed server-side against IST
+(rule 2), outreach is still an append-only log (rule 1), and every figure on both surfaces
+resolves to a field the server already decided.
+
+### What was actually wrong
+
+Both surfaces worked. Neither answered a question.
+
+* **The workspace had exactly one lens.** A tree of Engagement → Band → Category → Company,
+  narrowed by four peer `<select>`s. Four selects can express four questions; every fifth
+  one an analyst has ("late, in this band, more than thirty days over") was simply
+  unaskable, and the one that mattered most — *what do I do next* — was the third option
+  inside the second select. `Group: Band → Category` sat where the primary control should be.
+* **A leaf capped at 40 rows behind "show N more"**, while its own header printed the true
+  count. The user was told 47 and shown 40, silently.
+* **Opening a company was a navigation.** Filters, grouping, scroll position and expansion
+  were all rebuilt by hand on the way back. Nobody works a queue twice like that.
+* **Analytics was six bordered panels in a grid**, which is what you reach for when the
+  sections have no relationship to each other. A grid has no reading order, so the reader
+  chose which box to read first and then held the rest in their head. That is an
+  information-architecture failure, not a styling one — so the panels are gone rather than
+  restyled.
+* **Every analytics number was a dead end.** "50 late" told you something was wrong and gave
+  you nothing to click.
+
+### The workspace: filter, grouping, view
+
+Two files written in the previous track had never been wired to anything —
+`lib/project-views.ts` (the filter/sort/priority model) and `lib/workspace-rows.ts` (the row
+flattener). This track builds the surface on top of them and finishes both.
+
+The three things the old dropdowns had tangled are now separate:
+
+    a FILTER   decides which companies are in play
+    a GROUPING decides how they are stacked
+    a VIEW     is a named (filter, group, sort) you can return to
+
+so "Needs attention" and "By band" are two lenses over one dataset, not two pages. Twelve
+built-ins, split by what they are *for*: **Working** views (overdue, replied, due this week,
+intro pending, gone cold, no contact) are flat and priority-sorted, because a queue that
+re-sorts by engagement is a filing cabinet; **Structure** views group and sort by name. A
+user's own combinations save to `localStorage` — per-person and per-machine, which is
+honestly what a working habit is, and no endpoint, migration or sharing model until it earns
+them.
+
+The whole state lives in the URL, so a lens is a link. `workspaceHref()` is the only way
+anything builds one, which is what stops a figure and the list behind it from drifting
+apart. `?attention=late` and `?book=` still work — they are rewritten into the view model
+once, on arrival, rather than evaluated forever.
+
+The filter is a condition list behind one button, with one AND/OR join for the whole group
+and deliberately **no nesting** — nesting is the feature that turns a filter into a query
+builder, and a query builder is a thing users open once. Every active condition is spelled
+out as a chip under the toolbar, because a hidden filter that removes 200 rows looks like
+missing data.
+
+`Expand all` / `Dense` — two controls named after their implementation — became **Display**
+(Comfortable / Compact) and one Expand/Collapse toggle that only appears when there is
+something to collapse.
+
+### The register: virtualized, and honest about its counts
+
+The tree plus a collapsed-set is deterministically one array of rows, and an array can be
+windowed. So the leaf cap is gone: a 282-company project mounts about thirty rows, and the
+count in a group header is now always the count you can scroll to.
+
+It is a CSS grid, not a `<table>`, because a virtualizer needs absolutely-positioned rows.
+What the table was carrying is kept explicitly — one shared `grid-template-columns` for the
+header and every row, and real `role="grid"` / `row` / `gridcell` semantics instead of ones
+inherited by accident. Columns respond to **container** queries, not the viewport: the
+register shares its row with the peek panel, so opening a company takes ~26rem off the table
+while the window does not move at all, and `lg:` cannot see that.
+
+Row heights are declared rather than measured. Every row of a kind is the same height by
+construction, so declaring it makes scroll offsets exact on the first frame instead of
+settling over several — visible, before, as the list jolting under the cursor — and makes
+Comfortable/Compact a real number rather than a side effect of how much text a cell held.
+
+The engagement header pins while you scroll inside its book. It is `sticky` with a matching
+negative margin so it occupies no space in flow; `position: sticky` on the rows themselves
+cannot work, because they are already `position: absolute`.
+
+### The panel, and working a queue
+
+A company opens **beside** the list, on the same route, in `?peek=`. The register is never
+unmounted, so scroll, selection, expansion and filters all survive an inspection. The panel
+answers who this is, where it sits, who we know, what happened, what is scheduled, what work
+is attached, and what can be done right now — the full dossier stays one click away.
+
+`↑`/`↓` (or `k`/`j`) walk the register and `Enter` opens the record beside it; with the panel
+open the arrows move the panel too, so review → act → next is two keys.
+`aria-activedescendant` names the cursor row without moving focus off the grid.
+
+Priority is a **list of reasons, never a score on screen**. The score exists only to order
+the queue; what the UI shows is the facts that produced it, each one a re-reading of a field
+the server computed. In the register the signal column stays nearly empty on purpose — only
+"overdue" and "somebody replied" earn ink, because "intro never sent" is already what the
+Next-touch cell says, and repeating it on 200 rows is the noise this redesign removes.
+
+Bulk actions stop exactly where the data model does. There is **no "Assign"**: a company has
+no owner field — people attach to engagements and to tasks — so an assign control would have
+to invent a relationship and then fail to save it.
+
+### Analytics: a briefing, read top to bottom
+
+Seven sections in the order the questions arrive: the reading → where outreach converts →
+where it is stalling → which book is carrying it → which counterparties answer → how long a
+reply takes → is it getting better. No cards anywhere; a section is a rule, a title, a
+sentence saying what it answers, and its content.
+
+Two rules the whole page obeys. **Every figure is a link** — every count, stage, engagement
+and segment deep-links through `workspaceHref` into the records that produced it. And **every
+rate carries its denominator**, with `MIN_N` as the floor: thin segments drop below a rule,
+keep their raw counts and lose the percentage, because deleting the row hides that the
+segment exists, and printing "67% (2/3)" beside a group of ninety is a confident wrong answer.
+
+The funnel draws the **loss between the steps**, not just the steps. 139 contacted companies
+that never answered is the finding; "replied: 135" is the arithmetic that produced it.
+
+### Sidebar
+
+Eight projects each printing a red figure was a wall of alarms with no ranking between them —
+and a count is not actionable from a sidebar anyway, since acting on it means opening the
+project. The rail now carries the one bit that is useful there (something in this book is
+late) as a dot, ordered by what the person is actually doing: open project first, then
+recently visited, then attention. The magnitude lives on the tooltip and on the deal floor,
+where projects can be compared. A filter appears past six projects.
+
+### Bugs found by driving the real app
+
+- **The engagement header rendered twice at the top of the list.** The pinned copy derived
+  its book from the first *rendered* virtual row, which includes overscan — so at scroll 0 it
+  pinned the header that was already on screen. Fixed by comparing against the real scroll
+  offset, from a running total of declared heights.
+- **A held arrow key skipped every other row.** Two keydowns arrive in the same tick and both
+  closed over the same rendered cursor, so the second recomputed from the position the first
+  had already left. The cursor is now mirrored in a ref that handlers read synchronously.
+- **Stepping through the queue mounted two panels.** `AnimatePresence` keyed on the company id
+  made every step an unmount plus a mount, and it holds the outgoing element for the length of
+  its exit — two panels side by side, register squeezed between them, on every press. The
+  presence boundary is for opening and closing; moving to the next company is the same panel
+  showing something else.
+- **"This book is empty. Add the first company"** appeared under every engagement when a search
+  matched nothing. The book was not empty; the search had no matches. A narrowed register now
+  says so, and the register's own empty state keys off the filtered count rather than the row
+  count, which a grouped tree never lets reach zero.
+- **A group header's reply rate was computed over the filtered subset** — "0% replied, 0/10"
+  under a view that excludes replies. True, and about the filter rather than the book.
+  Suppressed whenever anything is narrowing the list.
+- **A flat view showed the same company twice with nothing to tell the rows apart.** One target
+  legitimately sits in two engagements; the row was printing its band where it should have
+  printed its book.
+- **An unanswered condition counted as an active filter.** A row opened but not yet answered
+  narrows nothing, and a badge reading "2" over an unchanged list is a badge nobody believes
+  again.
+
+### Verification
+
+Backend `pytest`: **378 passed** (no backend change in this track; run as the regression gate).
+Frontend `vitest run`: **251 passed**, 35 of them new in `tests/project-views.test.ts` — filter
+URL round-trips and garbage tolerance, every match operator including the two that must
+*exclude* rows with no value rather than treat them as zero, priority ordering and its one
+editorial claim (an unanswered reply outranks an overdue follow-up), sort stability, view
+definitions, drill-through links, and row flattening with its no-cap guarantee. `tsc --noEmit`
+and `eslint` clean.
+
+`npx playwright test`: **53 passed, 1 failed** on a clean run — the failure being the
+fixture mismatch described below. Six of the passes are new cases in
+`tests/e2e/workspace.spec.ts`, covering the view system, the panel-preserves-the-list
+contract, the analytics drill-through and bulk selection.
+
+Two runs during the work showed extra failures and both were self-inflicted: editing
+frontend files while Playwright is running makes `next dev` recompile mid-suite. Each of
+those specs passes on its own — `command-palette` 4/4, `workbook-import` 3/3 — and
+`pipeline-board` remains the known batch-only flake already recorded above. **Do not edit
+the frontend while the suite runs.**
+
+The command-palette failure was worth chasing rather than dismissing, because this track
+adds a *global* keydown handler to the workspace. It does not interfere: the handler
+returns early on any modifier (so ⌘K passes through untouched) and skips events whose
+target is inside an `input` or a `[role="dialog"]` (so typing in the palette cannot move
+the register cursor). Verified live with the workspace mounted — cursor on a row, ⌘K
+opened, `j` and `ArrowDown` typed into the palette, cursor unmoved.
+
+Two spec changes, each a finding of its own:
+
+- `workbook-import.spec.ts` asserted an imported company was visible on the project
+  **overview**, whose queue is the seven most urgent rows — so whether any particular company
+  appeared depended on how the sheet's dates landed against today, not on whether the import
+  worked. It now searches the workspace, which proves both that the row was written and that
+  it is findable.
+- The workspace spec counts from the caption, never from the DOM. With a virtualized register
+  the number of mounted rows is a fact about the scroll position.
+
+**Known gap, not a regression:** `feature-sweep.spec.ts` fails on this machine's database. Its
+own header states the fixture it needs — `bootstrap --reset`, `sourcing_pool`, then the three
+`phase_2` workbooks — and this dev DB was seeded with the Faker `seed.py` instead, so its
+assertions about specific pool and Master List companies cannot hold. The file is
+`describe.serial`, which is why one failure leaves the rest unrun. Nothing in Sourcing or
+Master List was touched by this track.
+
+---
+
+## Track UX — "Ledger": product-wide redesign  ✅ complete (2026-09-11)
+
+**Goal:** replace the all-grey "ink on paper" system across every product surface with one
+coherent, production-grade visual language: black and white foundation, strong type,
+crisp hairlines, and colour used only for state. Strategy in `PRODUCT.md` (new), the
+system in `DESIGN.md` (rewritten). Behaviour, routes and data flow are unchanged.
+
+**Why:** the previous system removed all hue — late, replied and bounced were all shades
+of grey, status needed a legend, and the inverted black blocks, tracked-caps eyebrows and
+monospace figures read as templated. The brief asked for a serious B2B product, not an
+"AI dashboard".
+
+### The system
+- Tokens (`app/globals.css`): white workspace, cool-tinted neutrals, solid hairlines, a
+  13px working `text-sm`, four state families (danger / warning / success / info) each
+  with solid, ink, soft and line, and a near-black navigation rail (`--sidebar-*`).
+- Type: Instrument Sans everywhere with tabular figures; `MONO` is now
+  `font-variant-numeric: tabular-nums`; Plex Mono only for code-like strings.
+- Roles (`lib/design.ts`, same export names): status glyph with state colour, `CHIP` +
+  `CHIP_TONE`, `LATE_TOKEN` (red) and `DUE_TOKEN` (amber), segmented control as a raised
+  white segment, sentence-case `LABEL`, flat `PANEL` + `PANEL_HEAD`.
+- Primitives rebuilt: button, badge, input, select, dropdown, popover, dialog, tabs,
+  card, table, skeleton, toast, avatar.
+
+### Shell and navigation
+- Dark rail replaces sidebar + top bar: firm and brand, Search (⌘/Ctrl K), Home · My work
+  · Deals · Outreach · Insights · Workspace groups, the recent-project list with a red dot
+  for anything late, and an account menu that keeps the role on screen. Collapses to an
+  icon rail (`[`); `g` + letter jumps to a section. Below `md` it is a drawer behind a
+  48px bar. "My work" (`/tasks`) is back in the nav as the cross-project inbox.
+- Shared `PageHeader` with breadcrumbs; skip link; skeleton shell while auth loads.
+
+### Surfaces
+- Home: a "Today" module (one sentence + four ruled figures + the queue action) replaces
+  the hero number and pressure gauge; focus queue as an aligned table.
+- Project shell, workspace register, peek, filter builder, view picker, bulk bar, work,
+  analytics, activity, details — state colours throughout; the "why now" column no longer
+  repeats lateness beside the late chip; phone-width column template for the register.
+- Projects, Master List (cells, board, next-touch), Sourcing (fit column without the side
+  stripe), Schedule (horizon bars, row tints and stagger removed), Contacts, Companies,
+  company and contact detail, Analytics (finding line, ruled metrics, conversion strip,
+  green replies), Project health, Sourcing analytics, My work (status tabs), Settings
+  (section index + flat panels), Import, Login/Signup (split auth shell), 404, error.
+- Mechanical sweep: tracked-caps labels → sentence case, monospace figures → tabular,
+  translucent washes → surface tokens, 12–16px radii → 8px, italic "provisional" voice →
+  dashed glyph, invisible `bg-muted` skeletons → `ink-100`, pills → square chips.
+
+### Verification
+
+Run against a Faker-seeded redesign stack (`api-redesign` :8200 + `product-app-v2` :3030,
+`backend/upstream_redesign.db`, plus ~30 realistic tasks so Work and Activity are populated).
+
+- `tsc --noEmit` clean; `next build` succeeds (all 28 routes).
+- Vitest: **253 passed** (23 files).
+- Playwright (full suite, serial): **40 passed**; the 6 initial failures were 2 real
+  regressions — `login`/`smoke` expect a heading named "Upstream", which the new auth shell
+  had demoted to text (fixed: the lockup is the page `<h1>`) — and 4 environment
+  mismatches (`activity`, `outreach-timeline` call the API at `NEXT_PUBLIC_API_URL`, which
+  defaults to :8000). Re-run with the URL set: **18/18 passed**. `feature-sweep` still needs
+  its own bootstrap + pool + workbooks fixture (unchanged known gap; 13 serial dependants
+  unrun).
+- Every route captured at 1440×900 before and after, plus interactive states (palette,
+  account menu, dialogs, peek, filter builder, view picker, row menu, bulk bar, collapsed
+  rail, confirm) and 390px mobile. Two layout bugs found this way and fixed: the phone-width
+  register header collision, and a duplicate command-palette key from adding My work to
+  the nav.
+- `eslint`: 7 pre-existing React Compiler errors (`set-state-in-effect` in
+  `companies/page.tsx`, `command-palette`, `compose-email-sheet`, `email-sending-card`,
+  `use-counter`) are untouched by this track — the redesign changed only class names in
+  those regions. Unused imports it left behind were removed.
+
+**Dev-only note:** Next's dev indicator sits over the rail's account button in `next dev`
+(not in production builds); use the keyboard or collapse it when testing that corner.

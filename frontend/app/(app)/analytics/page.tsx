@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
 
       {/* THE FINDING — computed thesis, leads the page */}
       {overviewQ.isError ? (
-        <div className="rounded-xl bg-card p-2 ring-1 ring-border">
+        <div className="rounded-lg bg-card p-2 ring-1 ring-border">
           <PanelError label="analytics" onRetry={() => overviewQ.refetch()} />
         </div>
       ) : (
@@ -206,7 +206,7 @@ export default function AnalyticsPage() {
           ) : overview ? (
             <ConversionSpine byStatus={byStatus} total={total} />
           ) : (
-            <div className="h-40 animate-pulse rounded-md bg-muted" />
+            <div className="h-40 animate-pulse rounded-md bg-ink-100" />
           )}
         </Section>
       </Reveal>
@@ -237,7 +237,7 @@ export default function AnalyticsPage() {
             ) : timingQ.data ? (
               <ReplyTimingPanel data={timingQ.data} />
             ) : (
-              <div className="h-40 animate-pulse rounded-md bg-muted" />
+              <div className="h-40 animate-pulse rounded-md bg-ink-100" />
             )}
           </Section>
         </Reveal>
@@ -283,7 +283,7 @@ export default function AnalyticsPage() {
           ) : sourcesQ.data ? (
             <SourceQualityMatrix rows={sourcesQ.data.items} />
           ) : (
-            <div className="h-40 animate-pulse rounded-md bg-muted" />
+            <div className="h-40 animate-pulse rounded-md bg-ink-100" />
           )}
         </Section>
       </Reveal>
@@ -320,7 +320,7 @@ export default function AnalyticsPage() {
         </Reveal>
       ) : (
         <Reveal>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-muted/30 px-4 py-3 text-sm ring-1 ring-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/30 px-4 py-3 text-sm ring-1 ring-border">
             <span className="text-muted-foreground">
               These figures cover <span className="font-medium text-foreground">your book</span> — the mandates assigned to you.
             </span>

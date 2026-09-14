@@ -425,7 +425,7 @@ async def test_archive_and_unarchive_project(
 
 
 @pytest.mark.asyncio
-async def test_archive_project_analyst_forbidden(
+async def test_archive_project_analyst_allowed(
     client: AsyncClient,
     firm: Firm,
     partner: User,
@@ -433,6 +433,19 @@ async def test_archive_project_analyst_forbidden(
     project: Project,
     analyst_assigned_to_project_mandate: User,
 ):
+    """Archive is visibility-gated, not role-gated (was partner-only before the
+    tasks/activity track).
+
+    The gate was removed deliberately: archiving is the first of the two steps that
+    permanent delete requires, and permanent delete is itself un-gated, so keeping this
+    partner-only would have made an analyst's own project undeletable by them. Archiving
+    is reversible in one click, which is what makes it safe to open up.
+    """
     await _login(client, _ANALYST)
     r = await client.delete(f"/projects/{project.id}")
-    assert r.status_code == 403, r.text
+    assert r.status_code == 200, r.text
+
+    # ...but only for a project they can actually see.
+    other = Project(firm_id=firm.id, name="Not theirs", client_name="Someone Else")
+    r = await client.delete("/projects/999999")
+    assert r.status_code == 404

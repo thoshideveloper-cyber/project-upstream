@@ -41,7 +41,7 @@ export function DataSourceManager() {
             <li key={c.id} className="flex items-center justify-between py-2 text-sm">
               <span className="flex items-center gap-2">
                 {providerLabel(c.provider_key)}
-                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                   {c.kind}
                 </span>
               </span>

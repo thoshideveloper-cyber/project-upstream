@@ -5,7 +5,7 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { PanelEmpty, PanelError } from "@/components/analytics/states";
-import { MONO } from "@/lib/design";
+import { MONO, SELECT_CLS } from "@/lib/design";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMandates } from "@/hooks/use-mandates";
 import { useFunnelAnalytics } from "@/hooks/use-funnel-analytics";
@@ -31,12 +31,12 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl bg-card p-4 ring-1 ring-border">
+    <section className="rounded-lg bg-card p-4 ring-1 ring-border">
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <h2 className="text-sm font-semibold text-foreground">
           {title}
         </h2>
-        {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
       {children}
     </section>
@@ -45,12 +45,10 @@ function Panel({
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-card p-4 text-center ring-1 ring-border">
-      <div className="text-2xl font-semibold tabular-nums" style={MONO}>
-        {value}
-      </div>
-      <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
+    <div className="bg-card px-4 py-3.5">
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="mt-1 text-2xl font-semibold leading-8 tracking-[-0.01em] tabular-nums" style={MONO}>
+        {value.toLocaleString()}
       </div>
     </div>
   );
@@ -71,7 +69,7 @@ function FitCard({
   const thin = isThin(n);
   return (
     <div
-      className={cn("rounded-lg border border-border p-3", thin && "opacity-60")}
+      className={cn("rounded-lg bg-subtle p-3 ring-1 ring-inset ring-border", thin && "[&_*]:text-muted-foreground")}
       title={thin ? `Thin sample — fewer than ${MIN_N} placements` : undefined}
     >
       <div className="text-xs text-muted-foreground">{label}</div>
@@ -105,8 +103,11 @@ export default function SourcingAnalyticsPage() {
         title="Sourcing analytics"
         description="Funnel conversion, reply rate by stage, pool coverage, and whether AI fit predicts a reply."
         actions={
-          <Link href="/sourcing" className="text-sm text-primary-ink hover:underline">
-            ← Workspace
+          <Link
+            href="/sourcing"
+            className="inline-flex h-8 items-center rounded-md border border-input bg-card px-3 text-sm font-medium shadow-xs transition-colors hover:bg-muted"
+          >
+            Back to sourcing
           </Link>
         }
       />
@@ -115,7 +116,7 @@ export default function SourcingAnalyticsPage() {
         value={mandateId}
         onChange={(e) => setMandateId(Number(e.target.value))}
         aria-label="Filter by engagement"
-        className="h-9 w-fit rounded-md border border-input bg-background px-2 text-sm"
+        className={`${SELECT_CLS} w-fit`}
       >
         <option value={0}>All my engagements</option>
         {(mandates?.items ?? []).map((m) => {
@@ -135,17 +136,20 @@ export default function SourcingAnalyticsPage() {
         </Panel>
       ) : loading ? (
         <>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border grid-cols-3">
             {[0, 1, 2].map((n) => (
-              <Skeleton key={n} className="h-[88px] rounded-xl" />
+              <div key={n} className="bg-card px-4 py-3.5">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="mt-2.5 h-6 w-12" />
+              </div>
             ))}
           </div>
-          <Skeleton className="h-56 rounded-xl" />
-          <Skeleton className="h-40 rounded-xl" />
+          <Skeleton className="h-56 rounded-lg" />
+          <Skeleton className="h-40 rounded-lg" />
         </>
       ) : isLoading ? null : (
         <>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid gap-px overflow-hidden rounded-lg bg-border ring-1 ring-border grid-cols-3">
             <Stat label="Pool total" value={cov?.pool_total ?? 0} />
             <Stat label="In a funnel" value={cov?.in_funnel ?? 0} />
             <Stat label="Scored" value={cov?.scored ?? 0} />
@@ -166,9 +170,9 @@ export default function SourcingAnalyticsPage() {
                     <span className="w-40 shrink-0 truncate text-muted-foreground">
                       {s.stage_name}
                     </span>
-                    <div className="h-4 flex-1 rounded bg-muted">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-ink-100">
                       <div
-                        className="h-4 rounded bg-primary/70"
+                        className="h-2 rounded-full bg-foreground"
                         style={{ width: `${(s.count / maxStage) * 100}%` }}
                       />
                     </div>

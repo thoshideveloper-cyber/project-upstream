@@ -258,7 +258,7 @@ export function AddCompanyForm({
           data-testid="add-company-name"
         />
         {warnings.length > 0 && (
-          <div className="mt-1.5 rounded-md border border-amber-200/60 bg-amber-50/60 px-2 py-1.5 text-xs text-amber-700 dark:border-amber-800/40 dark:bg-amber-950/20 dark:text-amber-300">
+          <div className="mt-1.5 rounded-md border border-border bg-muted/60 px-2 py-1.5 text-xs text-foreground">
             <div className="flex items-start gap-1.5">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               <div>
@@ -319,7 +319,7 @@ export function AddCompanyForm({
 
       {/* Classify */}
       <div className="rounded-md border border-border p-3 space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Classify</p>
+        <p className="text-xs font-semibold text-muted-foreground">Classify</p>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="ac-category">Category *</Label>
@@ -401,7 +401,7 @@ export function AddCompanyForm({
 
       {/* Primary contact(s) */}
       <div className="rounded-md border border-border p-3 space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-xs font-semibold text-muted-foreground">
           Primary contact (optional)
         </p>
         {contacts.map((c, i) => (
@@ -448,15 +448,29 @@ export function AddCompanyForm({
 }
 
 interface AddCompanyDialogProps extends Omit<AddCompanyFormProps, "onAdded" | "onCancel"> {
-  trigger: React.ReactNode;
+  /** Omit, and pass `open`/`onOpenChange`, to drive the dialog from a menu. */
+  trigger?: React.ReactNode;
   onAdded?: (company: CreateCompanyResponse) => void;
+  /** Controlled open state (opt-in) — the same contract MandateDialog offers. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddCompanyDialog({ trigger, onAdded, ...formProps }: AddCompanyDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddCompanyDialog({
+  trigger,
+  onAdded,
+  open: controlledOpen,
+  onOpenChange,
+  ...formProps
+}: AddCompanyDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <span className="contents" onClick={() => setOpen(true)}>{trigger}</span>
+      {trigger != null && (
+        <span className="contents" onClick={() => setOpen(true)}>{trigger}</span>
+      )}
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add a company</DialogTitle>

@@ -11,6 +11,7 @@ import {
   Bookmark,
   Building2,
   Check,
+  CheckSquare,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -36,6 +37,7 @@ import { useTableUrlState } from "@/hooks/use-table-url-state";
 import { useColumnVisibility } from "@/hooks/use-column-visibility";
 import { AddCompanyDialog } from "@/components/features/add-company";
 import { LogOutreachDialog } from "@/components/features/log-outreach-dialog";
+import { TaskDialog } from "@/components/features/task-dialog";
 import { PipelineBoard, type BoardRow } from "@/components/features/pipeline-board";
 import { EmptyState } from "@/components/features/empty-state";
 import { ColumnToggle, type ToggleableColumn } from "@/components/features/column-toggle";
@@ -57,8 +59,8 @@ import {
   DEAL_TYPE_LABEL,
   DEAL_TYPE_SHORT,
   DEAL_TYPE_STYLE,
-  DISPLAY,
-  LABEL,
+  DUE_TOKEN,
+  LATE_TOKEN,
   MONO,
   PAGE_TITLE,
   PAGE_TITLE_STYLE,
@@ -68,7 +70,7 @@ import {
   TH_STICKY,
 } from "@/lib/design";
 import { cn } from "@/lib/utils";
-import type { Company, CompanyProfile, CompanyStatus, MandateType, ProfilePlacement } from "@/types";
+import type { Company, CompanyProfile, MandateType, ProfilePlacement } from "@/types";
 
 const PAGE_SIZE = 50;
 
@@ -114,18 +116,20 @@ function fmtDate(iso: string | null): string {
 }
 
 // ── Relationship state — one vocabulary for cells, lens, and the next-touch column ─
-// Colour language shared with the rest of the app: late is the only loud tone
-// (destructive), first-outreach is indigo, due-soon amber, replied emerald.
+// Ink language shared with the rest of the app: late is the only solid-black cell, an
+// intro that has not gone out is hollow, and everything else steps down the ladder by
+// how much it asks of you — a reply waiting on a next step, then due soon, then a
+// cadence running quietly, then a book that has closed.
 
 type BookState = "overdue" | "awaiting" | "due_soon" | "active" | "responded" | "cold";
 
 const STATE_META: Record<BookState, { label: string; cell: string; running: boolean }> = {
-  overdue: { label: "Late", cell: "bg-destructive", running: true },
-  awaiting: { label: "Intro pending", cell: "bg-indigo-500", running: true },
-  due_soon: { label: "Due soon", cell: "bg-primary", running: true },
-  active: { label: "In cadence", cell: "bg-foreground/25", running: true },
-  responded: { label: "Replied", cell: "bg-emerald-500", running: false },
-  cold: { label: "Cold / closed", cell: "bg-muted-foreground/25", running: false },
+  overdue: { label: "Late", cell: "bg-danger", running: true },
+  awaiting: { label: "Intro pending", cell: "ink-hollow", running: true },
+  due_soon: { label: "Due soon", cell: "bg-warning", running: true },
+  active: { label: "In cadence", cell: "bg-ink-400", running: true },
+  responded: { label: "Replied", cell: "bg-success", running: false },
+  cold: { label: "Cold / closed", cell: "bg-ink-200", running: false },
 };
 
 function companyState(c: Company): BookState {
@@ -191,20 +195,22 @@ function NextTouch({ c }: { c: Company }) {
   const days = c.days_remaining;
   if (s === "awaiting")
     return (
-      <span className="text-xs text-indigo-600 dark:text-indigo-400" style={MONO} title="Awaiting the first email — the clock hasn't started">
-        intro pending
+      <span className="inline-flex items-center gap-1.5 text-xs text-secondary-foreground" title="Awaiting the first email — the clock hasn't started">
+        <span className="hb hb-dashed" aria-hidden />
+        Intro pending
       </span>
     );
   if (s === "overdue")
     return (
-      <span className="text-xs font-semibold text-destructive-ink" style={MONO} title={c.next_due_date ? `Was due ${fmtDate(c.next_due_date)}` : undefined}>
+      <span className={LATE_TOKEN} style={MONO} title={c.next_due_date ? `Was due ${fmtDate(c.next_due_date)}` : undefined}>
         {Math.abs(days ?? 0)}d late
       </span>
     );
   if (s === "due_soon")
     return (
-      <span className="text-xs font-medium text-primary-ink" style={MONO} title={days === 0 ? "Due today" : `Due in ${days} days`}>
-        {days === 0 ? "today" : `${days}d`} · {fmtDate(c.next_due_date)}
+      <span className="inline-flex items-center gap-1.5 text-xs" style={MONO} title={days === 0 ? "Due today" : `Due in ${days} days`}>
+        <span className={DUE_TOKEN}>{days === 0 ? "Today" : `${days}d`}</span>
+        <span className="text-muted-foreground">{fmtDate(c.next_due_date)}</span>
       </span>
     );
   if (s === "active")
@@ -232,6 +238,7 @@ function RowMenu({ c }: { c: Company }) {
   const awaiting = c.schedule_status === "AWAITING_INITIAL";
   const running = isActive(c);
   const [quickType, setQuickType] = useState<string | null>(null);
+  const [taskOpen, setTaskOpen] = useState(false);
   return (
     <>
       <DropdownMenu>
@@ -255,7 +262,7 @@ function RowMenu({ c }: { c: Company }) {
                 {awaiting ? "Send intro" : "Log follow-up"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setQuickType("RESPONSE")}>
-                <Reply className="h-4 w-4 text-emerald-500" aria-hidden /> Mark replied
+                <Reply className="h-4 w-4 text-foreground" aria-hidden /> Mark replied
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setQuickType("BOUNCE")}>
                 <XCircle className="h-4 w-4 text-destructive-ink" aria-hidden /> Mark bounced
@@ -270,11 +277,20 @@ function RowMenu({ c }: { c: Company }) {
               <DropdownMenuSeparator />
             </>
           )}
+          <DropdownMenuItem onClick={() => setTaskOpen(true)}>
+            <CheckSquare className="h-4 w-4 text-muted-foreground" aria-hidden /> Add task
+          </DropdownMenuItem>
           <DropdownMenuItem render={<Link href={`/companies/${c.id}`} />}>
             <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden /> Open dossier
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {/* Pre-attached to this company — the server derives the mandate and project. */}
+      <TaskDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        defaults={{ title: "", company_id: c.id }}
+      />
       {quickType !== null && (
         <LogOutreachDialog
           key={quickType}
@@ -330,14 +346,19 @@ export default function MasterListPage() {
     <div className="flex flex-col gap-4">
       {/* ── Command line ── */}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-        <h1 className={PAGE_TITLE} style={PAGE_TITLE_STYLE}>
-          Master List
-        </h1>
+        <div className="min-w-0">
+          <h1 className={PAGE_TITLE} style={PAGE_TITLE_STYLE}>
+            Master List
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Every company the firm works — your book, its pipeline, and the shared database.
+          </p>
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <div
             role="tablist"
             aria-label="Master list view"
-            className="inline-flex w-fit items-center rounded-lg bg-muted p-[3px] text-sm text-muted-foreground"
+            className="inline-flex h-8 w-fit items-center gap-0.5 rounded-md bg-muted p-0.5 text-muted-foreground ring-1 ring-inset ring-border"
           >
             {(
               [
@@ -356,9 +377,9 @@ export default function MasterListPage() {
                   aria-controls="master-panel"
                   onClick={() => selectTab(t.id)}
                   className={cn(
-                    "inline-flex h-7 items-center rounded-md border border-transparent px-3 font-medium outline-none transition-all focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                    "inline-flex h-full items-center rounded-[5px] px-3 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/40",
                     active
-                      ? "bg-background text-foreground shadow-sm dark:border-input dark:bg-input/30"
+                      ? "bg-card text-foreground shadow-sm ring-1 ring-border"
                       : "hover:text-foreground",
                   )}
                 >
@@ -673,8 +694,8 @@ function MyBookView() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-center">
-        <AlertTriangle className="h-6 w-6 text-amber-500" aria-hidden />
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card py-16 text-center">
+        <AlertTriangle className="h-5 w-5 text-danger" aria-hidden />
         <p className="text-sm font-medium">Couldn&rsquo;t load your book.</p>
         <button onClick={() => refetch()} className="text-xs font-medium text-primary-ink hover:underline">
           Try again
@@ -686,14 +707,14 @@ function MyBookView() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4">
-        <div className="h-5 w-80 animate-pulse rounded bg-muted" />
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="h-5 w-80 animate-pulse rounded bg-ink-100" />
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
           <div className="h-9 border-b border-border bg-muted/20" />
           {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
             <div key={n} className="flex items-center gap-6 border-b border-border px-4 py-2.5 last:border-0">
-              <div className="h-4 w-1/4 animate-pulse rounded bg-muted" />
-              <div className="hidden h-3 w-1/6 animate-pulse rounded bg-muted sm:block" />
-              <div className="ml-auto h-3 w-24 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-1/4 animate-pulse rounded bg-ink-100" />
+              <div className="hidden h-3 w-1/6 animate-pulse rounded bg-ink-100 sm:block" />
+              <div className="ml-auto h-3 w-24 animate-pulse rounded bg-ink-100" />
             </div>
           ))}
         </div>
@@ -836,7 +857,7 @@ function MyBookView() {
       </div>
 
       {/* ── The register ── */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         <div className="max-h-[calc(100vh-13rem)] overflow-auto">
           <table className="w-full min-w-[352px] border-collapse text-sm">
             <thead>
@@ -851,7 +872,7 @@ function MyBookView() {
                       "flex h-4 w-4 items-center justify-center rounded border transition-colors disabled:opacity-40",
                       allDisplayedSelected
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-input hover:border-primary/60",
+                        : "border-input hover:border-border-strong",
                     )}
                   >
                     {allDisplayedSelected && <Check className="h-3 w-3" strokeWidth={3} aria-hidden />}
@@ -899,7 +920,7 @@ function MyBookView() {
                   <td colSpan={colCount} className="px-3 py-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <Search className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
-                      <span className="text-xs font-semibold uppercase tracking-wider">Search results</span>
+                      <span className="text-xs font-semibold">Search results</span>
                       <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold tabular-nums text-muted-foreground" style={MONO}>
                         {searchRows.length}
                       </span>
@@ -967,7 +988,7 @@ function MyBookView() {
                               className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")}
                               aria-hidden
                             />
-                            <span className="truncate text-xs font-semibold uppercase tracking-wider text-foreground">
+                            <span className="truncate text-xs font-semibold text-foreground">
                               {g.project_name ?? "Unassigned"}
                             </span>
                           </button>
@@ -982,7 +1003,7 @@ function MyBookView() {
                             </Link>
                           )}
                           <span className="text-[11px] text-muted-foreground" style={MONO}>
-                            <span className="font-semibold tabular-nums text-foreground/80">{g.rows.length}</span>
+                            <span className="font-semibold tabular-nums text-secondary-foreground">{g.rows.length}</span>
                             {lens === "all" && (
                               <>
                                 {" · "}
@@ -1061,7 +1082,7 @@ function RegistryRow({
     <tr
       className={cn(
         "group border-b border-border transition-colors last:border-0 hover:bg-muted/40",
-        selected && "bg-primary/[0.05] hover:bg-primary/[0.07]",
+        selected && "bg-subtle hover:bg-subtle",
       )}
     >
       {/* Selection — appears on hover, or stays visible once any row is picked. */}
@@ -1074,7 +1095,7 @@ function RegistryRow({
             "flex h-4 w-4 items-center justify-center rounded border transition-all focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
             selected
               ? "border-primary bg-primary text-primary-foreground"
-              : cn("border-input hover:border-primary/60", anySelected ? "opacity-70" : "opacity-0 group-hover:opacity-100"),
+              : cn("border-input hover:border-border-strong", anySelected ? "opacity-70" : "opacity-0 group-hover:opacity-100"),
           )}
         >
           {selected && <Check className="h-3 w-3" strokeWidth={3} aria-hidden />}
@@ -1116,7 +1137,7 @@ function RegistryRow({
       )}
       {cols.isVisible("revenue") && (
         <td className="hidden px-3 py-2 text-right xl:table-cell">
-          <span className="text-xs tabular-nums text-foreground/70" style={MONO}>
+          <span className="text-xs tabular-nums text-secondary-foreground" style={MONO}>
             {c.revenue_inr_cr ? Number(c.revenue_inr_cr).toLocaleString() : "—"}
           </span>
         </td>
@@ -1190,8 +1211,8 @@ function BoardView() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-center">
-        <AlertTriangle className="h-6 w-6 text-amber-500" aria-hidden />
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card py-16 text-center">
+        <AlertTriangle className="h-5 w-5 text-foreground" aria-hidden />
         <p className="text-sm font-medium">Couldn&rsquo;t load your book.</p>
         <button onClick={() => refetch()} className="text-xs font-medium text-primary-ink hover:underline">
           Try again
@@ -1204,10 +1225,10 @@ function BoardView() {
     return (
       <div className="flex gap-3 overflow-hidden">
         {[1, 2, 3, 4, 5, 6].map((n) => (
-          <div key={n} className="flex w-[250px] shrink-0 flex-col gap-2 rounded-xl border bg-muted/20 p-2">
-            <div className="h-8 animate-pulse rounded bg-muted" />
-            <div className="h-16 animate-pulse rounded bg-muted" />
-            <div className="h-16 animate-pulse rounded bg-muted" />
+          <div key={n} className="flex w-[250px] shrink-0 flex-col gap-2 rounded-lg border bg-muted/20 p-2">
+            <div className="h-8 animate-pulse rounded bg-ink-100" />
+            <div className="h-16 animate-pulse rounded bg-ink-100" />
+            <div className="h-16 animate-pulse rounded bg-ink-100" />
           </div>
         ))}
       </div>
@@ -1304,7 +1325,7 @@ function PlacementChip({ p }: { p: ProfilePlacement }) {
   return (
     <Link
       href={`/companies/${p.company_id}`}
-      className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground outline-none transition-colors hover:bg-primary/10 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+      className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
       title={[
         p.client_name ?? p.mandate_name ?? "",
         p.engagement_type ? ENGAGEMENT_LABEL[p.engagement_type] : "",
@@ -1315,7 +1336,7 @@ function PlacementChip({ p }: { p: ProfilePlacement }) {
         .filter(Boolean)
         .join(" · ")}
     >
-      <span className="font-medium text-foreground/80">{p.client_name ?? p.mandate_name}</span>
+      <span className="font-medium text-secondary-foreground">{p.client_name ?? p.mandate_name}</span>
       {p.engagement_type && <span>· {ENGAGEMENT_SHORT[p.engagement_type] ?? p.engagement_type}</span>}
     </Link>
   );
@@ -1331,7 +1352,7 @@ function WorkedBy({ placements }: { placements: ProfilePlacement[] }) {
       {shown.map((n) => (
         <span
           key={n}
-          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-foreground/70 ring-1 ring-border"
+          className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-muted text-[9px] font-semibold text-secondary-foreground ring-1 ring-border"
           style={MONO}
         >
           {initialsOf(n)}
@@ -1366,7 +1387,7 @@ function SortHeader({
       <button
         onClick={() => onClick(col)}
         className={cn(
-          "flex w-full items-center gap-1 rounded text-[10px] font-semibold uppercase tracking-[0.12em] outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
+          "flex w-full items-center gap-1 rounded text-xs font-medium outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50",
           active ? "text-foreground" : "text-muted-foreground",
           align === "right" && "justify-end",
         )}
@@ -1613,9 +1634,9 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
 
       {/* ── Facets ── */}
       {showFilters && (
-        <div className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-muted/20 p-3">
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-muted/20 p-3">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Category</label>
+            <label className="text-xs font-medium text-muted-foreground">Category</label>
             <select
               value={categoryId}
               onChange={(e) => patchUrl({ category_id: Number(e.target.value), page: 1 })}
@@ -1630,7 +1651,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Engagement</label>
+            <label className="text-xs font-medium text-muted-foreground">Engagement</label>
             <select
               value={engagementType}
               onChange={(e) => patchUrl({ engagement_type: e.target.value, page: 1 })}
@@ -1645,7 +1666,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Status</label>
+            <label className="text-xs font-medium text-muted-foreground">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => patchUrl({ status: e.target.value, page: 1 })}
@@ -1660,7 +1681,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
             </select>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Min engagements</label>
+            <label className="text-xs font-medium text-muted-foreground">Min engagements</label>
             <select
               value={minEng}
               onChange={(e) => patchUrl({ min_engagements: Number(e.target.value), page: 1 })}
@@ -1712,7 +1733,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
             <button
               key={i}
               onClick={f.clear}
-              className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary-ink outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="inline-flex h-7 items-center gap-1 rounded-md border border-border-strong bg-accent px-2.5 text-xs font-medium text-foreground outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               {f.label}
               <X className="h-3 w-3" aria-hidden />
@@ -1742,7 +1763,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
       {byAnalyst && byAnalyst.length > 0 && (
         <div className="flex flex-wrap gap-2 text-xs">
           {byAnalyst.map((a) => (
-            <span key={a.analyst_name} className="rounded-full border px-2 py-0.5">
+            <span key={a.analyst_name} className="rounded-md border px-2 py-0.5">
               {a.analyst_name}:{" "}
               <span className="font-semibold tabular-nums" style={MONO}>
                 {a.profiles}
@@ -1754,20 +1775,20 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
 
       {/* ── The universe grid ── */}
       {profiles.isError ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card py-16 text-center">
-          <AlertTriangle className="h-6 w-6 text-amber-500" aria-hidden />
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-border bg-card py-16 text-center">
+          <AlertTriangle className="h-5 w-5 text-foreground" aria-hidden />
           <p className="text-sm font-medium">Couldn&rsquo;t load the firm database.</p>
           <button onClick={() => profiles.refetch()} className="text-xs font-medium text-primary-ink hover:underline">
             Try again
           </button>
         </div>
       ) : profiles.isLoading ? (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
           <div className="h-9 border-b border-border bg-muted/20" />
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <div key={n} className="border-b border-border px-4 py-3 last:border-0">
-              <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-              <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-1/3 animate-pulse rounded bg-ink-100" />
+              <div className="mt-2 h-3 w-1/2 animate-pulse rounded bg-ink-100" />
             </div>
           ))}
         </div>
@@ -1778,7 +1799,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
           description={q || activeFilters.length ? "Try widening your search or filters." : "Add companies from an engagement or here."}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-hidden rounded-lg border border-border bg-card">
           <div className="max-h-[calc(100vh-13rem)] overflow-auto">
             <table className="w-full min-w-[352px] border-collapse text-sm">
               <thead>
@@ -1792,7 +1813,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
                         "flex h-4 w-4 items-center justify-center rounded border transition-colors",
                         allPageSelected
                           ? "border-primary bg-primary text-primary-foreground"
-                          : "border-input hover:border-primary/60",
+                          : "border-input hover:border-border-strong",
                       )}
                     >
                       {allPageSelected && <Check className="h-3 w-3" strokeWidth={3} aria-hidden />}
@@ -1821,7 +1842,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
                     key={p.id}
                     className={cn(
                       "group border-b border-border transition-colors last:border-0 hover:bg-muted/40",
-                      selected.has(p.id) && "bg-primary/[0.05] hover:bg-primary/[0.07]",
+                      selected.has(p.id) && "bg-subtle hover:bg-subtle",
                     )}
                   >
                     <td className="w-9 px-2 py-2.5 align-top">
@@ -1834,7 +1855,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
                           selected.has(p.id)
                             ? "border-primary bg-primary text-primary-foreground"
                             : cn(
-                                "border-input hover:border-primary/60",
+                                "border-input hover:border-border-strong",
                                 selected.size > 0 ? "opacity-70" : "opacity-0 group-hover:opacity-100",
                               ),
                         )}
@@ -1857,7 +1878,7 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
                         {p.overlap && (
                           <span
                             title="Worked by more than one analyst"
-                            className="shrink-0 rounded bg-amber-500/[0.12] px-1.5 py-0.5 text-[10px] font-medium text-amber-700/90 dark:text-amber-300/80"
+                            className="shrink-0 rounded-[3px] border border-foreground px-1.5 py-0.5 text-[10px] font-medium text-foreground"
                           >
                             overlap
                           </span>
@@ -1893,14 +1914,14 @@ function FirmWideView({ isPartner }: { isPartner: boolean }) {
                     )}
                     {firmCols.isVisible("revenue") && (
                       <td className="hidden whitespace-nowrap px-3 py-2.5 text-right sm:table-cell">
-                        <span className="text-xs tabular-nums text-foreground/80" style={MONO}>
+                        <span className="text-xs tabular-nums text-secondary-foreground" style={MONO}>
                           {p.revenue_inr_cr ? Number(p.revenue_inr_cr).toLocaleString() : "—"}
                         </span>
                       </td>
                     )}
                     {firmCols.isVisible("headcount") && (
                       <td className="hidden whitespace-nowrap px-3 py-2.5 text-right sm:table-cell">
-                        <span className="text-xs tabular-nums text-foreground/80" style={MONO}>
+                        <span className="text-xs tabular-nums text-secondary-foreground" style={MONO}>
                           {p.headcount ? p.headcount.toLocaleString() : "—"}
                         </span>
                       </td>

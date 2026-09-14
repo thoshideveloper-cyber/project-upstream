@@ -20,12 +20,12 @@ function Histogram({ dim, unit }: { dim: LatencyDimension; unit: string }) {
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <span className="text-xs font-medium text-muted-foreground">
           {unit === "d" ? "Days to reply" : "Touches to reply"}
         </span>
         <span className="text-xs text-muted-foreground">
           median{" "}
-          <span className="font-mono font-semibold tabular-nums text-foreground" style={MONO}>
+          <span className="tabular-nums font-semibold tabular-nums text-foreground" style={MONO}>
             {dim.median == null ? "—" : `${dim.median}${unit === "d" ? "d" : ""}`}
           </span>
         </span>
@@ -33,7 +33,7 @@ function Histogram({ dim, unit }: { dim: LatencyDimension; unit: string }) {
       <ul className="flex flex-col gap-2.5">
         {dim.buckets.map((b) => (
           <li key={b.label} className="flex items-center gap-2.5">
-            <span className="w-12 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground" style={MONO}>
+            <span className="w-12 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground" style={MONO}>
               {b.label}
             </span>
             <div className="relative h-6 flex-1">
@@ -43,7 +43,7 @@ function Histogram({ dim, unit }: { dim: LatencyDimension; unit: string }) {
                 style={{ width: `${b.count > 0 ? Math.max(4, (b.count / max) * 100) : 0}%` }}
               />
             </div>
-            <span className="w-6 shrink-0 text-right font-mono text-[11px] tabular-nums text-muted-foreground" style={MONO}>
+            <span className="w-6 shrink-0 text-right tabular-nums text-[11px] tabular-nums text-muted-foreground" style={MONO}>
               {b.count}
             </span>
           </li>
@@ -75,7 +75,7 @@ export function ReplyTimingPanel({ data }: { data: ReplyTiming }) {
         {thin ? (
           <>
             Thin sample —{" "}
-            <span className="font-mono tabular-nums" style={MONO}>
+            <span className="tabular-nums" style={MONO}>
               {withData}
             </span>{" "}
             timed {withData === 1 ? "reply" : "replies"}. Read as a hint, not a rate.
@@ -83,7 +83,7 @@ export function ReplyTimingPanel({ data }: { data: ReplyTiming }) {
         ) : (
           <>
             Across{" "}
-            <span className="font-mono tabular-nums" style={MONO}>
+            <span className="tabular-nums" style={MONO}>
               {withData}
             </span>{" "}
             timed replies, current cycle only.

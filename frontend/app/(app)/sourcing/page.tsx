@@ -11,7 +11,6 @@ import {
   ChevronsUpDown,
   Database,
   Download,
-  FolderPlus,
   History,
   Import,
   LineChart,
@@ -32,9 +31,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CandidateRow } from "@/components/features/candidate-card";
+import { DatabaseLens } from "@/components/features/database-lens";
 import { PushToDialog } from "@/components/features/push-to-dialog";
 import { SourcingKanban } from "@/components/features/sourcing-kanban";
-import { EmptyState } from "@/components/features/empty-state";
 import { api } from "@/lib/api";
 import { useMandates } from "@/hooks/use-mandates";
 import { useCategories } from "@/hooks/use-categories";
@@ -43,7 +42,9 @@ import {
   useAddCandidate,
   useBulkAddCandidates,
   buildPoolQS,
+  UNCLASSIFIED_SECTOR,
   type PoolFilters,
+  type PoolSegment,
   type RevBand,
 } from "@/hooks/use-candidates";
 import { useSourcingFacets } from "@/hooks/use-sourcing-facets";
@@ -60,21 +61,23 @@ import {
   MONO,
   PAGE_TITLE,
   PAGE_TITLE_STYLE,
+  SEGMENT_META,
   SELECT_CLS,
 } from "@/lib/design";
 import { cn } from "@/lib/utils";
-import type { MandateListItem, MandateType, SourcingPoolItem, SourcingPoolResponse } from "@/types";
+import type { MandateListItem, SourcingPoolItem, SourcingPoolResponse } from "@/types";
 
 const PAGE_SIZE = 25;
 const SCORE_CAP = 200; // server page cap — "Score matches" scores at most this many
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const TYPE_LABEL: Record<string, string> = { TARGET: "Target", BUYER: "Buyer", INVESTOR: "Investor" };
 
 interface Criteria {
   q: string;
   hq: string;
   categoryId: number;
-  type: string;
+  /** Profile-level side of the market. Supersedes the placement-derived `type`. */
+  segment: PoolSegment | "";
+  sector: string;
   band: RevBand | "";
   revMin: string; // legacy saved-search passthrough — no dedicated input
   headcountMin: string;
@@ -86,7 +89,8 @@ const EMPTY_CRITERIA: Criteria = {
   q: "",
   hq: "",
   categoryId: 0,
-  type: "",
+  segment: "",
+  sector: "",
   band: "",
   revMin: "",
   headcountMin: "",
@@ -95,82 +99,51 @@ const EMPTY_CRITERIA: Criteria = {
   sort: "score",
 };
 
-// ── Database lens — the page's signature instrument ─────────────────────────────
-// The left rail reads the firm database back to the analyst: category mix, city
-// mix, size bands, warm doors — each row a mono count over a share-of-database
-// underbar, and each row IS the filter it describes. Discovery starts by seeing
-// what the firm already owns, not by typing into a blank box. The Outreach desk's
-// rail reads TIME, the Master List's tape reads STATE; the lens reads the POOL.
-
-function LensRow({
-  label,
-  count,
-  total,
-  active,
-  icon,
-  onClick,
-}: {
-  label: string;
-  count: number;
-  total: number;
-  active: boolean;
-  icon?: React.ReactNode;
-  onClick: () => void;
-}) {
-  const share = total > 0 ? (count / total) * 100 : 0;
-  const quiet = count === 0;
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      disabled={quiet && !active}
-      className={cn(
-        "group/lens flex w-full flex-col gap-1 rounded-md px-2 py-1.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-        active ? "bg-primary/[0.08] ring-1 ring-primary/30" : "hover:bg-muted/60",
-        quiet && !active && "cursor-default opacity-45",
-      )}
-    >
-      <span className="flex w-full items-baseline justify-between gap-2">
-        <span
-          className={cn(
-            "flex min-w-0 items-center gap-1.5 truncate text-xs",
-            active ? "font-medium text-foreground" : "text-muted-foreground group-hover/lens:text-foreground",
-          )}
-        >
-          {icon}
-          <span className="truncate">{label}</span>
-        </span>
-        <span
-          className={cn("shrink-0 text-[11px] font-semibold tabular-nums", active ? "text-primary-ink" : "text-foreground/70")}
-          style={MONO}
-        >
-          {count}
-        </span>
-      </span>
-      <span className="h-[2px] w-full overflow-hidden rounded-full bg-foreground/[0.06]">
-        <span
-          className={cn("horizon-load block h-full rounded-full", active ? "bg-primary" : "bg-foreground/25")}
-          style={{ width: `${quiet ? 0 : Math.max(3, share)}%` }}
-        />
-      </span>
-    </button>
-  );
-}
-
-function LensGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        {title}
-      </div>
-      <div className="flex flex-col gap-0.5">{children}</div>
-    </div>
-  );
-}
+// The left rail (components/features/database-lens.tsx) reads the firm database back to
+// the analyst: its size, its shape by side of the market, sector and city mix, and how
+// much of it is actually filled in — each row also being the filter it describes.
+// Discovery starts by seeing what the firm already owns, not by typing into a blank box.
+// The Outreach desk's rail reads TIME, the Master List's tape reads STATE; this reads the
+// DATABASE.
 
 // ── Engagement switch — the deal-context anchor in the command line ─────────────
 // Fit scores, warm history, and pushes are all computed against this engagement;
 // it reads as the page title so the context is never in doubt.
+
+/**
+ * The command line when there is no engagement yet.
+ *
+ * The pool is the firm's own company database — it is worth searching on day one, before
+ * a single deal exists, which is why this screen no longer refuses to open. It says what
+ * a deal would add rather than pretending there is nothing here.
+ */
+function DatabaseModeHeader({ total, isPartner }: { total?: number; isPartner: boolean }) {
+  return (
+    <div className="min-w-0">
+      <h1 className={PAGE_TITLE} style={PAGE_TITLE_STYLE}>
+        Company database
+      </h1>
+      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+        <span data-testid="database-mode-note">
+          {total != null
+            ? `${total.toLocaleString("en-IN")} companies on file · no deal open`
+            : "No deal open"}
+        </span>
+        <span aria-hidden>·</span>
+        {isPartner ? (
+          <span>
+            <Link href="/projects" className="font-medium text-primary-ink hover:underline">
+              Open a deal
+            </Link>{" "}
+            to score these against its thesis
+          </span>
+        ) : (
+          <span>ask a partner to assign you a deal to score and push from here</span>
+        )}
+      </p>
+    </div>
+  );
+}
 
 function EngagementSwitch({
   mandates,
@@ -187,7 +160,7 @@ function EngagementSwitch({
     // collapsing to its siblings' intrinsic width (which ellipsised it).
     <div className="min-w-0 grow basis-72">
       <div className="flex items-center gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">Sourcing for</span>
+        <span className="text-xs font-medium text-muted-foreground">Sourcing for</span>
         {current && (
           <span className={cn("rounded px-1.5 py-px text-[11px] font-medium", DEAL_TYPE_STYLE[current.type])}>
             {ENGAGEMENT_TYPE_LABEL[current.type]}
@@ -229,10 +202,69 @@ function EngagementSwitch({
         </DropdownMenuContent>
       </DropdownMenu>
       <p className="mt-0.5 truncate text-sm text-muted-foreground">
-        {label.secondary && <span className="text-foreground/80">{label.secondary}</span>}
+        {label.secondary && <span className="text-secondary-foreground">{label.secondary}</span>}
         {label.secondary && current && " · "}
         {current && <span>{ENGAGEMENT_SIDE_HINT[current.type]}</span>}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Side of the market as a segmented control, not a select.
+ *
+ * Three values, each one of the highest-traffic narrowings on the page, and each carrying
+ * a count worth seeing — that is a segmented control's exact job. A `<select>` would hide
+ * both the options and their sizes behind a click.
+ */
+function SideSwitch({
+  value,
+  counts,
+  onChange,
+}: {
+  value: PoolSegment | "";
+  counts: Partial<Record<PoolSegment, number>>;
+  onChange: (v: PoolSegment | "") => void;
+}) {
+  const present = (Object.keys(SEGMENT_META) as PoolSegment[]).filter((s) => counts[s]);
+  if (present.length < 2) return null;
+  return (
+    <div
+      role="group"
+      aria-label="Side of the market"
+      className="inline-flex h-8 items-center rounded-lg bg-muted p-[3px] text-xs"
+    >
+      {[{ key: "" as const, label: "All" }, ...present.map((s) => ({ key: s, label: SEGMENT_META[s].plural }))].map(
+        (opt) => {
+          const active = value === opt.key;
+          return (
+            <button
+              key={opt.key || "all"}
+              onClick={() => onChange(opt.key)}
+              aria-pressed={active}
+              className={cn(
+                "inline-flex h-full items-center gap-1.5 rounded-md px-2.5 font-medium outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring/50",
+                active
+                  ? "bg-background text-foreground shadow-sm dark:bg-input/40"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {opt.key && (
+                <span
+                  className={cn("h-1.5 w-1.5 rounded-full", SEGMENT_META[opt.key].bar)}
+                  aria-hidden
+                />
+              )}
+              {opt.label}
+              {opt.key && (
+                <span className="tabular-nums text-muted-foreground" style={MONO}>
+                  {counts[opt.key]}
+                </span>
+              )}
+            </button>
+          );
+        },
+      )}
     </div>
   );
 }
@@ -256,8 +288,8 @@ function ToggleChip({
       className={cn(
         "inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
         active
-          ? "border-primary/50 bg-primary/10 text-primary-ink"
-          : "border-input text-muted-foreground hover:border-primary/40 hover:text-foreground",
+          ? "border-border-strong bg-accent text-primary-ink"
+          : "border-input text-muted-foreground hover:border-border-strong hover:text-foreground",
       )}
     >
       {icon}
@@ -276,6 +308,9 @@ export default function SourcingPage() {
   const [c, setC] = useState<Criteria>(EMPTY_CRITERIA);
   const [qDebounced, setQDebounced] = useState("");
   const [page, setPage] = useState(1);
+  // `sort` defaults to "score", which is meaningless with no deal open — the server
+  // silently orders by name there, so the state follows the server rather than the label
+  // claiming an order the list does not have.
   const [view, setView] = useState<"discover" | "funnel">("discover");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -288,6 +323,12 @@ export default function SourcingPage() {
   const mandateList = mandates?.items ?? [];
   const effectiveMandate = mandateId || mandateList[0]?.id || 0;
   const currentDeal = mandateList.find((m) => m.id === effectiveMandate);
+  /**
+   * The pool is the firm's standing company database, not a per-deal list — so with no
+   * engagement yet it still opens, searchable, in "database mode". What a deal *adds*
+   * is the overlay: funnel stages, AI scores, and pushing a company onto a book.
+   */
+  const databaseMode = effectiveMandate === 0;
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -305,17 +346,18 @@ export default function SourcingPage() {
   /** The current query, minus paging — reused by results, CSV export, and Score matches. */
   const criteria = useMemo(
     () => ({
-      mandate_id: effectiveMandate,
+      mandate_id: effectiveMandate || undefined,
       q: qDebounced || undefined,
       hq: c.hq || undefined,
       category_id: c.categoryId || undefined,
-      type: c.type || undefined,
+      segment: c.segment || undefined,
+      sector: c.sector || undefined,
       rev_min: c.revMin || undefined,
       rev_band: c.band || undefined,
       headcount_min: c.headcountMin ? Number(c.headcountMin) : undefined,
       has_score: c.hasScore || undefined,
       warm_only: c.warmOnly || undefined,
-      sort: c.sort,
+      sort: !effectiveMandate && c.sort === "score" ? "name" : c.sort,
     }),
     [effectiveMandate, qDebounced, c],
   );
@@ -324,7 +366,7 @@ export default function SourcingPage() {
     [criteria, page],
   );
 
-  const pool = usePool(filters, effectiveMandate > 0 && view === "discover");
+  const pool = usePool(filters, view === "discover");
   const { data, isLoading, isFetching, isError } = pool;
   const { data: facets } = useSourcingFacets(effectiveMandate || undefined);
   const { data: coverage } = useFunnelAnalytics(effectiveMandate || undefined);
@@ -344,15 +386,47 @@ export default function SourcingPage() {
   const poolTotal = facets?.total;
   const inFunnel = coverage?.pool_coverage.in_funnel;
 
+  // Facet-derived shape of the database. These decide which controls are worth rendering:
+  // the deck grows as the firm's data does, instead of shipping dead selects on day one.
+  const segmentCounts = useMemo(
+    () =>
+      Object.fromEntries((facets?.by_segment ?? []).map((s) => [s.segment, s.count])) as Partial<
+        Record<PoolSegment, number>
+      >,
+    [facets],
+  );
+  const sectorOptions = facets?.by_sector ?? [];
+  const sizedTotal = useMemo(
+    () => (facets?.size_bands ?? []).reduce((sum, b) => sum + b.count, 0),
+    [facets],
+  );
+
+  /**
+   * Every narrowing currently in force, as removable chips.
+   *
+   * The rail, the deck and the saved searches can all narrow the list, so without one
+   * place that states the whole query an analyst can end up staring at 3 results and no
+   * explanation. Each chip drops exactly the criterion it names.
+   */
   const activeCriteria = useMemo(
     () =>
       [
+        c.segment && {
+          label: SEGMENT_META[c.segment].plural,
+          clear: () => set("segment", "" as const),
+        },
+        c.sector && {
+          label:
+            c.sector === UNCLASSIFIED_SECTOR
+              ? "Unclassified sector"
+              : c.sector,
+          clear: () => set("sector", ""),
+        },
         c.categoryId && {
           label: categories?.items.find((x) => x.id === c.categoryId)?.name ?? "Category",
           clear: () => set("categoryId", 0),
         },
-        c.type && { label: TYPE_LABEL[c.type] ?? c.type, clear: () => set("type", "") },
-        c.hq && { label: `HQ: ${c.hq}`, clear: () => set("hq", "") },
+        c.hq && { label: c.hq, clear: () => set("hq", "") },
         c.band && {
           label: facets?.size_bands.find((b) => b.key === c.band)?.label ?? "Size",
           clear: () => set("band", ""),
@@ -476,7 +550,8 @@ export default function SourcingPage() {
           q: qDebounced || undefined,
           hq: c.hq || undefined,
           category_id: c.categoryId || undefined,
-          type: c.type || undefined,
+          segment: c.segment || undefined,
+          sector: c.sector || undefined,
           rev_band: c.band || undefined,
           rev_min: c.revMin || undefined,
           headcount_min: c.headcountMin ? Number(c.headcountMin) : undefined,
@@ -498,7 +573,11 @@ export default function SourcingPage() {
       q: (criteria.q as string) ?? "",
       hq: (criteria.hq as string) ?? "",
       categoryId: (criteria.category_id as number) ?? 0,
-      type: (criteria.type as string) ?? "",
+      // Searches saved before segment existed carry the old placement-derived `type`.
+      // TARGET/BUYER/INVESTOR are the same three words in both, so the old value still
+      // means what the analyst meant — it just narrows better now.
+      segment: ((criteria.segment ?? criteria.type) as PoolSegment) ?? "",
+      sector: (criteria.sector as string) ?? "",
       band: (criteria.rev_band as RevBand) ?? "",
       revMin: (criteria.rev_min as string) ?? "",
       headcountMin: criteria.headcount_min ? String(criteria.headcount_min) : "",
@@ -581,40 +660,12 @@ export default function SourcingPage() {
   if (!mandates) {
     return (
       <div className="flex flex-col gap-4 p-4 sm:p-6">
-        <div className="h-6 w-40 animate-pulse rounded bg-muted" />
-        <div className="h-32 animate-pulse rounded-xl bg-muted" />
+        <div className="h-6 w-40 animate-pulse rounded bg-ink-100" />
+        <div className="h-32 animate-pulse rounded-lg bg-ink-100" />
         <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
-          <div className="hidden h-72 animate-pulse rounded-xl bg-muted lg:block" />
-          <div className="h-72 animate-pulse rounded-xl bg-muted" />
+          <div className="hidden h-72 animate-pulse rounded-lg bg-ink-100 lg:block" />
+          <div className="h-72 animate-pulse rounded-lg bg-ink-100" />
         </div>
-      </div>
-    );
-  }
-
-  if (mandateList.length === 0) {
-    return (
-      <div className="flex flex-col gap-4">
-        <h1 className={PAGE_TITLE} style={PAGE_TITLE_STYLE}>
-          Sourcing
-        </h1>
-        <EmptyState
-          icon={FolderPlus}
-          title="No engagements to source for yet"
-          description={
-            user?.role === "PARTNER"
-              ? "Sourcing scores and pushes companies against a specific deal. Create a project and an engagement (sell-side, buy-side, or capital-raise) to begin."
-              : "You have no assigned engagements yet. Ask a partner to assign you to a deal, then come back to source companies for it."
-          }
-          action={
-            user?.role === "PARTNER" ? (
-              <Link href="/projects">
-                <Button size="sm">
-                  <FolderPlus className="mr-1.5 h-3.5 w-3.5" /> Go to Projects
-                </Button>
-              </Link>
-            ) : undefined
-          }
-        />
       </div>
     );
   }
@@ -623,8 +674,19 @@ export default function SourcingPage() {
     <div className="flex flex-col gap-4">
       {/* ── Command line — deal context left; view switch + occasional tools right ── */}
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
-        <EngagementSwitch mandates={mandateList} current={currentDeal} onSelect={selectEngagement} />
+        {databaseMode ? (
+          <DatabaseModeHeader total={poolTotal} isPartner={user?.role === "PARTNER"} />
+        ) : (
+          <EngagementSwitch
+            mandates={mandateList}
+            current={currentDeal}
+            onSelect={selectEngagement}
+          />
+        )}
         <div className="flex flex-wrap items-center gap-2">
+          {/* A tab group of one is not a choice. With no deal open there is no funnel to
+              switch to, so the switch itself stays away. */}
+          {!databaseMode && (
           <div
             role="tablist"
             aria-label="Sourcing view"
@@ -665,6 +727,7 @@ export default function SourcingPage() {
               );
             })}
           </div>
+          )}
           <Link href="/sourcing/import">
             <Button variant="outline" size="sm" className="h-9">
               <Import className="mr-1.5 h-3.5 w-3.5" aria-hidden /> Import
@@ -684,7 +747,7 @@ export default function SourcingPage() {
         ) : (
           <>
             {/* ── Query deck — ask the database ── */}
-            <section className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:p-5">
+            <section className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4 sm:p-5">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-ink" aria-hidden />
                 <Input
@@ -699,7 +762,7 @@ export default function SourcingPage() {
                       ? `Search ${poolTotal.toLocaleString("en-IN")} companies — name, city, or domain…`
                       : "Search the firm database — name, city, or domain…"
                   }
-                  className="h-12 rounded-xl pl-11 !text-[15px]"
+                  className="h-12 rounded-lg pl-11 !text-[15px]"
                 />
                 {c.q && (
                   <button
@@ -712,47 +775,61 @@ export default function SourcingPage() {
                 )}
               </div>
 
-              {/* Criteria — always visible; discovery filters are first-class here */}
+              {/* Criteria — always visible; discovery filters are first-class here.
+                  Controls that can only read a *placement* (category, revenue size) render
+                  solely once the firm's book gives them something to say. A select whose
+                  every option returns nothing is worse than no select. */}
               <div className="flex flex-wrap items-center gap-2">
-                <select
-                  value={c.categoryId}
-                  onChange={(e) => set("categoryId", Number(e.target.value))}
-                  className={SELECT_CLS}
-                  aria-label="Category"
-                >
-                  <option value={0}>All categories</option>
-                  {categories?.items.map((x) => (
-                    <option key={x.id} value={x.id}>
-                      {x.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={c.type}
-                  onChange={(e) => set("type", e.target.value)}
-                  className={SELECT_CLS}
-                  aria-label="Counterparty type"
-                >
-                  <option value="">Any type</option>
-                  {Object.entries(TYPE_LABEL).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={c.band}
-                  onChange={(e) => set("band", e.target.value as Criteria["band"])}
-                  className={SELECT_CLS}
-                  aria-label="Revenue size"
-                >
-                  <option value="">Any size</option>
-                  {(facets?.size_bands ?? []).map((b) => (
-                    <option key={b.key} value={b.key}>
-                      {b.label}
-                    </option>
-                  ))}
-                </select>
+                <SideSwitch
+                  value={c.segment}
+                  counts={segmentCounts}
+                  onChange={(v) => set("segment", v)}
+                />
+                {sectorOptions.length > 0 && (
+                  <select
+                    value={c.sector}
+                    onChange={(e) => set("sector", e.target.value)}
+                    className={SELECT_CLS}
+                    aria-label="Sector"
+                  >
+                    <option value="">Any sector</option>
+                    {sectorOptions.map((s) => (
+                      <option key={s.sector} value={s.sector}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {(categories?.items.length ?? 0) > 0 && (facets?.by_category.length ?? 0) > 0 && (
+                  <select
+                    value={c.categoryId}
+                    onChange={(e) => set("categoryId", Number(e.target.value))}
+                    className={SELECT_CLS}
+                    aria-label="Category"
+                  >
+                    <option value={0}>All categories</option>
+                    {categories?.items.map((x) => (
+                      <option key={x.id} value={x.id}>
+                        {x.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {sizedTotal > 0 && (
+                  <select
+                    value={c.band}
+                    onChange={(e) => set("band", e.target.value as Criteria["band"])}
+                    className={SELECT_CLS}
+                    aria-label="Revenue size"
+                  >
+                    <option value="">Any size</option>
+                    {(facets?.size_bands ?? []).map((b) => (
+                      <option key={b.key} value={b.key}>
+                        {b.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <Input
                   value={c.hq}
                   onChange={(e) => set("hq", e.target.value)}
@@ -760,33 +837,29 @@ export default function SourcingPage() {
                   aria-label="HQ city"
                   className="h-8 w-28 text-xs"
                 />
-                <Input
-                  inputMode="numeric"
-                  value={c.headcountMin}
-                  onChange={(e) => set("headcountMin", e.target.value)}
-                  placeholder="Staff ≥"
-                  aria-label="Minimum headcount"
-                  className="h-8 w-20 text-xs"
-                />
+                {sizedTotal > 0 && (
+                  <Input
+                    inputMode="numeric"
+                    value={c.headcountMin}
+                    onChange={(e) => set("headcountMin", e.target.value)}
+                    placeholder="Staff ≥"
+                    aria-label="Minimum headcount"
+                    className="h-8 w-20 text-xs"
+                  />
+                )}
                 <ToggleChip
                   label="Worked before"
                   active={c.warmOnly}
                   icon={<History className="h-3 w-3" aria-hidden />}
                   onClick={() => set("warmOnly", !c.warmOnly)}
                 />
-                <ToggleChip
-                  label="Scored"
-                  active={c.hasScore}
-                  icon={<Sparkles className="h-3 w-3" aria-hidden />}
-                  onClick={() => set("hasScore", !c.hasScore)}
-                />
-                {activeCount > 0 && (
-                  <button
-                    onClick={resetCriteria}
-                    className="rounded text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-                  >
-                    Reset
-                  </button>
+                {!databaseMode && (
+                  <ToggleChip
+                    label="Scored"
+                    active={c.hasScore}
+                    icon={<Sparkles className="h-3 w-3" aria-hidden />}
+                    onClick={() => set("hasScore", !c.hasScore)}
+                  />
                 )}
                 <div className="ml-auto">
                   {savingSearch ? (
@@ -839,15 +912,18 @@ export default function SourcingPage() {
                   {isFetching && !isLoading && <Loader2 className="h-3 w-3 animate-spin" aria-hidden />}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* "Best fit" needs a thesis to be a fit *to*, and revenue needs revenue
+                      on file. Offering either where it silently falls back to name order
+                      would make the control lie about how the list is ordered. */}
                   <select
                     value={c.sort}
                     onChange={(e) => set("sort", e.target.value as PoolFilters["sort"])}
                     className={SELECT_CLS}
                     aria-label="Sort results"
                   >
-                    <option value="score">Sort: Best fit</option>
+                    {!databaseMode && <option value="score">Sort: Best fit</option>}
                     <option value="name">Sort: Name</option>
-                    <option value="rev">Sort: Revenue</option>
+                    {sizedTotal > 0 && <option value="rev">Sort: Revenue</option>}
                   </select>
                   <a
                     href={csvHref}
@@ -857,28 +933,66 @@ export default function SourcingPage() {
                   >
                     <Download className="h-3.5 w-3.5" aria-hidden />
                   </a>
-                  <Button
-                    size="sm"
-                    className="h-8"
-                    onClick={scoreMatches}
-                    disabled={scoringMatches || total === 0}
-                    title={`AI-score every match (up to ${SCORE_CAP}) against this deal's thesis — they join Research / Long-list`}
-                  >
-                    {scoringMatches ? (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden />
-                    ) : (
-                      <Sparkles className="mr-1.5 h-3.5 w-3.5" aria-hidden />
-                    )}
-                    {scoringMatches ? "Scoring…" : "Score matches"}
-                  </Button>
+                  {/* Scoring is *against a thesis*, so it needs a deal. With none open the
+                      page's strongest affordance would be a dead amber button — so it
+                      states the prerequisite in the quiet register instead. */}
+                  {databaseMode ? (
+                    <span className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs text-muted-foreground ring-1 ring-border">
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                      Open a deal to score
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="h-8"
+                      onClick={scoreMatches}
+                      disabled={scoringMatches || total === 0}
+                      title={`AI-score every match (up to ${SCORE_CAP}) against this deal's thesis — they join Research / Long-list`}
+                    >
+                      {scoringMatches ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden />
+                      ) : (
+                        <Sparkles className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                      )}
+                      {scoringMatches ? "Scoring…" : "Score matches"}
+                    </Button>
+                  )}
                 </div>
               </div>
             </section>
 
+            {/* ── The query, stated — every narrowing in force, each one removable ── */}
+            {activeCount > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={LABEL}>Narrowed by</span>
+                {activeCriteria.map((crit) => (
+                  <span
+                    key={crit.label}
+                    className="inline-flex items-center gap-0.5 rounded-full bg-subtle py-0.5 pl-2.5 pr-1 text-xs font-medium text-primary-ink ring-1 ring-border-strong"
+                  >
+                    {crit.label}
+                    <button
+                      onClick={crit.clear}
+                      aria-label={`Remove filter ${crit.label}`}
+                      className="inline-flex h-5 w-5 items-center justify-center rounded-full outline-none transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50"
+                    >
+                      <X className="h-3 w-3" aria-hidden />
+                    </button>
+                  </span>
+                ))}
+                <button
+                  onClick={resetCriteria}
+                  className="rounded px-1 text-xs font-medium text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+
             {/* ── Saved searches ── */}
             {(savedSearches.data?.items.length ?? 0) > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-xs text-muted-foreground">Saved:</span>
+                <span className={LABEL}>Saved</span>
                 {savedSearches.data!.items.map((s) => (
                   <span key={s.id} className="inline-flex items-center gap-0.5 rounded-full border py-0.5 pl-2.5 pr-1 text-xs">
                     <button
@@ -900,94 +1014,28 @@ export default function SourcingPage() {
             )}
 
             {/* ── Lens + results ── */}
-            <div className="grid items-start gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
-              {/* Database lens — composition of the pool; every row is also a filter */}
-              <aside className="sticky top-4 hidden flex-col gap-4 rounded-xl border border-border bg-card p-3 lg:flex">
-                <div className="px-2">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    The database
-                  </div>
-                  <div className="mt-0.5 text-lg font-semibold leading-none tabular-nums" style={MONO}>
-                    {poolTotal != null ? poolTotal.toLocaleString("en-IN") : "—"}
-                  </div>
-                  <div className="mt-0.5 text-[11px] text-muted-foreground">companies, firm-wide</div>
-                </div>
-                {facets ? (
-                  <>
-                    <LensGroup title="Signals">
-                      <LensRow
-                        label="Worked before"
-                        icon={<History className="h-3 w-3 shrink-0 text-primary-ink/70" aria-hidden />}
-                        count={facets.warm}
-                        total={facets.total}
-                        active={c.warmOnly}
-                        onClick={() => set("warmOnly", !c.warmOnly)}
-                      />
-                      <LensRow
-                        label="Scored for this deal"
-                        icon={<Sparkles className="h-3 w-3 shrink-0 text-primary-ink/70" aria-hidden />}
-                        count={facets.scored}
-                        total={facets.total}
-                        active={c.hasScore}
-                        onClick={() => set("hasScore", !c.hasScore)}
-                      />
-                    </LensGroup>
-                    {facets.by_category.length > 0 && (
-                      <LensGroup title="Category">
-                        {facets.by_category.slice(0, 8).map((cat) => (
-                          <LensRow
-                            key={cat.id}
-                            label={cat.name}
-                            count={cat.count}
-                            total={facets.total}
-                            active={c.categoryId === cat.id}
-                            onClick={() => set("categoryId", c.categoryId === cat.id ? 0 : cat.id)}
-                          />
-                        ))}
-                      </LensGroup>
-                    )}
-                    {facets.by_hq.length > 0 && (
-                      <LensGroup title="HQ">
-                        {facets.by_hq.map((h) => (
-                          <LensRow
-                            key={h.hq}
-                            label={h.hq}
-                            count={h.count}
-                            total={facets.total}
-                            active={c.hq.toLowerCase() === h.hq.toLowerCase()}
-                            onClick={() => set("hq", c.hq.toLowerCase() === h.hq.toLowerCase() ? "" : h.hq)}
-                          />
-                        ))}
-                      </LensGroup>
-                    )}
-                    <LensGroup title="Size">
-                      {facets.size_bands.map((b) => (
-                        <LensRow
-                          key={b.key}
-                          label={b.label}
-                          count={b.count}
-                          total={facets.total}
-                          active={c.band === b.key}
-                          onClick={() => set("band", c.band === b.key ? "" : b.key)}
-                        />
-                      ))}
-                    </LensGroup>
-                  </>
-                ) : (
-                  <div className="flex flex-col gap-2 px-2">
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <div key={n} className="h-6 animate-pulse rounded bg-muted" />
-                    ))}
-                  </div>
-                )}
-              </aside>
+            <div className="grid items-start gap-5 lg:grid-cols-[248px_minmax(0,1fr)]">
+              <DatabaseLens
+                facets={facets}
+                databaseMode={databaseMode}
+                selection={{
+                  warmOnly: c.warmOnly,
+                  hasScore: c.hasScore,
+                  segment: c.segment,
+                  sector: c.sector,
+                  hq: c.hq,
+                  band: c.band,
+                  categoryId: c.categoryId,
+                }}
+                onChange={(key, value) => set(key, value as Criteria[typeof key])}
+              />
 
               {/* Results */}
               <div className="flex min-w-0 flex-col gap-4">
-                <div className="overflow-hidden rounded-xl border border-border bg-card">
+                <div className="overflow-hidden rounded-lg border border-border bg-card">
                   {isError ? (
                     <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-                      <AlertTriangle className="h-6 w-6 text-amber-500" aria-hidden />
+                      <AlertTriangle className="h-5 w-5 text-foreground" aria-hidden />
                       <p className="text-sm font-medium">Couldn&rsquo;t load the database.</p>
                       <button onClick={() => pool.refetch()} className="text-xs font-medium text-primary-ink hover:underline">
                         Try again
@@ -997,36 +1045,49 @@ export default function SourcingPage() {
                     <div className="divide-y divide-border">
                       {[1, 2, 3, 4, 5, 6].map((n) => (
                         <div key={n} className="flex items-stretch">
-                          <div className="w-[58px] shrink-0 animate-pulse bg-muted/60" />
+                          <div className="w-[58px] shrink-0 animate-pulse bg-ink-100" />
                           <div className="flex-1 space-y-2 px-4 py-3.5">
-                            <div className="h-3.5 w-1/3 animate-pulse rounded bg-muted" />
-                            <div className="h-3 w-1/2 animate-pulse rounded bg-muted/70" />
+                            <div className="h-3.5 w-1/3 animate-pulse rounded bg-ink-100" />
+                            <div className="h-3 w-1/2 animate-pulse rounded bg-ink-100" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                    <div className="mx-auto flex max-w-sm flex-col items-center justify-center gap-2 px-6 py-16 text-center">
                       <Database className="h-6 w-6 text-muted-foreground" aria-hidden />
                       <p className="text-sm font-medium">
                         {poolTotal === 0 ? "The database is empty." : "No companies match."}
                       </p>
                       {poolTotal === 0 ? (
-                        <Link href="/sourcing/import" className="text-xs font-medium text-primary-ink hover:underline">
-                          Import your first list to start sourcing
-                        </Link>
+                        <>
+                          <p className="text-xs text-muted-foreground">
+                            Every firm starts with a research pool of real companies. Yours has
+                            none on file — import a list and it becomes searchable here.
+                          </p>
+                          <Link href="/import" className="text-xs font-medium text-primary-ink hover:underline">
+                            Import a workbook
+                          </Link>
+                        </>
                       ) : activeCount > 0 || qDebounced ? (
-                        <button
-                          onClick={() => {
-                            resetCriteria();
-                            set("q", "");
-                          }}
-                          className="text-xs font-medium text-primary-ink hover:underline"
-                        >
-                          Clear search &amp; criteria
-                        </button>
+                        <>
+                          <p className="text-xs text-muted-foreground">
+                            {qDebounced
+                              ? `Nothing in the ${poolTotal?.toLocaleString("en-IN")}-company database matches “${qDebounced}”${activeCount > 0 ? " with these filters" : ""}.`
+                              : "These filters exclude every company in the database."}
+                          </p>
+                          <button
+                            onClick={() => {
+                              resetCriteria();
+                              set("q", "");
+                            }}
+                            className="text-xs font-medium text-primary-ink hover:underline"
+                          >
+                            Clear search &amp; criteria
+                          </button>
+                        </>
                       ) : (
-                        <Link href="/sourcing/import" className="text-xs font-medium text-primary-ink hover:underline">
+                        <Link href="/import" className="text-xs font-medium text-primary-ink hover:underline">
                           Import a list to grow the database
                         </Link>
                       )}
@@ -1039,17 +1100,21 @@ export default function SourcingPage() {
                           data-row-index={i}
                           className={cn(
                             "data-row",
-                            fi === i && "bg-primary/[0.05] ring-1 ring-inset ring-primary/40",
+                            fi === i && "bg-subtle ring-1 ring-inset ring-border-strong",
                           )}
                           style={{ "--row-i": Math.min(i, 14) } as CSSProperties}
                         >
                           <CandidateRow
                             item={item}
                             index={i}
-                            onShortlist={shortlist}
-                            onPush={setPushTarget}
+                            // Shortlist and Push both write onto a *deal*; with none
+                            // selected the row is a database record, not a candidate.
+                            onShortlist={databaseMode ? undefined : shortlist}
+                            onPush={databaseMode ? undefined : setPushTarget}
                             onFeedback={sendFeedback}
-                            selectable
+                            // Selection exists to drive the bulk deal actions, so it is
+                            // off when there is no deal to act on.
+                            selectable={!databaseMode}
                             selected={selected.has(item.profile_id)}
                             anySelected={selected.size > 0}
                             onToggleSelect={toggleSelect}
@@ -1087,11 +1152,11 @@ export default function SourcingPage() {
                 {/* Shortcut hint — one quiet line under the work, not chrome above it. */}
                 {items.length > 0 && (
                   <p className="hidden text-center text-[11px] text-muted-foreground lg:block">
-                    <kbd className="rounded border bg-muted px-1 font-mono">j</kbd>/<kbd className="rounded border bg-muted px-1 font-mono">k</kbd> move ·{" "}
-                    <kbd className="rounded border bg-muted px-1 font-mono">x</kbd> select ·{" "}
-                    <kbd className="rounded border bg-muted px-1 font-mono">s</kbd> shortlist ·{" "}
-                    <kbd className="rounded border bg-muted px-1 font-mono">p</kbd> push ·{" "}
-                    <kbd className="rounded border bg-muted px-1 font-mono">e</kbd> why
+                    <kbd className="rounded border bg-muted px-1 tabular-nums">j</kbd>/<kbd className="rounded border bg-muted px-1 tabular-nums">k</kbd> move ·{" "}
+                    <kbd className="rounded border bg-muted px-1 tabular-nums">x</kbd> select ·{" "}
+                    <kbd className="rounded border bg-muted px-1 tabular-nums">s</kbd> shortlist ·{" "}
+                    <kbd className="rounded border bg-muted px-1 tabular-nums">p</kbd> push ·{" "}
+                    <kbd className="rounded border bg-muted px-1 tabular-nums">e</kbd> why
                   </p>
                 )}
               </div>
@@ -1100,10 +1165,10 @@ export default function SourcingPage() {
         )}
       </div>
 
-      {/* ── Bulk action bar ── */}
-      {selected.size > 0 && view === "discover" && (
+      {/* ── Bulk action bar — every action on it writes onto a deal ── */}
+      {selected.size > 0 && view === "discover" && !databaseMode && (
         <div
-          className="bar-rise fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-primary/20 bg-card px-4 py-2 shadow-lg shadow-primary/5"
+          className="bar-rise fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border-strong bg-card px-4 py-2 shadow-lg shadow-primary/5"
           role="status"
         >
           <span className="text-sm font-medium">

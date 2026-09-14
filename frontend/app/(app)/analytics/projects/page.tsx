@@ -22,7 +22,7 @@ import { PanelEmpty, PanelError } from "@/components/analytics/states";
 import { DEAL_TYPE_SHORT, DEAL_TYPE_STYLE, MONO } from "@/lib/design";
 import { Skeleton } from "@/components/ui/skeleton";
 import { bookComposition, isThin, MIN_N, pctLabel, replyRate } from "@/lib/analytics";
-import { DISPLAY, LABEL } from "@/lib/design";
+import { DISPLAY } from "@/lib/design";
 import { cn } from "@/lib/utils";
 import type { EngagementAnalytics, ProjectAnalyticsItem } from "@/types";
 
@@ -50,12 +50,12 @@ function Panel({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-xl bg-card p-4 ring-1 ring-border", className)}>
+    <section className={cn("rounded-lg bg-card p-4 ring-1 ring-border", className)}>
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <h2 className="text-sm font-semibold text-foreground">
           {title}
         </h2>
-        {hint && <p className="text-[11px] text-muted-foreground">{hint}</p>}
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
       {children}
     </section>
@@ -101,8 +101,8 @@ function Pill({
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px]",
-        tone === "warn" && "bg-destructive/10 text-destructive-ink",
-        tone === "cold" && "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+        tone === "warn" && "bg-danger-soft font-medium text-danger-ink ring-1 ring-inset ring-danger-line",
+        tone === "cold" && "bg-muted text-muted-foreground ring-1 ring-inset ring-border",
         !tone && "bg-muted text-muted-foreground",
       )}
     >
@@ -174,7 +174,7 @@ function ProjectCard({ item }: { item: ProjectAnalyticsItem }) {
   const h = item.headline;
 
   return (
-    <div className="hover-lift overflow-hidden rounded-xl bg-card ring-1 ring-border">
+    <div className="hover-lift overflow-hidden rounded-lg bg-card ring-1 ring-border">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -274,7 +274,7 @@ function AnalystTable() {
                   <th
                     key={h}
                     className={cn(
-                      "py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground",
+                      "py-2 text-xs font-medium text-muted-foreground",
                       i === 0 ? "px-1 text-left" : "px-3 text-right",
                     )}
                   >
@@ -418,7 +418,7 @@ export default function AnalyticsProjectsPage() {
             showSkeleton ? (
               <div className="flex flex-col gap-3">
                 {[0, 1, 2].map((n) => (
-                  <Skeleton key={n} className="h-32 rounded-xl" />
+                  <Skeleton key={n} className="h-32 rounded-lg" />
                 ))}
               </div>
             ) : null

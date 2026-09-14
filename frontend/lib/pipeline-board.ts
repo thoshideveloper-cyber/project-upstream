@@ -19,50 +19,45 @@ export const PIPELINE_COLUMNS = [
     id: "NOT_CONTACTED",
     label: "Not contacted",
     hint: "No email logged yet",
-    dot: "bg-muted-foreground/40",
-    edge: "border-l-muted-foreground/40",
+    dot: "hb hb-0",
   },
   {
     id: "CONTACTED",
     label: "In cadence",
     hint: "Chasing on schedule",
-    dot: "bg-sky-500",
-    edge: "border-l-sky-500/70",
+    dot: "hb hb-25",
   },
   {
     id: "RESPONDED",
     label: "Replied",
     hint: "Cadence stopped — they answered",
-    dot: "bg-emerald-500",
-    edge: "border-l-emerald-500/70",
+    dot: "hb hb-50",
   },
   {
     id: "INTERESTED",
     label: "Interested",
     hint: "Flagged warm by hand",
-    dot: "bg-violet-500",
-    edge: "border-l-violet-500/70",
+    dot: "hb hb-100",
   },
   {
     id: "DECLINED",
     label: "Declined",
     hint: "Closed by hand",
-    dot: "bg-amber-500",
-    edge: "border-l-amber-500/70",
+    dot: "hb hb-mute",
   },
   {
     id: "BOUNCED",
     label: "Bounced",
     hint: "Cadence stopped — undeliverable",
-    dot: "bg-destructive",
-    edge: "border-l-destructive/70",
+    dot: "hb hb-void",
   },
+  // `dot` is the status's Harvey ball — the same glyph STATUS_META gives every row, so
+  // a card's column and the status it would carry anywhere else are one mark.
 ] as const satisfies readonly {
   id: CompanyStatus;
   label: string;
   hint: string;
   dot: string;
-  edge: string;
 }[];
 
 export type PipelineColumn = (typeof PIPELINE_COLUMNS)[number];

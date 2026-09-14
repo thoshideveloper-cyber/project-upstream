@@ -158,7 +158,7 @@ function Stepper({ step }: { step: Step }) {
             className={cn(
               "flex h-6 w-6 items-center justify-center rounded-full text-xs transition-colors",
               i < order && "bg-primary text-primary-foreground",
-              i === order && "bg-primary text-primary-foreground ring-2 ring-primary/30 ring-offset-1 ring-offset-background",
+              i === order && "bg-primary text-primary-foreground ring-2 ring-border-strong ring-offset-1 ring-offset-background",
               i > order && "bg-muted text-muted-foreground",
             )}
           >
@@ -208,15 +208,15 @@ function UploadStep({
             if (!pending) takeFile(e.dataTransfer.files?.[0]);
           }}
           className={cn(
-            "flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-colors",
-            dragOver ? "border-primary bg-primary/5" : "hover:border-primary/40 hover:bg-muted/40",
+            "flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed p-10 text-center transition-colors",
+            dragOver ? "border-primary bg-accent" : "hover:border-border-strong hover:bg-muted/40",
             pending && "pointer-events-none opacity-70",
           )}
         >
           {pending ? (
             <Loader2 className="h-8 w-8 animate-spin text-primary-ink" />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent">
               <FileUp className="h-6 w-6 text-primary-ink" />
             </div>
           )}
@@ -327,8 +327,8 @@ function ValidateStep({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-3 gap-3">
-          <Stat label="New" value={counts.create} tone="text-emerald-600" />
-          <Stat label="Update / merge" value={counts.update} tone="text-sky-700 dark:text-sky-400" />
+          <Stat label="New" value={counts.create} tone="text-foreground" />
+          <Stat label="Update / merge" value={counts.update} tone="text-foreground" />
           <Stat label="Errors" value={counts.error} tone="text-destructive-ink" />
         </div>
         {validation.clusters.length > 0 && (
@@ -359,8 +359,8 @@ function DoneStep({ result, onAnother }: { result: ImportApplyResponse; onAnothe
   return (
     <Card>
       <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted ring-1 ring-inset ring-border">
+          <CheckCircle2 className="h-7 w-7 text-foreground" />
         </div>
         <p className="text-sm font-medium">Import complete</p>
         <p className="text-sm text-muted-foreground">

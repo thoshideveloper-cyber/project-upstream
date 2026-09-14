@@ -1,7 +1,18 @@
+# The one Railway config for this service.
+#
+# There used to be a railway.json beside this file carrying a different builder AND the
+# only copy of the migration step. Railway resolves railway.toml first, so the JSON was
+# dead config — which is how a deploy shipped code that queried a column no migration had
+# added. One file, or the next divergence is silent again.
 [build]
 builder = "nixpacks"
+# Let nixpacks use its default Python install (creates venv + pip install .)
 
 [deploy]
+# Runs after the build and BEFORE the new instance takes traffic, so the schema is never
+# behind the code that queries it. A failing migration fails the deploy and leaves the
+# previous instance serving, which is the behaviour we want.
+preDeployCommand = "alembic upgrade head"
 startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
 healthcheckTimeout = 60

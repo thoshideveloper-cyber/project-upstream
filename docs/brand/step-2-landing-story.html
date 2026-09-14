@@ -1,0 +1,779 @@
+<title>Upstream Landing Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+:root{
+  --paper:#EDEEF0; --card:#FAFAFB; --ink:#161A1F; --ink-2:#3A424C; --muted:#5B636D;
+  --rule:#D3D7DC; --rule-soft:#E2E5E9; --accent:#2F5570; --accent-soft:#E3EAF0;
+  --warn:#8C4A2F; --warn-soft:#F1E5DE; --shadow:0 1px 2px rgba(16,22,30,.05);
+  --spec:#FFFFFF; --spec-rule:#C8CED6;
+  --sans:"Instrument Sans",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#131619; --card:#1A1E23; --ink:#E5E8EB; --ink-2:#C2C8CF; --muted:#98A0AA;
+    --rule:#2C333A; --rule-soft:#242A30; --accent:#8FB4CD; --accent-soft:#1E2A34;
+    --warn:#D0906F; --warn-soft:#2E2320; --shadow:0 1px 2px rgba(0,0,0,.3);
+    --spec:#20252B; --spec-rule:#39424B;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131619; --card:#1A1E23; --ink:#E5E8EB; --ink-2:#C2C8CF; --muted:#98A0AA;
+  --rule:#2C333A; --rule-soft:#242A30; --accent:#8FB4CD; --accent-soft:#1E2A34;
+  --warn:#D0906F; --warn-soft:#2E2320; --shadow:0 1px 2px rgba(0,0,0,.3);
+  --spec:#20252B; --spec-rule:#39424B;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);
+  font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased;margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px 96px}
+
+/* masthead */
+.mast{padding:56px 0 28px;border-bottom:1px solid var(--ink)}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 18px}
+h1{font-family:var(--sans);font-weight:700;font-size:clamp(30px,4.6vw,50px);line-height:1.04;
+  letter-spacing:-.022em;margin:0;max-width:16ch;text-wrap:balance}
+.dek{font-size:19px;color:var(--ink-2);max-width:62ch;margin:20px 0 0}
+.meta{display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:26px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+.meta b{color:var(--ink-2);font-weight:500}
+
+/* two-col shell */
+.shell{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+@media(min-width:1000px){.shell{grid-template-columns:212px minmax(0,1fr);gap:56px}}
+nav.toc{display:none}
+@media(min-width:1000px){
+  nav.toc{display:block;position:sticky;top:0;align-self:start;padding:44px 0 40px;max-height:100vh;overflow-y:auto}
+}
+nav.toc h3{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 14px;font-weight:500}
+nav.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+nav.toc a{display:grid;grid-template-columns:26px 1fr;gap:6px;align-items:baseline;
+  text-decoration:none;color:var(--ink-2);font-family:var(--sans);font-size:12.5px;
+  line-height:1.3;padding:5px 0;border-bottom:1px solid var(--rule-soft)}
+nav.toc a:hover{color:var(--accent)}
+nav.toc a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tnum{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+
+/* sections */
+.sec{padding:40px 0 8px;border-bottom:1px solid var(--rule-soft)}
+.sec:last-of-type{border-bottom:0}
+h2{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:14px;
+  font-family:var(--sans);font-weight:600;font-size:clamp(22px,2.6vw,29px);letter-spacing:-.018em;
+  line-height:1.12;margin:0 0 26px;text-wrap:balance}
+.pnum{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--accent);
+  letter-spacing:.06em;transform:translateY(-2px)}
+h3{font-family:var(--sans);font-weight:600;font-size:17.5px;letter-spacing:-.008em;
+  margin:34px 0 10px;color:var(--ink)}
+h4{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);margin:26px 0 8px}
+h3+p,h3+ul,h3+ol,h3+blockquote,h3+.tw,h4+p,h4+ul{margin-top:0}
+p{margin:0 0 15px;max-width:68ch}
+ul,ol{max-width:68ch;margin:0 0 16px;padding-left:20px}
+li{margin-bottom:7px}
+li::marker{color:var(--muted)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+a{color:var(--accent)}
+
+/* evidence chips */
+.ev{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border-radius:2px;
+  vertical-align:1.5px;white-space:nowrap;border:1px solid transparent}
+.ev-fact{background:var(--accent-soft);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 22%,transparent)}
+.ev-inf{background:transparent;color:var(--accent);border-color:color-mix(in srgb,var(--accent) 38%,transparent)}
+.ev-rec{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+.ev-block{background:var(--warn-soft);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
+
+/* pull statements */
+blockquote{margin:22px 0;padding:20px 24px;background:var(--card);border:1px solid var(--rule);
+  border-left:3px solid var(--accent);border-radius:2px;box-shadow:var(--shadow);max-width:66ch}
+blockquote p{font-family:var(--sans);font-size:18px;line-height:1.45;font-weight:500;
+  letter-spacing:-.011em;margin:0;color:var(--ink)}
+blockquote p+p{margin-top:10px}
+
+/* tables */
+.tw{overflow-x:auto;margin:18px 0 22px;border:1px solid var(--rule);border-radius:2px;background:var(--card)}
+table{border-collapse:collapse;width:100%;font-family:var(--sans);font-size:13.5px;line-height:1.5}
+th{text-align:left;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);padding:11px 14px;border-bottom:1px solid var(--rule);
+  white-space:nowrap;vertical-align:bottom}
+td{padding:11px 14px;border-bottom:1px solid var(--rule-soft);color:var(--ink-2);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td strong{color:var(--ink)}
+td.n{font-family:var(--mono);font-size:11.5px;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* running order rail */
+.order{margin:26px 0 8px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}
+.ord{display:grid;grid-template-columns:34px minmax(0,1fr);gap:16px;align-items:baseline;
+  padding:13px 2px;border-bottom:1px solid var(--rule-soft)}
+.ord:last-child{border-bottom:0}
+.ord-n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);
+  letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.ord-b{display:grid;gap:3px}
+.ord-t{font-family:var(--sans);font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.ord-q{font-family:var(--serif);font-size:14.5px;font-style:italic;color:var(--muted);max-width:60ch}
+@media(min-width:760px){
+  .ord{grid-template-columns:34px 260px minmax(0,1fr);gap:20px}
+  .ord-b{display:contents}
+  .ord-q{padding-top:1px}
+}
+
+/* copy specimens */
+.spec{background:var(--spec);border:1px solid var(--spec-rule);border-radius:2px;
+  padding:26px 28px 22px;margin:16px 0 26px;box-shadow:var(--shadow);max-width:72ch}
+.spec-h{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;
+  padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--rule-soft)}
+.spec-n{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.08em}
+.spec-t{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted)}
+.h-1{font-family:var(--sans);font-weight:600;font-size:clamp(20px,2.4vw,26px);line-height:1.16;
+  letter-spacing:-.018em;color:var(--ink);margin:0 0 12px;max-width:24ch;text-wrap:balance}
+.h-2{font-family:var(--serif);font-size:17px;line-height:1.5;color:var(--ink-2);margin:0 0 16px;max-width:58ch}
+.spec p{font-size:16px;line-height:1.6;color:var(--ink-2);max-width:58ch;margin:0 0 13px}
+.spec p:last-child{margin-bottom:0}
+.lbl{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);display:block;margin:20px 0 7px}
+.spec .lbl:first-child{margin-top:0}
+.btn{display:inline-block;font-family:var(--sans);font-weight:600;font-size:13.5px;
+  padding:8px 16px;border-radius:2px;background:var(--accent);color:var(--spec);
+  letter-spacing:-.005em;margin:2px 8px 2px 0}
+.btn-2{background:transparent;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.micro{font-family:var(--sans);font-size:13px;color:var(--muted);margin:8px 0 0;max-width:52ch}
+.crumbs{display:grid;gap:11px;margin:0}
+.crumb{padding-left:14px;border-left:2px solid var(--rule);font-size:15.5px;
+  line-height:1.55;color:var(--ink-2);max-width:56ch}
+.crumb b{font-family:var(--sans);font-weight:600;font-size:13px;letter-spacing:.01em;
+  color:var(--ink);display:block;margin-bottom:1px}
+
+/* rules strip */
+.rules{font-family:var(--mono);font-size:11.5px;line-height:1.9;color:var(--muted);
+  background:var(--card);border:1px solid var(--rule);border-radius:2px;
+  padding:16px 18px;margin:18px 0 24px;max-width:66ch}
+.rules b{color:var(--ink-2);font-weight:500}
+
+/* exclusion list */
+.no li{color:var(--muted)}
+.no li strong{color:var(--ink-2);font-weight:600}
+
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--ink);
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.7}
+footer b{color:var(--ink-2);font-weight:500}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <p class="kick">Step 2 · Story, Architecture &amp; Copy</p>
+    <h1>Nine folds, and the words that go in them</h1>
+    <p class="dek">The landing-page blueprint for the M&amp;A origination product currently code-named Upstream &mdash; built from <b>DESIGN_CONTEXT.md</b> as product truth, tested against the Step 1 strategy rather than inheriting it, and written to be handed straight to a visual designer. Deliberately independent of the product&rsquo;s eventual name.</p>
+    <div class="meta">
+      <span><b>Sources</b> DESIGN_CONTEXT.md &rsaquo; Step 1 strategy</span>
+      <span><b>Conversion goal</b> Request access</span>
+      <span><b>Verdict</b> Ready with caveats &mdash; two blocking</span>
+      <span><b>Scope</b> Story, IA and copy &mdash; no colours, type or layout</span>
+    </div>
+  </header>
+
+  <div class="shell">
+    <nav class="toc" aria-label="Contents">
+      <h3>Contents</h3>
+      <ol>
+        <li><a href="#s0"><span class="tnum">00</span><span>Decisions taken first</span></a></li>
+        <li><a href="#s1"><span class="tnum">A</span><span>Reassessing Step 1</span></a></li>
+        <li><a href="#s2"><span class="tnum">B</span><span>Goal, story, central idea</span></a></li>
+        <li><a href="#s3"><span class="tnum">C</span><span>The running order</span></a></li>
+        <li><a href="#s4"><span class="tnum">D</span><span>Above the fold</span></a></li>
+        <li><a href="#s5"><span class="tnum">E</span><span>What must be shown</span></a></li>
+        <li><a href="#s6"><span class="tnum">F</span><span>Value, proof, objections</span></a></li>
+        <li><a href="#s7"><span class="tnum">G</span><span>The copy deck</span></a></li>
+        <li><a href="#s8"><span class="tnum">H</span><span>What stays off the page</span></a></li>
+        <li><a href="#s9"><span class="tnum">I</span><span>Mobile priority</span></a></li>
+        <li><a href="#s10"><span class="tnum">J</span><span>Blocking issues</span></a></li>
+        <li><a href="#s11"><span class="tnum">K</span><span>Asset brief</span></a></li>
+        <li><a href="#s12"><span class="tnum">L</span><span>Self-review</span></a></li>
+        <li><a href="#s13"><span class="tnum">&bull;</span><span>Verdict</span></a></li>
+      </ol>
+    </nav>
+
+    <main>
+
+<section class="sec" style="padding-top:36px">
+  <h2 id="s0"><span class="pnum">00</span><span>Four decisions taken before a word was written</span></h2>
+  <p>Step 1 closed as <em>ready with caveats</em> and listed five business decisions that had to be settled before a page could honestly be written. Four were put to the owner and answered. Every section below depends on them.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Decision</th><th>Answer</th><th>Consequence for the page</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Access model and CTA</strong></td><td><strong>Request access</strong>, by form</td><td>The page ends in a capture, not a signup. Low commitment, which matches a chronic rather than acute problem. Needs a submission path the current static export cannot provide.</td></tr>
+      <tr><td><strong>Firm-wide record</strong></td><td><strong>Yes</strong> &mdash; firms provisioned by hand</td><td>Hand-provisioning makes the firm-scale claim honest, because the vendor creates the users. This resolves Step 1&rsquo;s &ldquo;largest single fork&rdquo; in the direction that makes the strongest page.</td></tr>
+      <tr><td><strong>Pricing</strong></td><td><strong>None yet</strong>, omit</td><td>No pricing section. &ldquo;What does it cost&rdquo; is one honest line inside the limits fold.</td></tr>
+      <tr><td><strong>Credibility substitute</strong></td><td><strong>The product admitting what it does not know</strong></td><td>Promoted from housekeeping to the page&rsquo;s spine. Everything else demoted to a line.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>One narrowing note on the fourth</h3>
+  <p>Only one credibility option was selected. Read strictly, that removes the product screenshots too, which makes the page unbuildable, since the mechanism has to be shown rather than asserted. The reading applied here: <strong>honesty is the credibility architecture; the running product is the demonstration vehicle underneath it.</strong> These do not conflict, because the screenshots carry a <code>DEMO BOOK</code> label, and that label is itself an instance of the chosen proof basis. The hand-checked database and the engineering posture drop to one line each. <span class="ev ev-rec">Flagged, not assumed</span></p>
+  <h4>How to read the labels</h4>
+  <ul>
+    <li><span class="ev ev-fact">FACT</span> directly supported by the running build.</li>
+    <li><span class="ev ev-inf">STRONG INFERENCE</span> several independent signals, stated nowhere.</li>
+    <li><span class="ev ev-rec">RECOMMENDATION</span> a judgement call, owned as one.</li>
+    <li><span class="ev ev-block">BLOCKING</span> must be resolved by the owner, not the designer.</li>
+  </ul>
+</section>
+
+<section class="sec">
+  <h2 id="s1"><span class="pnum">A</span><span>Reassessing Step 1 against the product</span></h2>
+  <p>Step 1 is the current hypothesis. The product is the source of truth. Six findings, and one of them is a disagreement between the two source documents that neither of them acknowledges.</p>
+
+  <h3>What Step 1 got exactly right</h3>
+  <ul>
+    <li><strong>The causal chain is the position.</strong> No second job &rarr; a complete record &rarr; a trustworthy record &rarr; knowledge that compounds. The only formulation that explains the queue, the import, the analytics and the append-only log at once, and the only one a competitor cannot retrofit.</li>
+    <li><strong>The reader is post-solution, not unaware.</strong> <span class="ev ev-fact">FACT</span> The product&rsquo;s own research note records the objection: <em>&ldquo;we bought one and nobody updated it.&rdquo;</em> This dictates page order &mdash; the objection is answered before the product is presented.</li>
+    <li><strong>The problem is chronic, not acute.</strong> Desks run on these spreadsheets successfully today and the FAQ concedes it. Aim for recognition, not alarm.</li>
+    <li><strong>Import removes the latency from the differentiator.</strong> The highest-leverage insight in Step 1, and currently FAQ answer three.</li>
+    <li><strong>The outbound-sequencer misread is fatal and under-appreciated.</strong> Cadences, intervals, templates and a compose sheet are the exact vocabulary of bulk sales tooling.</li>
+    <li><strong>Honesty is a differentiator, not housekeeping.</strong> <span class="ev ev-fact">FACT</span> across six surfaces.</li>
+  </ul>
+
+  <h3>Where it over-interprets, and what changes</h3>
+
+  <h4>Conflict 1 &mdash; the two sources disagree about the lead, and neither says so</h4>
+  <p>The context document states the page should rest on <strong>&ldquo;your work stops being scattered&rdquo;</strong>, places the firm&rsquo;s memory third, and warns that leading with the record alone <em>&ldquo;risks a database reading.&rdquo;</em> Step 1 elevates <strong>the record as consequence</strong> to the central idea and builds the page on the inversion.</p>
+  <p>Both are right about different things, and the disagreement is a sequencing problem wearing a positioning problem&rsquo;s clothes.</p>
+  <blockquote><p>The scattered day is the entry point, because it is what the analyst recognises. The record is the destination, because it is what the firm buys. The page is the journey between them, and the mechanism is the bridge.</p></blockquote>
+  <p><span class="ev ev-rec">RECOMMENDATION</span> Neither source states this synthesis. It is the spine of the running order below. The practical consequence: the hero does not open on the record, and the page does not end on the queue.</p>
+
+  <h4>Conflict 2 &mdash; the fixed anchor cannot carry a hero</h4>
+  <p>Step 1 names the anchor as the unique mechanism, correctly, then concedes that <em>&ldquo;the anchor never moves&rdquo; is meaningless until the reader knows what an anchor is.</em> A hero cannot afford that sentence of setup. <span class="ev ev-rec">The anchor is demoted from hook to proof</span> and lives inside the mechanism fold, where it does its real job: explaining why the date can be trusted.</p>
+
+  <h4>Conflict 3 &mdash; the best line in Step 1 is buried in an appendix</h4>
+  <p>Step 1 calls <em>&ldquo;it does everything except decide&rdquo;</em> the biggest opportunity and open ground occupied by nobody, then leaves it inside a brand section and never makes it a page beat. <span class="ev ev-rec">Promoted to its own fold.</span> It does three jobs no other beat does: it differentiates against every competitor selling automation, it answers &ldquo;will this act on my behalf&rdquo;, and it is the only thing that kills the sequencer misread. A claim with six citations in the build deserves better than a paragraph.</p>
+
+  <h4>Conflict 4 &mdash; the sourcing half is written out entirely, and should not be</h4>
+  <p>Step 1 holds the company database for &ldquo;a second act&rdquo;. The context document ranks it fourth by centrality and notes the current page <strong>does not mention it at all</strong>. Step 1 is right that it cannot carry a claim <span class="ev ev-fact">164 rows, no shared tier, no provenance, no refresh</span> &mdash; but omitting the moment leaves the product looking like a follow-up tracker, and <em>&ldquo;the client&rsquo;s list ran out&rdquo;</em> is a real week. <span class="ev ev-rec">Present the moment, not the asset:</span> one paragraph in the recognition fold, one honest line in the limits fold. No size claim, no reach claim.</p>
+
+  <h4>Conflict 5 &mdash; no urgency, and no replacement for it</h4>
+  <p>Step 1 is right that there is no urgency to exploit. But a page with no reason to act now converts at zero. <span class="ev ev-rec">The honest motivator is scarcity of access, not scarcity of time.</span> <em>&ldquo;Access is opening to a small number of desks&rdquo;</em> is already true in the product&rsquo;s own copy, invents no deadline, and is the only pressure the page applies.</p>
+
+  <h3>What both documents miss</h3>
+  <blockquote><p>A page whose credibility spine is &ldquo;we tell you what we do not know&rdquo; cannot be anonymous.</p></blockquote>
+  <p><span class="ev ev-fact">FACT</span> There is no team page, no about, no founder, no company entity and no jurisdiction anywhere. The footer says only <em>&copy; 2026 Upstream.</em> The reader is being asked to hand over what the product&rsquo;s own copy correctly calls <em>the most confidential document a desk owns.</em> A page that makes candour its proof, from an entity that will not say who it is, contains a contradiction the reader will feel without articulating it. <span class="ev ev-block">Blocking &mdash; see J</span></p>
+</section>
+
+<section class="sec">
+  <h2 id="s2"><span class="pnum">B</span><span>Conversion goal, story and the central idea</span></h2>
+
+  <h3>The conversion goal</h3>
+  <p><strong>Request access.</strong> One action, no competing primary.</p>
+  <div class="tw"><table>
+    <tbody>
+      <tr><td style="width:26%"><strong>Starting state</strong></td><td>An analyst or partner running two to four engagements across a master list, an email schedule, a contact list and a browser. The system works. They are not in crisis. They have either tried a CRM that died or watched one die, and they are primed to pattern-match anything new into that category and dismiss it in four seconds.</td></tr>
+      <tr><td><strong>Ending state</strong></td><td><em>&ldquo;That thing keeps itself, and it starts from the sheets I already have.&rdquo;</em> They believe the mechanism because they performed it. They no longer suspect it will email anyone on their behalf.</td></tr>
+      <tr><td><strong>Conversion moment</strong></td><td>Not the mechanism fold. It is <strong>the import fold</strong> &mdash; the point at which finding out costs a workbook and a week rather than a quarter and a configuration project, and the record arrives already full. Everything before it earns belief; everything after removes hesitation.</td></tr>
+      <tr><td><strong>Commitment</strong></td><td>Deliberately low, because the problem is chronic. Four fields and one human reply.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>The central idea</h3>
+  <blockquote><p>The visitor should leave thinking: <em>that one keeps itself.</em></p></blockquote>
+  <div class="tw"><table>
+    <tbody>
+      <tr><td style="width:26%"><strong>Product insight</strong></td><td>Recording was designed as a separate act from doing, which is why every previous attempt decayed. Collapse the two and the record becomes complete by construction.</td></tr>
+      <tr><td><strong>User insight</strong></td><td>The analyst is not trying to maintain a record. They are trying to do the work. Every maintenance step a tool asks for is one they will skip, and they know it about themselves.</td></tr>
+      <tr><td><strong>Transformation</strong></td><td>From being the integration layer between four artifacts, to working in one place where the consequences work themselves out.</td></tr>
+      <tr><td><strong>Emotional shift</strong></td><td>From low-grade vigilance to composure. Not relief-from-rescue. The confidence of a number that was computed rather than remembered.</td></tr>
+      <tr><td><strong>Reason to believe</strong></td><td>It is demonstrated rather than claimed, and it tells you what it could not work out.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>The narrative structure</h3>
+  <p>Not problem &rarr; solution. Not old way &rarr; new way. The structure a reader who has already rejected the obvious answer requires:</p>
+  <blockquote><p>Recognition &rarr; the fix you already tried, and why it died &rarr; the inversion, performed &rarr; what it refuses to do &rarr; what that leaves behind &rarr; the way in &rarr; the limits &rarr; the ask</p></blockquote>
+  <p>Three things about it are unusual, and each is deliberate:</p>
+  <ol>
+    <li><strong>The killer objection is answered third, before the product is presented.</strong> A post-solution sceptic will not process a feature until the reason they discarded the last one is addressed. Most pages put this in an FAQ. Here it is the pivot.</li>
+    <li><strong>The refusal fold sits between the mechanism and the differentiator.</strong> The mechanism fold uses exactly the vocabulary that triggers the sequencer misread. The misread has to be closed the moment it forms, and before the record fold asks for trust.</li>
+    <li><strong>The page ends on limits, then the ask.</strong> Counterintuitive and correct: it is the chosen credibility mechanism, and it converts the absence of pricing, customers and notifications from gaps into evidence of the same behaviour the page has described for eight folds.</li>
+  </ol>
+</section>
+
+<section class="sec">
+  <h2 id="s3"><span class="pnum">C</span><span>The running order</span></h2>
+  <p>Nine folds. Each answers one reader question, in the order a reader asks it. Sections common on SaaS pages and absent here are listed in <a href="#s8">H</a> with reasons.</p>
+
+  <div class="order">
+    <div class="ord"><span class="ord-n">01</span><div class="ord-b"><span class="ord-t">Hero</span><span class="ord-q">What is this, and is it for me?</span></div></div>
+    <div class="ord"><span class="ord-n">02</span><div class="ord-b"><span class="ord-t">The shape of the day</span><span class="ord-q">Do you actually understand how I work?</span></div></div>
+    <div class="ord"><span class="ord-n">03</span><div class="ord-b"><span class="ord-t">Why the last one died</span><span class="ord-q">We bought one of these and nobody updated it. Why is this different?</span></div></div>
+    <div class="ord"><span class="ord-n">04</span><div class="ord-b"><span class="ord-t">One act in</span><span class="ord-q">So what do I actually have to do?</span></div></div>
+    <div class="ord"><span class="ord-n">05</span><div class="ord-b"><span class="ord-t">It does everything except decide</span><span class="ord-q">Hold on. Is this going to email people for me?</span></div></div>
+    <div class="ord"><span class="ord-n">06</span><div class="ord-b"><span class="ord-t">What it leaves behind</span><span class="ord-q">What do I get that a tidy spreadsheet would not give me?</span></div></div>
+    <div class="ord"><span class="ord-n">07</span><div class="ord-b"><span class="ord-t">The way in</span><span class="ord-q">How long until we are running on it, and does it start empty?</span></div></div>
+    <div class="ord"><span class="ord-n">08</span><div class="ord-b"><span class="ord-t">What it will not do</span><span class="ord-q">What is the catch, what does it cost, and who are you?</span></div></div>
+    <div class="ord"><span class="ord-n">09</span><div class="ord-b"><span class="ord-t">Request access</span><span class="ord-q">What happens if I do this?</span></div></div>
+  </div>
+
+  <h3>Why each fold sits where it does</h3>
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>Fold</th><th>Job it does, and why it cannot move</th><th>Evidence it carries</th></tr></thead>
+    <tbody>
+      <tr><td class="n">01</td><td><strong>Hero</strong></td><td>Comprehension has to precede everything. The queue is the only frame where the value is visible in the picture itself.</td><td>Outreach desk queue, light theme, <code>DEMO BOOK</code> label, <strong>one row carrying a &ldquo;2 prior&rdquo; chip</strong> so the differentiator is in frame one.</td></tr>
+      <tr><td class="n">02</td><td><strong>The shape of the day</strong></td><td>Recognition is the only persuasion mechanism available to a product with no customers. It must not sell.</td><td>Specific texture: the header block above the real column row, the exchange-rate line, the column nobody sorts. The four losses as a closing strip.</td></tr>
+      <tr><td class="n">03</td><td><strong>Why the last one died</strong></td><td>The pivot. A post-solution reader cannot evaluate a feature until this is answered. Answering it here converts the rest of the page from a pitch into a demonstration.</td><td>None. Argument only, and the only fold where that is correct.</td></tr>
+      <tr><td class="n">04</td><td><strong>One act in</strong></td><td>Directly after the promise it proves. The anchor&rsquo;s setup sentence has room here and would not in a hero.</td><td>An interaction the visitor performs, resolving into four consequences: the clock, the queue, the report, the record.</td></tr>
+      <tr><td class="n">05</td><td><strong>It does everything except decide</strong></td><td>The hinge. Fold 04 uses the exact vocabulary of outbound automation; the misread forms here or nowhere. Placing it before the record means the differentiator arrives to a reader who trusts the stance.</td><td>Six behaviours, each traceable to a shipped surface.</td></tr>
+      <tr><td class="n">06</td><td><strong>What it leaves behind</strong></td><td>The destination. It can only land once the reader believes the record was kept without effort. Leading with it produces the database reading.</td><td>One company on two deals, side by side. The &ldquo;2 prior&rdquo; chip expanding into warm history.</td></tr>
+      <tr><td class="n">07</td><td><strong>The way in</strong></td><td>The conversion moment, and the last thing between belief and action. It triples: switching cost, latency, proof of candour.</td><td>Three frames. The middle one &mdash; the product naming what it could not read &mdash; is the one that matters.</td></tr>
+      <tr><td class="n">08</td><td><strong>What it will not do</strong></td><td>Immediately before the ask, so candour is the last thing in the reader&rsquo;s mouth. Four otherwise-damaging facts become consistent with everything argued so far.</td><td>Six plain statements: scope, notifications, bulk send, database, demo data, price.</td></tr>
+      <tr><td class="n">09</td><td><strong>Request access</strong></td><td>The ask arrives after the reader knows the scope, the limits and the cost of finding out.</td><td>Four fields. One risk-reversal line.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="sec">
+  <h2 id="s4"><span class="pnum">D</span><span>Above the fold</span></h2>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">01</span><span class="spec-t">Hero &middot; recommended</span></div>
+    <p class="h-1">Log the email. The follow-ups, the queue and the firm&rsquo;s record keep themselves.</p>
+    <p class="h-2">Origination and outreach for boutique M&amp;A desks. The only thing you type is the thing you were already doing, so there is no second job called keeping the system up to date.</p>
+    <span class="btn">Request access</span><span class="btn btn-2">See what one email does &darr;</span>
+    <p class="micro">Access is opening to a small number of desks.</p>
+  </div>
+
+  <h3>Why this headline</h3>
+  <p>The shipped incumbent is <em>&ldquo;Log the email. The rest is derived.&rdquo;</em> It is genuinely good: concrete, mechanism-first, and it answers the maintenance objection. Its weaknesses are that <strong>&ldquo;derived&rdquo; is a technical word that assumes the reader already knows what is being derived</strong>, and that it names no payoff, which leaves the reminder-tool reading open.</p>
+  <p>The recommendation keeps its spine and its rhythm, replaces the abstraction with the three things a reader cares about, and moves the answer to <em>who maintains this</em> into the headline itself, via <strong>keep themselves</strong>.</p>
+
+  <h3>Directions considered</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Direction</th><th>Line</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Mechanism / inversion</strong></td><td>Log the email. The follow-ups, the queue and the firm&rsquo;s record keep themselves.</td><td><strong>Selected.</strong> Names the payoff and answers the killer objection inside the headline.</td></tr>
+      <tr><td>Contrarian / objection-led</td><td>The last one died because someone had to keep it.</td><td>Strongest differentiation of any candidate. Rejected as a hero: it assumes they had a CRM, and opening on a competitor&rsquo;s failure makes the product sound small. <strong>Retained as fold 03.</strong></td></tr>
+      <tr><td>Refusal / contrarian</td><td>It does everything except decide.</td><td>The most ownable sentence available. Rejected as a hero because a stranger cannot tell what the product is from it. <strong>Retained as fold 05.</strong></td></tr>
+      <tr><td>Recognition / problem-led</td><td>Three spreadsheets, a browser, and you holding them together.</td><td>Excellent recognition, but delays <em>what is this</em> past ten seconds. <strong>Retained as fold 02.</strong></td></tr>
+      <tr><td>Record-led</td><td>A record nobody has to keep.</td><td>Rejected. &ldquo;Record&rdquo; alone reads archival and passive &mdash; Step 1 flagged this exact risk in naming. Says nothing about the reader&rsquo;s day.</td></tr>
+      <tr><td>Category-led</td><td>The origination and outreach system for boutique M&amp;A desks.</td><td>Too inert for a headline. <strong>Retained inside the subheadline</strong>, where it does its comprehension job without spending the H1.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Three of the rejected directions are not wasted. They become fold headlines, which is why the page argues in a consistent voice rather than carrying one good line and eight generic ones.</p>
+
+  <h3>The hero image</h3>
+  <p>The Outreach desk queue panel, light theme, against the seeded demo book, labelled <code>DEMO BOOK</code>. A column of computed day-counts on the left, company names, contact names, one action per row. <strong>One row carries a &ldquo;2 prior&rdquo; chip.</strong></p>
+  <ul>
+    <li><strong>Not an interaction.</strong> The press-and-hold demonstration is the strongest device on the reference page, but it belongs in fold 04. A hero has one job, and an interaction competes with it.</li>
+    <li><strong>The chip earns its place.</strong> <span class="ev ev-fact">FACT</span> The context document is explicit that the strongest hero variant carries prior-work history, so the differentiator sits in frame one rather than fold six. It costs one chip.</li>
+    <li><strong>The label stays.</strong> Under the credibility decision it is no longer a disclaimer. It is the first instance of the page&rsquo;s proof mechanism, appearing in the first frame.</li>
+  </ul>
+</section>
+
+<section class="sec">
+  <h2 id="s5"><span class="pnum">E</span><span>What must be shown rather than said</span></h2>
+  <p>The product is the argument. Nothing on this page is decoration.</p>
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>Demonstration</th><th>Fold</th><th>Why it cannot be a sentence</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><strong>The derivation, performed</strong></td><td class="n">04</td><td>The claim is that nothing else is typed. A sentence asserting that is exactly what the failed CRM&rsquo;s marketing also said. Letting the reader perform the act and watch four things appear is the only version that survives scepticism.</td></tr>
+      <tr><td class="n">2</td><td><strong>The importer naming what it could not work out</strong></td><td class="n">07</td><td>The chosen credibility spine, and un-imitable. Feature copy cannot fake a product showing its own uncertainty. Set verbatim, as evidence, never illustrated.</td></tr>
+      <tr><td class="n">3</td><td><strong>The record speaking before the approach</strong></td><td class="n">06</td><td><span class="ev ev-fact">FACT</span> This has never been shown as screens anywhere. The highest-value untold story in the product. Static undersells it; it needs the reveal.</td></tr>
+      <tr><td class="n">4</td><td><strong>One company, two deals</strong></td><td class="n">06</td><td>The one case where static is correct, because the point is the contrast, not the motion. The caption does the work.</td></tr>
+      <tr><td class="n">5</td><td><strong>The queue with computed lateness</strong></td><td class="n">01</td><td>Needs no caption. The value is visible in the picture.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>What to zoom into</h3>
+  <ul>
+    <li>The <strong>day-count column</strong>. Monospaced and tabular, and the single detail that makes the product read as an instrument rather than a template.</li>
+    <li>The <strong>flag list</strong> in the import review, verbatim and at readable size. <em>&ldquo;Excel had no date for this event, dated to the last known touch.&rdquo;</em></li>
+    <li>The <strong>&ldquo;2 prior&rdquo; chip</strong>, at the moment it expands.</li>
+  </ul>
+
+  <h3>What must never appear</h3>
+  <p><span class="ev ev-fact">FACT</span>-backed exclusions, all retained from the context document:</p>
+  <ul class="no">
+    <li><strong>The dashboard&rsquo;s red HEAVY PRESSURE gauge.</strong> The most alarming frame in the product, and a state rather than an identity. It opens the page on <em>you are behind</em>, which is the wrong note for a product whose promise is composure.</li>
+    <li><strong>The company record</strong> &mdash; raw system values and lorem-ipsum seed notes.</li>
+    <li><strong>Settings</strong>, whose read-only team panel implies a capability the product does not have.</li>
+    <li><strong>The empty new-firm dashboard</strong>, the login screen, and the orphaned companies route.</li>
+    <li><strong>Any dark-theme capture</strong>, unless the whole brand moves dark.</li>
+    <li><strong>The seeded firm name</strong>, which currently makes the product appear as its own customer inside the screenshots used to sell it.</li>
+  </ul>
+</section>
+
+<section class="sec">
+  <h2 id="s6"><span class="pnum">F</span><span>Value, differentiation, proof and objections</span></h2>
+
+  <h3>Value proposition hierarchy</h3>
+  <blockquote><p>Everything you currently keep across three spreadsheets and a browser happens in one place, and it keeps itself, because the only thing you type is that an email went out.</p></blockquote>
+  <p><strong>Primary:</strong> you stop keeping the system, and the system starts keeping you. The follow-up schedule, the day&rsquo;s order of work, the firm&rsquo;s record and the reporting all come out of one act you were performing anyway.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Value</th><th>User problem</th><th>Functional benefit</th><th>Emotional benefit</th><th>Reason to believe</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nothing to maintain</strong></td><td>The last system died because updating it was a second job</td><td>No re-typing, no sorting, no Monday compile</td><td>Composure. The number was computed, not remembered</td><td>Performed by the reader in fold 04. Cadence engine, anchor immutable by rule</td></tr>
+      <tr><td><strong>Control stays with you</strong></td><td>&ldquo;Will this send something on my behalf?&rdquo;</td><td>One message at a time from your own mailbox. No relay, no bulk send</td><td>Being taken seriously by your software</td><td><span class="ev ev-fact">FACT</span> six independent surfaces</td></tr>
+      <tr><td><strong>The firm arrives already knowing</strong></td><td>A buyer known for years opens as a stranger</td><td>You open the second deal carrying the first</td><td>Continuity. Your past work comes back to you</td><td><span class="ev ev-fact">FACT</span> verified in the demo book: one company on three engagements, another on two</td></tr>
+      <tr><td><strong>The way in costs a workbook</strong></td><td>&ldquo;How long until we are running on it?&rdquo;</td><td>Days rather than a quarter, and the record starts full</td><td>Relief without a project</td><td>The importer, its fourteen flags, and its rolled-back preview</td></tr>
+    </tbody>
+  </table></div>
+  <p>Every one is supported by shipped behaviour. No benefit here requires a capability the product does not have.</p>
+
+  <h3>Feature prioritisation</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Tier</th><th>Feature</th><th>Communicated as</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="5"><strong>Must understand</strong></td><td>The single logged act and the derivation from it</td><td>Mechanism, performed</td></tr>
+      <tr><td>The fixed anchor</td><td>Proof, inside the mechanism</td></tr>
+      <tr><td>Whole-workbook import with reconstructed history</td><td>Its own fold</td></tr>
+      <tr><td>The refusal to act, across six surfaces</td><td>Its own fold</td></tr>
+      <tr><td>The firm-wide deduplicated record and warm history</td><td>Its own fold</td></tr>
+      <tr><td rowspan="4"><strong>Should understand</strong></td><td>Sending from your own mailbox, one at a time</td><td>Inside fold 05. Doubles as the sequencer killer</td></tr>
+      <tr><td>The append-only log</td><td>One line: it cannot be edited afterwards</td></tr>
+      <tr><td>The day&rsquo;s queue ordered by lateness</td><td>Hero image, and one consequence in fold 04</td></tr>
+      <tr><td>Scope stops at outreach</td><td>Limits fold</td></tr>
+      <tr><td rowspan="4"><strong>Nice to know</strong></td><td>Analytics opening on a written finding</td><td>One line, partner-facing</td></tr>
+      <tr><td>The hand-checked company database</td><td>One line, framed as <em>checked</em>, never as <em>large</em></td></tr>
+      <tr><td>Confidentiality enforced server-side</td><td>One line in the limits fold</td></tr>
+      <tr><td>Contacts and the rolodex</td><td><strong>Omit.</strong> <span class="ev ev-fact">FACT</span> the person-level story is a view, not an entity. Claiming it invites a promise the schema cannot keep</td></tr>
+      <tr><td rowspan="5"><strong>Do not show</strong></td><td>AI drafting and fit scoring</td><td>Peripheral, off by default, in tension with the no-second-job argument. Puts the product in the wrong category against the wrong competitors</td></tr>
+      <tr><td>Team collaboration as self-serve</td><td>A firm cannot add a second user. Hand-provisioning permits <em>we set the workspace up with your people in it</em>, and forbids <em>invite your team</em></td></tr>
+      <tr><td>Notifications, &ldquo;nothing slips&rdquo;</td><td><span class="ev ev-fact">FACT</span> no notification path exists. It surfaces a lapse on arrival; it does not prevent one</td></tr>
+      <tr><td>Database size, reach, freshness</td><td>164 rows, no shared tier, no provenance, no refresh</td></tr>
+      <tr><td>Pipeline board, palette, saved searches, exports, templates</td><td>Real, and page noise. They make a small tool look like a catalogue, which forfeits the smallness argument</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Differentiation</h3>
+  <p>The alternative is not another product. It is the reader&rsquo;s current arrangement, in three forms: the spreadsheets, a browser plus an LLM for the sourcing half, and the memory of a CRM that failed. The meaningful difference is not features. It is <strong>where the record comes from</strong>.</p>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>Every alternative</th><th>This</th></tr></thead>
+    <tbody>
+      <tr><td><strong>How the record gets kept</strong></td><td>Somebody keeps it, beside the work</td><td>The work keeps it</td></tr>
+      <tr><td><strong>Therefore, completeness</strong></td><td>As complete as someone&rsquo;s discipline that month</td><td>Complete by construction</td></tr>
+      <tr><td><strong>Therefore, trust</strong></td><td>Consulted with a caveat</td><td>Consulted</td></tr>
+      <tr><td><strong>Therefore, across deals</strong></td><td>Each engagement starts near zero</td><td>The second deal inherits the first</td></tr>
+      <tr><td><strong>At the point of action</strong></td><td>It acts for you, increasingly</td><td>It stops and hands the decision back</td></tr>
+    </tbody>
+  </table></div>
+  <p><span class="ev ev-fact">RESEARCHED FACT</span>, from the repository&rsquo;s own buyer research and no further: DealCloud is <em>&ldquo;the standard&rdquo;</em> and <em>&ldquo;expensive and clunky&rdquo;</em>; Affinity is <em>&ldquo;clean&rdquo;</em> with <em>&ldquo;limited workflow&rdquo;</em>; Salesforce is <em>&ldquo;an instance nobody updates.&rdquo;</em> No competitor beyond the five named in the source is inferred, named or characterised on this page. Competitive research was not extended, because the marginal value of naming more vendors is negative for a page whose real opponent is a spreadsheet.</p>
+
+  <h3>Proof</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Proof</th><th>Role</th><th>Where used</th></tr></thead>
+    <tbody>
+      <tr><td><strong>The product admitting what it does not know</strong></td><td><strong>The spine.</strong> Fourteen plain-English importer flags, thin-data quarantine, an advisory duplicate check, an FAQ that tells the wrong buyer to leave</td><td>Folds 07 and 08, and structurally from frame one</td></tr>
+      <tr><td>The running product, labelled</td><td>Demonstration vehicle. Three light-mode screenshots already exist and are annotated</td><td>01, 04, 06, 07</td></tr>
+      <tr><td>The mechanism, performed</td><td>The reader&rsquo;s own hand is the evidence</td><td>04</td></tr>
+      <tr><td>A verified cross-deal example</td><td>Confirmed by query, not only by copy</td><td>06</td></tr>
+      <tr><td>164 hand-checked organisations</td><td>Small, verifiable, unusual. Framed as <em>checked</em>, never <em>large</em></td><td>One line, 08</td></tr>
+      <tr><td>Engineering and confidentiality posture</td><td>Currently unused. Answers &ldquo;is this a weekend project?&rdquo;</td><td>One line, 08</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Proof that does not exist, and must not be invented:</strong> customers, logos, testimonials, case studies, traction, outcome numbers, named users, pilot results, time-saved figures. The product&rsquo;s own house style forbids outcome numbers on the grounds that there are no customers yet, and that rule is correct and is inherited here.</p>
+
+  <h3>Objections, answered where they form</h3>
+  <p><strong>No FAQ section is recommended.</strong> An FAQ is where a page puts the objections it lacked the confidence to answer in the narrative. Four of the current five move forward into the story.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Objection</th><th>Forms</th><th>Answered</th><th>How</th></tr></thead>
+    <tbody>
+      <tr><td>&ldquo;We bought one and nobody updated it&rdquo;</td><td>Immediately</td><td class="n">03</td><td>Named before the reader names it, reframed from discipline to architecture</td></tr>
+      <tr><td>&ldquo;Is this going to email people for me?&rdquo;</td><td>Fold 04</td><td class="n">05</td><td>Six behaviours. One message at a time from your own mailbox</td></tr>
+      <tr><td>&ldquo;Our desk has run on these sheets for years&rdquo;</td><td>Fold 02</td><td class="n">07</td><td>Those exact sheets, with the fragility removed</td></tr>
+      <tr><td>&ldquo;How long until we are running on it?&rdquo;</td><td>Fold 06</td><td class="n">07</td><td>The workbook is the setup. History arrives with it</td></tr>
+      <tr><td>&ldquo;Is this an AI tool?&rdquo;</td><td>Any mention of drafting</td><td class="n">&mdash;</td><td><strong>Prevented, not answered.</strong> AI is absent from the page. Silence is the correct instrument</td></tr>
+      <tr><td>&ldquo;What if we outgrow it?&rdquo;</td><td>Late</td><td class="n">08</td><td>It stops at outreach on purpose</td></tr>
+      <tr><td>&ldquo;What does it cost?&rdquo;</td><td>Late</td><td class="n">08</td><td>There is no price yet, and we will not invent one</td></tr>
+      <tr><td>&ldquo;Is my buyer list safe with a startup?&rdquo;</td><td>Fold 07, at upload</td><td class="n">08</td><td>Confidentiality enforced server-side. One line, specific and true to the build</td></tr>
+      <tr><td>&ldquo;Who else uses it?&rdquo;</td><td>Anywhere</td><td class="n">08</td><td>The book in every screenshot is seeded demo data, and it is labelled</td></tr>
+      <tr><td><strong>&ldquo;Who are you?&rdquo;</strong></td><td>Fold 09, at the form</td><td class="n">&mdash;</td><td><span class="ev ev-block">Currently unanswerable</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Voice &mdash; inherited, not invented</h3>
+  <p><span class="ev ev-fact">FACT</span> A documented house style already exists in the marketing content file, and the context document calls it <em>the strongest brand asset that exists.</em> It is not replaced here. It is inherited and extended by two rules.</p>
+  <div class="rules">
+    <b>1.</b> No em dashes in rendered copy. Comma, colon or full stop.<br>
+    <b>2.</b> Say the concrete thing. &ldquo;You find out from the CFO&rdquo; beats &ldquo;poor visibility&rdquo;.<br>
+    <b>3.</b> No AI vocabulary. Ban list: seamless, leverage, robust, empower, streamline, elevate, unlock, actionable, solutions.<br>
+    <b>4.</b> No outcome numbers. No customers, so no results. The only figures live inside the demo book, which is labelled.<br>
+    <b>5.</b> Write like someone who has sat on the desk: plain, a little dry, allowed to notice that losing a warm thread stings.<br>
+    <b>6.</b> The claim ledger. Every claim gets exactly one home on the page.<br>
+    <b>7.</b> <em>New.</em> Never blame the reader. The product advises instead of blocking; the copy absolves instead of scolding.<br>
+    <b>8.</b> <em>New.</em> State limits in the same voice as capabilities. No hedging type, no fine print. A limit in a flat tone is the proof mechanism working.
+  </div>
+  <p><span class="ev ev-rec">Marked provisional</span> because naming and visual identity are undecided and either may shift the register. Nothing above depends on the name.</p>
+</section>
+
+<section class="sec">
+  <h2 id="s7"><span class="pnum">G</span><span>The copy deck</span></h2>
+  <p>Set at real hierarchy rather than in table cells, so the words can be judged as words. House style applied throughout: no em dashes, no banned vocabulary, no outcome numbers, no invented figures. This is the shipping copy.</p>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">02</span><span class="spec-t">The shape of the day</span></div>
+    <p class="h-1">Three spreadsheets, a browser, and you holding them together.</p>
+    <p>The master list for this mandate. The email schedule, with the follow-up column nobody sorts. The contact list someone else owns. And when the client&rsquo;s list runs out, a browser: searches, directories, portfolio pages, an LLM, reassembled by hand into something you can send.</p>
+    <p>The same company gets typed three times. The header block sits above the real column row. The exchange rate is on line four. None of it is difficult. It is just that the only thing joining any of it together is you, and you are also doing the actual work.</p>
+    <span class="lbl">Sub-beat</span>
+    <p style="font-family:var(--sans);font-weight:600;color:var(--ink);font-size:17px">And every so often, it costs something.</p>
+    <div class="tw" style="max-width:none"><table>
+      <thead><tr><th>What happened</th><th>How you found out</th></tr></thead>
+      <tbody>
+        <tr><td>Two analysts email the same CFO</td><td>From the CFO</td></tr>
+        <tr><td>The follow-up date passes on a Tuesday</td><td>Three weeks later</td></tr>
+        <tr><td>A buyer you have known for years opens as a stranger</td><td>You don&rsquo;t</td></tr>
+        <tr><td>An analyst leaves on Friday</td><td>In the handover</td></tr>
+      </tbody>
+    </table></div>
+    <span class="lbl">Turn line</span>
+    <p style="font-family:var(--sans);font-weight:600;color:var(--ink);font-size:17px;margin:0">All four are the same failure. The work was done. It had nowhere to live.</p>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">03</span><span class="spec-t">Why the last one died</span></div>
+    <p class="h-1">The last one died because someone had to keep it.</p>
+    <p>A desk buys a system. For three weeks everything gets entered. Then a live deal lands, and entering things is the first thing to go, because entering things was never the job.</p>
+    <p>Nobody was undisciplined. The tool asked people to record as well as do, and recording as well as doing is a second job. A record that needs a second job is always a little incomplete, and a little incomplete is worse than empty, because an incomplete record still gets consulted and believed.</p>
+    <p>So the question is not whether this one is better. It is whether this one needs you.</p>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">04</span><span class="spec-t">One act in</span></div>
+    <p class="h-1">One act in. Four consequences out.</p>
+    <p class="h-2">Hold to log the email, the way you would in the app. Nothing below this was typed.</p>
+    <div class="crumbs">
+      <div class="crumb"><b>The clock</b>Anchored to 12 March. Follow-ups fall on 26 March, 9 April, 23 April. The anchor never moves. A follow-up sent late does not buy the next one more time, which is the whole reason the date can be trusted.</div>
+      <div class="crumb"><b>The queue</b>The row stops waiting for its first email and joins the day&rsquo;s work, sorted by how late it is. Nobody sorts it.</div>
+      <div class="crumb"><b>The report</b>Volume and reply rate move. Nobody compiles anything on Monday.</div>
+      <div class="crumb"><b>The record</b>A line is appended that the next mandate will read. It cannot be edited afterwards.</div>
+    </div>
+    <span class="lbl">Closing line</span>
+    <p style="margin:0">That is the whole input. Everything under it is computed on the server, which is why there is nothing for you to keep up to date.</p>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">05</span><span class="spec-t">It does everything except decide</span></div>
+    <p class="h-1">It does everything except decide.</p>
+    <p class="h-2">This is not a sequencer. Email goes out one message at a time, from your own mailbox, when you press send. No relay, no shared sending domain, no bulk send. The recipient sees a normal email from you.</p>
+    <div class="crumbs">
+      <div class="crumb">It reads your workbook, then asks which deal each tab belongs to. Sheet names do not say, so it will not guess.</div>
+      <div class="crumb">It tells you a company may already be on another deal. It does not stop you adding it.</div>
+      <div class="crumb">It drafts from the deal&rsquo;s own context. You edit it. You send it.</div>
+      <div class="crumb">It will not set a status because you dragged a card. A column is never written directly.</div>
+      <div class="crumb">It scores a company against the mandate, and lets you mark the score wrong.</div>
+      <div class="crumb">It hides its own numbers when there is too little data for them to mean anything.</div>
+    </div>
+    <span class="lbl">Closing line</span>
+    <p style="margin:0">Everything it does on its own is worked out from something you did. Nothing is done on your behalf.</p>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">06</span><span class="spec-t">What it leaves behind</span></div>
+    <p class="h-1">May&rsquo;s target is June&rsquo;s buyer, and June opens already knowing.</p>
+    <p class="h-2">A company is held once for the whole firm. Every deal it has sat on hangs off that one record.</p>
+    <span class="lbl">Comparison caption</span>
+    <p style="font-family:var(--sans);font-weight:600;color:var(--ink);font-size:17px">Nobody typed the right-hand column.</p>
+    <span class="lbl">Warm history</span>
+    <p>A candidate carries a small chip: <strong>2 prior</strong>. Open it and it says who worked them, for which client, how it went, and when. That the firm has approached them is visible to everyone. What was said is visible only to the people on that deal.</p>
+    <span class="lbl">Closing line</span>
+    <p style="margin:0">This is not a setting anyone can switch on later. Either the record was complete while the work was happening, or it was not.</p>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">07</span><span class="spec-t">The way in &middot; conversion moment</span></div>
+    <p class="h-1">Start with the workbook you already keep.</p>
+    <p class="h-2">Not a configuration project. Drop the client&rsquo;s files in, all of them, and the project comes out live.</p>
+    <div class="crumbs">
+      <div class="crumb"><b>1</b>Drop the workbook. Header blocks, exchange-rate lines, running counts and all. It hunts down the real column row rather than assuming row one.</div>
+      <div class="crumb"><b>2</b>It tells you what it could not work out. &ldquo;Excel had no date for this event, dated to the last known touch.&rdquo; &ldquo;Type not in the firm&rsquo;s category vocabulary, imported as Other.&rdquo; Fourteen named flags, in plain English, before a single row is written.</div>
+      <div class="crumb"><b>3</b>The project is live. Companies, contacts, and every outreach event backdated to its real date, with the clock already in the right state, including the companies that are already late.</div>
+    </div>
+    <span class="lbl">Closing lines</span>
+    <p>Nothing is written until you apply. The preview is a true dry run and rolls itself back.</p>
+    <p>Your record does not start empty. It starts with what you already did.</p>
+    <span class="btn btn-2">Start with the deal you are running &rarr;</span>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">08</span><span class="spec-t">What it will not do</span></div>
+    <p class="h-1">The whole tool is three screens. Here is what it will not do.</p>
+    <div class="crumbs">
+      <div class="crumb"><b>It stops at outreach.</b>Execution, bid management and diligence are somebody else&rsquo;s software. If you need those today, we are the wrong tool today.</div>
+      <div class="crumb"><b>It will not chase you.</b>There are no notifications, reminders or digests. The clock runs, and it speaks when you open the app.</div>
+      <div class="crumb"><b>It will not send for you.</b>One message at a time, on your press. There is no bulk send and there is not going to be one.</div>
+      <div class="crumb"><b>It is not a data provider.</b>It ships with a set of organisations someone checked by hand, with the sources cited and revenue left blank rather than invented. It is a place to start, not a market map.</div>
+      <div class="crumb"><b>The book in every screenshot is seeded demo data</b>, and it is labelled that way on the images. There are no customers to show you yet.</div>
+      <div class="crumb"><b>There is no price yet.</b>When there is one it will be on this page, and not before.</div>
+    </div>
+    <span class="lbl">Closing line</span>
+    <p style="margin:0">We would rather you found all of that out here than in month two.</p>
+  </div>
+
+  <div class="spec">
+    <div class="spec-h"><span class="spec-n">09</span><span class="spec-t">Request access</span></div>
+    <p class="h-1">Start with the mandate you are running now.</p>
+    <p class="h-2">Access is opening to a small number of desks. Tell us the firm and the deal you are running, and we will set the workspace up with your people already in it.</p>
+    <span class="lbl">Form</span>
+    <p>Firm &middot; Your name &middot; Work email &middot; The deal you are running now <em>(optional)</em></p>
+    <span class="btn">Request access</span>
+    <p class="micro">One reply, from a person. You are not being added to a sequence.</p>
+    <span class="lbl">Risk reversal</span>
+    <p>Import the workbook you already keep. If the first week does not read like your own desk, you have lost a week and a spreadsheet.</p>
+    <span class="lbl">Footer note</span>
+    <p style="margin:0">The book shown throughout is seeded demo data. This ships empty except for a database of real organisations someone checked by hand.</p>
+  </div>
+
+  <h3>Alternatives worth holding, and only these</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Slot</th><th>Alternative</th><th>When to use it</th></tr></thead>
+    <tbody>
+      <tr><td>Hero headline</td><td>One act in. The follow-ups, the queue and the record come out.</td><td>Only if layout forces a shorter line. Weaker standing alone.</td></tr>
+      <tr><td>Hero headline</td><td>Log the email. The rest is derived. <em>(shipped)</em></td><td>If continuity with existing assets, including the share card, is worth more than clarity. The more elegant line, and the less informative one.</td></tr>
+      <tr><td>Fold 03 headline</td><td>You already tried the fix. It died of maintenance.</td><td>More accusatory. Use if the recommended line tests as too gentle.</td></tr>
+      <tr><td>Fold 05 sub</td><td>No relay. No shared sending domain. No bulk send.</td><td>A harder three-beat version, if the sequencer misread proves stubborn.</td></tr>
+      <tr><td>CTA label</td><td>Ask for a workspace</td><td>Warmer, and matches hand-provisioning. <strong>Prefer &ldquo;Request access&rdquo;</strong> for being unambiguous.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Microcopy that must survive edit</strong>, because each does a job no other line does: <em>Access is opening to a small number of desks</em> &middot; <em>Nobody sorted this</em> &middot; <em>Nothing below this was typed</em> &middot; <em>Nobody typed the right-hand column</em> &middot; <em>Nothing is written until you apply</em> &middot; <em>One reply, from a person.</em></p>
+</section>
+
+<section class="sec">
+  <h2 id="s8"><span class="pnum">H</span><span>What stays off the page</span></h2>
+  <p>Specific to this product. Each with the cost of including it.</p>
+  <ul class="no">
+    <li><strong>An FAQ section.</strong> Four of the five current FAQs are load-bearing objections and have been promoted into the narrative. An FAQ would restate them, breaking the claim ledger, and would signal that the page lacked confidence to answer them where they arise.</li>
+    <li><strong>A pricing section.</strong> No price exists. One line in fold 08.</li>
+    <li><strong>Logos, testimonials, customer counts, &ldquo;trusted by&rdquo;.</strong> None exist, and a page whose spine is candour cannot open with a fabrication.</li>
+    <li><strong>Any outcome metric.</strong> No customers, therefore no results.</li>
+    <li><strong>AI, anywhere.</strong> Peripheral, off by default, and in direct tension with the no-second-job argument. Naming it recategorises the product against the wrong competitors and invites the automation misread the page spends a whole fold closing.</li>
+    <li><strong>&ldquo;Invite your team&rdquo;, seat counts, collaboration UI.</strong> A firm cannot add a second user.</li>
+    <li><strong>&ldquo;Nothing slips&rdquo; as an active promise.</strong> There is no notification path. The honest form is that a lapse is visible the moment you open it.</li>
+    <li><strong>Database size, reach, freshness, &ldquo;new to you&rdquo;.</strong> Size is the one claim this product cannot make.</li>
+    <li><strong>A feature grid.</strong> The product is deliberately small and its smallness is a selling point. A grid trades a real advantage for the appearance of a bigger one.</li>
+    <li><strong>An integrations section.</strong> Two mail providers are a mechanism inside the sending story, not a value proposition.</li>
+    <li><strong>The river, current and flow metaphor.</strong> Saturated to inaudibility, it names the least-built half of the product, and it exists partly to justify a name under test. The page must not be built to justify a name again.</li>
+    <li><strong>&ldquo;Deal intelligence, institutionalized.&rdquo;</strong> A leftover that violates the product&rsquo;s own copy rules. It should come off login and signup too.</li>
+    <li><strong>A founder story.</strong> None exists and it must not be invented. Its absence is nonetheless a problem &mdash; see J.</li>
+    <li><strong>Security certifications, SOC 2, DPA language.</strong> Describing behaviour is honest. Implying compliance is not.</li>
+    <li><strong>Generic hero illustration, abstract gradient, stock imagery.</strong> The product is the argument. Decoration in place of evidence is exactly what this page&rsquo;s credibility mechanism is defined against.</li>
+  </ul>
+</section>
+
+<section class="sec">
+  <h2 id="s9"><span class="pnum">I</span><span>Mobile priority</span></h2>
+  <p>Mobile preserves the argument rather than compressing the page. The argument survives if and only if recognition, objection, mechanism and the ask survive in order.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Rank</th><th>Content</th><th>Treatment</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td>Hero headline, sub, primary CTA</td><td>Full. Headline may wrap to three lines.</td></tr>
+      <tr><td class="n">1</td><td>Hero queue panel</td><td>Crop to four rows, including the row with the &ldquo;2 prior&rdquo; chip. A cropped legible queue beats a full illegible one.</td></tr>
+      <tr><td class="n">1</td><td>Fold 03, entire</td><td>Keep. It is text, it is the pivot, and it costs almost nothing.</td></tr>
+      <tr><td class="n">1</td><td>Fold 04, the four consequences</td><td>Keep. If press-and-hold cannot be made reliable on touch, use an autoplaying three-state animation. <strong>Never a static image</strong> &mdash; the point is that nothing was typed.</td></tr>
+      <tr><td class="n">1</td><td>Fold 09 form and risk reversal</td><td>Full. Four fields, stacked.</td></tr>
+      <tr><td class="n">2</td><td>Fold 02 body and turn line</td><td>Keep the body. The four-loss table becomes four stacked lines.</td></tr>
+      <tr><td class="n">2</td><td>Fold 05, all six behaviours</td><td>Keep. Short text, and it prevents the fatal misread.</td></tr>
+      <tr><td class="n">2</td><td>Fold 07, frames 2 and 3</td><td>Frame 2 is the credibility spine and must stay legible.</td></tr>
+      <tr><td class="n">2</td><td>Fold 08 list</td><td>Keep. Six short lines.</td></tr>
+      <tr><td class="n">3</td><td>Fold 06 comparison</td><td>Stack to before and after with the caption between. The contrast survives stacking; a shrunken two-column table does not.</td></tr>
+      <tr><td class="n">3</td><td>Master List screenshot</td><td>Crop to three rows, or drop. The warm-history block can carry the fold alone.</td></tr>
+      <tr><td class="n">4</td><td>Fold 07 frame 1, secondary hero CTA, any analytics imagery</td><td>Cut.</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Never cut on mobile:</strong> the <code>DEMO BOOK</code> label, the import review&rsquo;s flag text, and the caption <em>&ldquo;Nobody typed the right-hand column.&rdquo;</em> Each is the entire load-bearing content of its fold.</p>
+</section>
+
+<section class="sec">
+  <h2 id="s10"><span class="pnum">J</span><span>Resolve before visual design begins</span></h2>
+
+  <h3>1 &middot; The page has no author <span class="ev ev-block">Blocking</span></h3>
+  <p>A page whose credibility mechanism is <em>&ldquo;we tell you what we do not know&rdquo;</em>, asking for the most confidential document a desk owns, from an entity with no about page, no named person, no company and no jurisdiction. <span class="ev ev-fact">FACT</span> The contradiction is structural, not cosmetic, and no copy fixes it. <strong>Minimum resolution:</strong> a name, a sentence about who built this and why, and a legal entity in the footer. It does not need to be a founder story. It needs to not be anonymous.</p>
+
+  <h3>2 &middot; The form has nowhere to post <span class="ev ev-block">Blocking, and technical</span></h3>
+  <p><span class="ev ev-fact">FACT</span> The landing page is a static export and cannot accept submissions. The access decision requires a form. Until a submission path exists, the page&rsquo;s only conversion action is inoperable, which is the exact failure the current dead end already represents. An infrastructure decision, not a design one, and it must be settled before the page is built.</p>
+
+  <h3>3 &middot; The demo firm is named after the product</h3>
+  <p><span class="ev ev-fact">FACT</span> The seeded firm shares the product&rsquo;s name, so the screenshots used to sell it show the product as its own customer. Every capture on this page inherits that. <strong>Reseed under a neutral firm name before any screenshot is taken.</strong> Cheap to fix, expensive to ship.</p>
+
+  <h3>4 &middot; Screenshot assets are theme-locked</h3>
+  <p><span class="ev ev-fact">FACT</span> Screenshots are baked and must be regenerated whenever the theme changes, and the light-or-dark default is still undecided. Capturing before that decision guarantees a recapture.</p>
+
+  <h3>5 &middot; Four required demonstrations have never been captured</h3>
+  <p><span class="ev ev-fact">FACT</span> The warm-history reveal has never been shown as screens anywhere, and the import&rsquo;s three frames, the two-deal comparison and the performed derivation all need production. These are not export-the-existing-assets tasks.</p>
+
+  <h3>6 &middot; The name is undecided, and this page must not justify one</h3>
+  <p><span class="ev ev-fact">FACT</span> Three landing rebuilds in six weeks, each around a different premise, to justify a name treated internally as a project name. <strong>This blueprint is deliberately name-independent.</strong> No copy in G depends on the string &ldquo;Upstream&rdquo;, and the river metaphor is excluded. If the name changes, the copy survives. Preserve that through the visual stage.</p>
+
+  <h3>7 &middot; Two vocabularies still collide inside the product</h3>
+  <p><span class="ev ev-fact">FACT</span> Schedule versus Outreach desk, Sourcing versus Discover, Master List versus Companies, mandate versus engagement. The page uses <em>mandate</em> and <em>queue</em>. If the product&rsquo;s labels are reconciled, the page should follow. If they are not, a visitor moves from the page&rsquo;s vocabulary into a different one on first login.</p>
+</section>
+
+<section class="sec">
+  <h2 id="s11"><span class="pnum">K</span><span>Asset brief for the design stage</span></h2>
+  <p>Do not design these yet. This is the brief for the stage that does.</p>
+  <div class="tw"><table>
+    <thead><tr><th>#</th><th>Asset</th><th>Fold</th><th>Must communicate</th><th>Evidence required</th><th>Pri</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><strong>Hero queue panel</strong></td><td class="n">01</td><td>An ordered list of real work with computed lateness that obviously nobody sorted</td><td>Outreach desk, light theme, demo book, <strong>one row with a &ldquo;2 prior&rdquo; chip</strong>, <code>DEMO BOOK</code> label, day-count column legible</td><td class="n">P0</td></tr>
+      <tr><td class="n">2</td><td><strong>The derivation, performed</strong></td><td class="n">04</td><td>That four things appeared and none was typed</td><td>Three states: awaiting first email &rarr; the log act &rarr; anchor date, three follow-ups, queue position, appended timeline line. Reader-driven, with animated fallback and a reduced-motion path</td><td class="n">P0</td></tr>
+      <tr><td class="n">3</td><td><strong>Import, three frames</strong></td><td class="n">07</td><td>That the middle frame is the product admitting what it could not read</td><td>Drop zone; review screen with counters and the flag list <strong>verbatim and legible</strong>; the live project line with its counts</td><td class="n">P0</td></tr>
+      <tr><td class="n">4</td><td><strong>Warm history reveal</strong></td><td class="n">06</td><td>That the software knew something the analyst could not have looked up</td><td>Discover mid-search &rarr; &ldquo;2 prior&rdquo; row &rarr; expanded block naming analyst, client, sentiment, date. <strong>Never captured before.</strong> Needs the reveal</td><td class="n">P0</td></tr>
+      <tr><td class="n">5</td><td>One company, two deals</td><td class="n">06</td><td>Contrast, not motion</td><td>Static before and after from the verified demo example. Caption carries it</td><td class="n">P1</td></tr>
+      <tr><td class="n">6</td><td>The four losses strip</td><td class="n">02</td><td>Four events and how each was found out</td><td>Typographic. No illustration</td><td class="n">P1</td></tr>
+      <tr><td class="n">7</td><td>The six refusals</td><td class="n">05</td><td>Six moments where the software stopped</td><td>Typographic list, each traceable to a shipped surface</td><td class="n">P1</td></tr>
+      <tr><td class="n">8</td><td>Master List crop</td><td class="n">06</td><td>That the record is structural, not a feature</td><td>One row per company with deal chips, &ldquo;Worked by&rdquo; stack, deal count</td><td class="n">P2</td></tr>
+      <tr><td class="n">9</td><td>Queue clearing loop</td><td class="n">01/04</td><td>Progress, and that the day is finite</td><td>Row flash and collapse, counter tick, horizon recount. The animation already exists in the app</td><td class="n">P2</td></tr>
+      <tr><td class="n">10</td><td><strong>Reseeded demo book</strong></td><td>all</td><td>Prerequisite to every capture</td><td>Neutral firm name, lorem-ipsum notes removed, dev-tool chrome absent</td><td class="n">P0</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>Asset 10 blocks 1, 3, 4, 5, 8 and 9.</strong> Four of the ten have never been captured.</p>
+  <p><strong>Not required:</strong> hero illustration, abstract or gradient artwork, river or water imagery, an icon set beyond the product&rsquo;s own, team photography, a logo strip, analytics imagery, dark-theme captures.</p>
+</section>
+
+<section class="sec">
+  <h2 id="s12"><span class="pnum">L</span><span>Self-review, without softening</span></h2>
+  <div class="tw"><table>
+    <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Is the story derived from the product?</strong></td><td>Yes. Every fold maps to a shipped behaviour, and the two folds with no image are the two that are pure argument by design. The one extension beyond both sources is the sequencing synthesis in A, labelled as a recommendation.</td></tr>
+      <tr><td><strong>Is the transformation clear?</strong></td><td>Yes. From holding four artifacts together by memory, to a record that is complete because the work wrote it. Stated in 02, proved in 04, paid off in 06.</td></tr>
+      <tr><td><strong>Ten seconds for a stranger?</strong></td><td>Yes, if the hero image is legible. It is a long headline, and that is a deliberate trade of elegance for comprehension against a sceptical reader.</td></tr>
+      <tr><td><strong>Is the hero differentiated?</strong></td><td>Differentiated, but not maximally. The more ownable line is unusable in a hero. Differentiation is carried instead by the chip in frame one and by fold 05. <strong>A real compromise, recorded as one.</strong></td></tr>
+      <tr><td><strong>Features instead of value?</strong></td><td>Mostly not. The risk concentrates in fold 05, which is a list of six behaviours. Retained because each is evidence for one claim, not six claims, and the closing line converts the list back into a stance.</td></tr>
+      <tr><td><strong>Is every fold necessary?</strong></td><td>The two most vulnerable are 02 and 08. Cutting 02 costs recognition, the only persuasion mechanism available without customers. Cutting 08 costs the credibility spine. Neither should go.</td></tr>
+      <tr><td><strong>Is the CTA earned?</strong></td><td>Yes. It arrives after the mechanism, the stance, the switching cost and the limits. Its one weakness is that the reader did not know access was rationed until the hero microcopy said so, which is honest and is the only pressure applied.</td></tr>
+      <tr><td><strong>Any unsupported claims?</strong></td><td>None found. The three closest to the line: <em>we set the workspace up with your people already in it</em> is true under hand-provisioning and would be false under self-serve, which is why that decision was required before writing it; <em>the whole tool is three screens</em> is the product&rsquo;s own shipped claim and the context document affirms it; <em>fourteen named flags</em> is a counted fact.</td></tr>
+      <tr><td><strong>Anything invented?</strong></td><td>No user, no result, no metric, and no competitor beyond the five in the source. The pain points are traceable, though their <em>ranking</em> is inference and is labelled as such.</td></tr>
+      <tr><td><strong>Following Step 1, or changing it?</strong></td><td>Changing it in four named places, each argued from product evidence: the anchor demoted, the refusal promoted, the sourcing moment restored, the record moved from opening claim to destination. All stated, none slipped in.</td></tr>
+      <tr><td><strong>One central idea?</strong></td><td>Yes. <em>That one keeps itself.</em> Every fold is the setup for it, the proof of it, the payoff from it, or a limit on it.</td></tr>
+      <tr><td><strong>Where is this weakest?</strong></td><td>Three places. The hero trades memorability for clarity. Fold 05 is a list in a page that otherwise argues. And the whole page rests on a credibility mechanism undermined by J1 until someone puts a name to it.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="sec">
+  <h2 id="s13"><span class="pnum">&bull;</span><span>Verdict</span></h2>
+  <blockquote><p>READY WITH CAVEATS</p><p style="font-family:var(--serif);font-size:16px;font-weight:400;color:var(--ink-2);line-height:1.6">Visual design can begin on folds 02 through 09 immediately.</p></blockquote>
+  <p>The story, architecture, messaging system and copy are complete and traceable to product evidence. Four business decisions that Step 1 correctly identified as blocking have been taken, and taking them resolved the two largest forks: hand-provisioning makes the firm-wide record honestly claimable, and a request-access CTA matches a problem that is chronic rather than urgent. The blueprint is deliberately independent of the product&rsquo;s name, so the naming stage cannot invalidate it.</p>
+
+  <h3>Two items must be resolved in parallel, and both are the owner&rsquo;s</h3>
+  <ol>
+    <li><strong>An author for the page.</strong> A credibility strategy built on candour cannot be delivered anonymously to a buyer being asked for their most confidential document. A name, a sentence and a legal entity is the minimum.</li>
+    <li><strong>A submission path for the form.</strong> The current static export cannot accept one, which would leave the page&rsquo;s only conversion action inoperable &mdash; the exact defect the existing dead end already has.</li>
+  </ol>
+  <p><strong>One item must be resolved before any screenshot is captured:</strong> the demo book is seeded under a firm named after the product, so every current capture shows the product as its own customer.</p>
+  <p><strong>Not blocking, but it will force rework if deferred:</strong> the light-or-dark default, because screenshots are baked and theme-locked.</p>
+
+  <footer>
+    <b>Step 2 &mdash; Landing page story, content and information architecture.</b><br>
+    Sources: <b>DESIGN_CONTEXT.md</b> as product truth; <b>Step 1 strategy</b> tested rather than inherited. Four owner decisions recorded in 00.<br>
+    Nothing here has been validated with a user. There is no user research, no customer evidence and no market testing anywhere in either source. Every conclusion is reasoned from the implementation, the product&rsquo;s own copy, and those four decisions.<br>
+    The colours and typefaces of this page are document chrome, carried over from the Step 1 dossier for series continuity. They are not a brand proposal.
+  </footer>
+</section>
+
+    </main>
+  </div>
+</div>

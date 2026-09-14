@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  CheckSquare,
   ChevronDown,
   Flame,
   FlaskConical,
@@ -52,6 +53,7 @@ import {
 import { useMandates } from "@/hooks/use-mandates";
 import { useDisconnectEmail, useEmailAccount } from "@/hooks/use-email";
 import { LogOutreachDialog } from "@/components/features/log-outreach-dialog";
+import { TaskDialog } from "@/components/features/task-dialog";
 import { ComposeEmailSheet } from "@/components/features/compose-email-sheet";
 import { EmailConnectPanel, GmailGlyph, OutlookGlyph } from "@/components/features/email-connect";
 import { Button } from "@/components/ui/button";
@@ -78,7 +80,6 @@ import {
   DEAL_TYPE_SHORT,
   DEAL_TYPE_STYLE,
   DISPLAY,
-  LABEL,
   MONO,
   PAGE_TITLE,
   PAGE_TITLE_STYLE,
@@ -107,29 +108,32 @@ const TEMP_META: Record<
   hot: {
     label: "Hot",
     Icon: Flame,
-    text: "text-destructive-ink",
-    chip: "border-destructive/30 bg-destructive/[0.10] text-destructive-ink",
+    // Temperature in the state colours: hot (they replied) is green, warm (in
+    // conversation) blue, cold recedes to grey, new is a dashed outline — nothing has
+    // been sent, so nothing about it has started yet.
+    text: "text-success-ink",
+    chip: "border-success-line bg-success-soft text-success-ink",
     note: "engaged — move fast",
   },
   warm: {
     label: "Warm",
     Icon: Sun,
-    text: "text-amber-400",
-    chip: "border-amber-500/30 bg-amber-500/[0.10] text-amber-700 dark:text-amber-300",
+    text: "text-info-ink",
+    chip: "border-info-line bg-info-soft text-info-ink",
     note: "in conversation",
   },
   cold: {
     label: "Cold",
     Icon: Snowflake,
-    text: "text-sky-400/80",
-    chip: "border-sky-500/25 bg-sky-500/[0.08] text-sky-700 dark:text-sky-300/90",
+    text: "text-muted-foreground",
+    chip: "border-border bg-muted text-muted-foreground",
     note: "no reply yet",
   },
   new: {
     label: "New",
     Icon: Sparkles,
-    text: "text-indigo-600 dark:text-indigo-400",
-    chip: "border-indigo-500/30 bg-indigo-500/[0.10] text-indigo-700 dark:text-indigo-300",
+    text: "text-foreground",
+    chip: "border-dashed border-border-strong bg-card text-foreground",
     note: "not yet contacted",
   },
 };
@@ -269,7 +273,7 @@ function TempChip({ temp, size = "sm" }: { temp: Temp; size?: "sm" | "lg" }) {
     <span
       title={`${m.label} · ${m.note}`}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full border font-semibold",
+        "inline-flex shrink-0 items-center gap-1 rounded-[4px] border font-medium",
         m.chip,
         size === "lg" ? "px-2.5 py-1 text-xs" : "px-1.5 py-0.5 text-[11px]",
       )}
@@ -287,19 +291,19 @@ function TempChip({ temp, size = "sm" }: { temp: Temp; size?: "sm" | "lg" }) {
 type RailTone = "overdue" | "today" | "week" | "initial";
 
 const RAIL_TONE: Record<RailTone, { text: string }> = {
-  overdue: { text: "text-destructive-ink" },
-  today: { text: "text-primary-ink" },
+  overdue: { text: "text-danger-ink" },
+  today: { text: "text-warning-ink" },
   week: { text: "text-muted-foreground" },
-  initial: { text: "text-indigo-600/90 dark:text-indigo-400/90" },
+  initial: { text: "text-secondary-foreground" },
 };
 
-// Barely-there row wash — overdue gets a whisper of red so a block of late work
-// reads in peripheral vision; everything else is neutral (calm, not colour-soup).
+// No row wash: the red count already marks a late row, and tinting sixty late rows
+// red turns the whole queue into one alarm. Every row takes the same hover.
 const ROW_TINT: Record<RailTone, string> = {
-  overdue: "bg-destructive/[0.018] hover:bg-destructive/[0.04]",
-  today: "hover:bg-muted/50",
-  week: "hover:bg-muted/50",
-  initial: "hover:bg-muted/50",
+  overdue: "hover:bg-subtle",
+  today: "hover:bg-subtle",
+  week: "hover:bg-subtle",
+  initial: "hover:bg-subtle",
 };
 
 function railFor(row: ScheduleRow): { tone: RailTone; num?: number; text?: string; small: string } {
@@ -350,12 +354,14 @@ function DueToken({ row, index = 0, size = "sm" }: { row: ScheduleRow; index?: n
  *  ahead (1–6), or the not-yet-started lane. */
 type Seg = "all" | "late" | "today" | "new" | number;
 
+// Load underbars carry urgency in the state colours: late is red, today amber, the
+// week ahead neutral ink, and the not-yet-started lane a lighter grey.
 const SEG_STYLE = {
-  all: { count: "text-foreground", bar: "bg-foreground/30" },
-  late: { count: "text-destructive-ink", bar: "bg-destructive" },
-  today: { count: "text-primary-ink", bar: "bg-primary" },
-  day: { count: "text-sky-600 dark:text-sky-400", bar: "bg-sky-500/80" },
-  new: { count: "text-indigo-600 dark:text-indigo-400", bar: "bg-indigo-500/80" },
+  all: { count: "text-foreground", bar: "bg-ink-200" },
+  late: { count: "font-semibold text-danger-ink", bar: "bg-danger" },
+  today: { count: "text-warning-ink", bar: "bg-warning" },
+  day: { count: "text-foreground", bar: "bg-ink-400" },
+  new: { count: "text-foreground", bar: "bg-ink-300" },
 } as const;
 
 function HorizonCell({
@@ -391,7 +397,7 @@ function HorizonCell({
     >
       <span
         className={cn(
-          "truncate text-[10px] font-semibold uppercase tracking-[0.12em]",
+          "truncate text-xs font-medium",
           active ? "text-foreground" : "text-muted-foreground",
         )}
       >
@@ -403,7 +409,7 @@ function HorizonCell({
       >
         {count ?? "—"}
       </span>
-      <span className="h-[3px] w-full overflow-hidden rounded-full bg-foreground/[0.06]">
+      <span className="h-[3px] w-full overflow-hidden rounded-full bg-accent">
         <span
           className={cn("horizon-load block h-full rounded-full", !quiet && barPct > 0 && s.bar)}
           style={{ width: `${quiet || barPct <= 0 ? 0 : Math.max(8, barPct)}%`, "--load-delay": `${delay}ms` } as CSSProperties}
@@ -436,7 +442,7 @@ function HorizonRail({
     <div
       role="group"
       aria-label="Queue horizon — scope by urgency or day"
-      className="flex items-stretch gap-0.5 overflow-x-auto rounded-xl border border-border bg-muted/40 p-1"
+      className="flex items-stretch gap-0.5 overflow-x-auto rounded-lg bg-muted p-1 ring-1 ring-inset ring-border"
     >
       {/* "All" is a scope, not a load — no underbar: totals aren't on the day scale. */}
       <HorizonCell label="All" count={total} tone="all" wide active={seg === "all"} barPct={0} delay={0} onClick={() => onSeg("all")} />
@@ -487,11 +493,11 @@ function SectionHeader({
   allSelected?: boolean;
 }) {
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-card/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+    <div className="sticky top-0 z-10 flex h-9 items-center gap-2 border-b border-border bg-muted px-4">
       {icon ?? <span className={cn("h-2 w-2 rounded-full", dot)} aria-hidden />}
-      <span className={cn("text-xs font-semibold uppercase tracking-wider", tone)}>{label}</span>
+      <span className={cn("text-xs font-semibold", tone)}>{label}</span>
       {count != null && (
-        <span className="rounded-full bg-muted px-1.5 text-[11px] font-semibold tabular-nums text-muted-foreground">
+        <span className="rounded-[4px] bg-card px-1.5 text-[11px] font-medium leading-[18px] tabular-nums text-muted-foreground ring-1 ring-inset ring-border">
           {count}
         </span>
       )}
@@ -527,6 +533,7 @@ function RowActions({
   onCompose?: () => void;
   onLogged?: () => void;
 }) {
+  const [taskOpen, setTaskOpen] = useState(false);
   const awaiting = row.schedule_status === "AWAITING_INITIAL";
   const [quickType, setQuickType] = useState<string | null>(null);
 
@@ -549,7 +556,7 @@ function RowActions({
         <Button
           size="sm"
           variant="outline"
-          className="h-7 rounded-r-none pr-2.5 text-xs font-normal transition-colors group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground"
+          className="h-7 rounded-r-none pr-2.5 text-xs font-normal transition-colors group-hover:border-border-strong group-hover:bg-primary group-hover:text-primary-foreground"
           data-log-index={logIndex}
           onClick={onCompose}
         >
@@ -572,7 +579,7 @@ function RowActions({
             <Button
               size="sm"
               variant="outline"
-              className="h-7 rounded-r-none pr-2.5 text-xs font-normal transition-colors group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground"
+              className="h-7 rounded-r-none pr-2.5 text-xs font-normal transition-colors group-hover:border-border-strong group-hover:bg-primary group-hover:text-primary-foreground"
               data-log-index={logIndex}
             >
               {primaryLabel}
@@ -596,7 +603,7 @@ function RowActions({
               <Button
                 size="sm"
                 variant="outline"
-                className="-ml-px h-7 w-6 rounded-l-none px-0 transition-colors group-hover:border-primary/40"
+                className="-ml-px h-7 w-6 rounded-l-none px-0 transition-colors group-hover:border-border-strong"
                 aria-label="More outcomes"
               />
             )
@@ -614,7 +621,7 @@ function RowActions({
             </>
           )}
           <DropdownMenuItem onClick={() => setQuickType("RESPONSE")}>
-            <Reply className="h-4 w-4 text-emerald-500" aria-hidden /> Mark replied
+            <Reply className="h-4 w-4 text-foreground" aria-hidden /> Mark replied
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setQuickType("BOUNCE")}>
             <XCircle className="h-4 w-4 text-destructive-ink" aria-hidden /> Mark bounced
@@ -626,8 +633,18 @@ function RowActions({
           <DropdownMenuItem onClick={() => setQuickType("MEETING")}>
             <Users className="h-4 w-4 text-muted-foreground" aria-hidden /> Log meeting
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => setTaskOpen(true)}>
+            <CheckSquare className="h-4 w-4 text-muted-foreground" aria-hidden /> Add task
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {/* Pre-attached to this company — "chase them Thursday" filed from the queue. */}
+      <TaskDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        defaults={{ title: "", company_id: row.company_id }}
+      />
       {quickType !== null && (
         <LogOutreachDialog
           key={quickType}
@@ -687,12 +704,12 @@ function QueueRow({
     <div
       data-row-index={logIndex}
       className={cn(
-        "cv-row group flex min-h-[52px] items-center gap-2.5 fill-mode-backwards py-2 pl-3 pr-2 transition-colors duration-300 animate-in fade-in slide-in-from-bottom-1 sm:pr-3",
+        "cv-row group flex min-h-[52px] items-center gap-2.5 py-2 pl-3 pr-2 transition-colors duration-150 sm:pr-3",
         ROW_TINT[tone],
         focused && "queue-row-focused",
         clearing && "row-clear",
       )}
-      style={{ contain: "layout", animationDelay: `${Math.min(index, 14) * 24}ms` }}
+      style={{ contain: "layout" }}
     >
       {selectable && (
         <button
@@ -701,9 +718,9 @@ function QueueRow({
           className={cn(
             "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all",
             selected
-              ? "scale-110 border-primary bg-primary text-primary-foreground"
+              ? "border-foreground bg-foreground text-background"
               : cn(
-                  "border-input hover:border-primary/60 focus-visible:opacity-100",
+                  "border-input hover:border-border-strong focus-visible:opacity-100",
                   anySelected ? "opacity-60" : "opacity-0 group-hover:opacity-100",
                 ),
           )}
@@ -722,7 +739,7 @@ function QueueRow({
           <Link
             href={`/companies/${row.company_id}`}
             title={row.regarding ?? undefined}
-            className="truncate rounded text-left text-[15px] font-semibold tracking-tight text-foreground outline-none hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring"
+            className="truncate rounded text-left text-sm font-semibold text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
           >
             {row.company_name}
           </Link>
@@ -819,7 +836,7 @@ function LeadRow({
     <div
       data-row-index={logIndex}
       className={cn(
-        "group flex flex-wrap items-center gap-x-2.5 gap-y-2 py-3.5 pl-3 pr-2 transition-colors duration-300 animate-in fade-in slide-in-from-bottom-1 sm:pr-3",
+        "group flex flex-wrap items-center gap-x-2.5 gap-y-2 py-3.5 pl-3 pr-2 transition-colors duration-150 sm:pr-3",
         ROW_TINT[r.tone],
         focused && "queue-row-focused",
         clearing && "row-clear",
@@ -831,7 +848,7 @@ function LeadRow({
           <Link
             href={`/companies/${row.company_id}`}
             title={row.regarding ?? undefined}
-            className="max-w-full truncate rounded text-left text-lg font-semibold leading-tight tracking-tight text-foreground outline-none hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring sm:text-[22px]"
+            className="max-w-full truncate rounded text-left text-base font-semibold leading-tight text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring sm:text-lg"
             style={{ ...DISPLAY, letterSpacing: "-0.02em" }}
           >
             {row.company_name}
@@ -917,9 +934,9 @@ function FocusMode({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="focus-card w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-2xl sm:p-8">
+      <div className="focus-card w-full max-w-lg rounded-lg bg-card p-6 shadow-lg ring-1 ring-border sm:p-8">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-ink">
+          <div className="flex items-center gap-2 text-xs font-medium text-primary-ink">
             <FocusIcon className="h-3.5 w-3.5" aria-hidden /> Focus mode
           </div>
           <button
@@ -935,7 +952,7 @@ function FocusMode({
         <div className="mt-4 flex items-center gap-3">
           <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-primary to-primary/50 transition-[width] duration-500 ease-out"
+              className="h-full rounded-full bg-foreground transition-[width] duration-300 ease-out"
               style={{ width: `${total ? (Math.min(idx, total) / total) * 100 : 100}%` }}
             />
           </div>
@@ -946,7 +963,7 @@ function FocusMode({
 
         {complete ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center">
-            <CheckCircle2 className="h-12 w-12 text-emerald-500" aria-hidden />
+            <CheckCircle2 className="h-10 w-10 text-success" strokeWidth={1.75} aria-hidden />
             <p className="text-lg font-semibold" style={DISPLAY}>
               Queue cleared.
             </p>
@@ -978,7 +995,7 @@ function FocusMode({
 
             <button
               onClick={() => router.push(`/companies/${row.company_id}`)}
-              className="mt-2.5 block max-w-full truncate text-left text-3xl font-semibold tracking-tight text-foreground outline-none hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring"
+              className="mt-2.5 block max-w-full truncate text-left text-2xl font-semibold text-foreground underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
               style={{ ...DISPLAY, letterSpacing: "-0.02em" }}
             >
               {row.company_name}
@@ -1068,8 +1085,8 @@ function FocusMode({
               )}
             </div>
             <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              <kbd className="rounded border bg-muted px-1 font-mono">S</kbd> skip ·{" "}
-              <kbd className="rounded border bg-muted px-1 font-mono">Esc</kbd> exit
+              <kbd className="rounded border bg-muted px-1 tabular-nums">S</kbd> skip ·{" "}
+              <kbd className="rounded border bg-muted px-1 tabular-nums">Esc</kbd> exit
             </p>
           </div>
         )}
@@ -1122,7 +1139,7 @@ function SenderChip() {
     ) : account.provider === "MICROSOFT" ? (
       <OutlookGlyph className="h-3.5 w-3.5" />
     ) : (
-      <FlaskConical className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" aria-hidden />
+      <FlaskConical className="h-3.5 w-3.5 text-foreground" aria-hidden />
     );
 
   return (
@@ -1194,7 +1211,7 @@ type SectionKey = "overdue" | "today" | "upcoming";
 const SECTION: Record<SectionKey, { label: string; sub?: string; dot: string; tone: string }> = {
   overdue: { label: "Overdue", dot: "bg-destructive", tone: "text-destructive-ink" },
   today: { label: "Due today", sub: "clear these next", dot: "bg-primary", tone: "text-primary-ink" },
-  upcoming: { label: "Coming up", dot: "bg-sky-500", tone: "text-muted-foreground" },
+  upcoming: { label: "Coming up", dot: "bg-ink-400", tone: "text-muted-foreground" },
 };
 
 // ── URL-persisted desk state (P2 DataTable pattern, desk idiom) ─────────────────
@@ -1537,7 +1554,7 @@ export default function SchedulePage() {
     if (seg === "today") return { ...SECTION.today, count: dueTodayCount };
     if (typeof seg === "number") {
       const d = dayFromOffset(seg);
-      return { label: `${d.weekday} ${d.day} ${d.month}`, sub: "scheduled that day", dot: "bg-sky-500", tone: "text-muted-foreground", count: dayCount(seg) };
+      return { label: `${d.weekday} ${d.day} ${d.month}`, sub: "scheduled that day", dot: "bg-ink-400", tone: "text-muted-foreground", count: dayCount(seg) };
     }
     return null;
   })();
@@ -1556,11 +1573,11 @@ export default function SchedulePage() {
           {/* Progress module — today's outreach, at a calm glance. */}
           <div className="mt-2 w-full max-w-md sm:w-[26rem]" aria-live="polite">
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground">
                 Today&rsquo;s outreach
               </span>
               {actionable === 0 ? (
-                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-500">
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
                   <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
                   {logged > 0 ? `Cleared — ${logged} done` : "All clear"}
                 </span>
@@ -1582,7 +1599,7 @@ export default function SchedulePage() {
                 />
               </div>
               {logged >= 3 && actionable > 0 && (
-                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+                <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-foreground">
                   <Flame className="h-3.5 w-3.5" aria-hidden />
                   {logged}
                 </span>
@@ -1675,10 +1692,10 @@ export default function SchedulePage() {
       />
 
       {/* ── The queue ── */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         {loadError ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
-            <AlertTriangle className="h-6 w-6 text-amber-500" aria-hidden />
+            <AlertTriangle className="h-5 w-5 text-foreground" aria-hidden />
             <p className="text-sm font-medium">Couldn&rsquo;t load the queue.</p>
             <button
               onClick={() => {
@@ -1706,7 +1723,7 @@ export default function SchedulePage() {
               </>
             ) : typeof seg === "number" ? (
               <>
-                <CheckCircle2 className="h-8 w-8 text-emerald-500" aria-hidden />
+                <CheckCircle2 className="h-8 w-8 text-foreground" aria-hidden />
                 <p className="text-sm font-medium">
                   You&rsquo;re clear for {dayFromOffset(seg).weekday} {dayFromOffset(seg).day}.
                 </p>
@@ -1737,7 +1754,7 @@ export default function SchedulePage() {
               </>
             ) : (
               <>
-                <CheckCircle2 className="h-8 w-8 text-emerald-500" aria-hidden />
+                <CheckCircle2 className="h-8 w-8 text-foreground" aria-hidden />
                 <p className="text-sm font-medium">Desk clear.</p>
                 <p className="text-xs text-muted-foreground">No outreach due in the next 7 days.</p>
               </>
@@ -1840,8 +1857,8 @@ export default function SchedulePage() {
             {showNeeds && visibleNeeds.length > 0 && (
               <>
                 <SectionHeader
-                  dot="bg-indigo-500"
-                  tone="text-indigo-600 dark:text-indigo-400"
+                  dot="bg-card ring-1 ring-inset ring-foreground"
+                  tone="text-foreground"
                   label="Ready to introduce"
                   sub="first outreach — clock hasn't started"
                   count={Math.max(visibleNeeds.length, needsTotal - (leadFromNeeds ? 1 : 0))}
@@ -1886,16 +1903,16 @@ export default function SchedulePage() {
 
       {/* Shortcut hint — one quiet line under the work, not chrome above it. */}
       <p className="hidden text-center text-[11px] text-muted-foreground lg:block">
-        <kbd className="rounded border bg-muted px-1 font-mono">j</kbd>/<kbd className="rounded border bg-muted px-1 font-mono">k</kbd> move ·{" "}
-        <kbd className="rounded border bg-muted px-1 font-mono">l</kbd> log ·{" "}
-        <kbd className="rounded border bg-muted px-1 font-mono">x</kbd> select ·{" "}
-        <kbd className="rounded border bg-muted px-1 font-mono">f</kbd> focus ·{" "}
-        <kbd className="rounded border bg-muted px-1 font-mono">?</kbd> all shortcuts
+        <kbd className="rounded border bg-muted px-1 tabular-nums">j</kbd>/<kbd className="rounded border bg-muted px-1 tabular-nums">k</kbd> move ·{" "}
+        <kbd className="rounded border bg-muted px-1 tabular-nums">l</kbd> log ·{" "}
+        <kbd className="rounded border bg-muted px-1 tabular-nums">x</kbd> select ·{" "}
+        <kbd className="rounded border bg-muted px-1 tabular-nums">f</kbd> focus ·{" "}
+        <kbd className="rounded border bg-muted px-1 tabular-nums">?</kbd> all shortcuts
       </p>
 
       {/* ── Bulk action bar ── */}
       {selected.size > 0 && (
-        <div className="bar-rise fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-primary/20 bg-card px-4 py-2 shadow-lg shadow-primary/5">
+        <div className="bar-rise fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border-strong bg-card px-4 py-2 shadow-lg shadow-primary/5">
           <span className="text-sm font-medium tabular-nums">{selected.size} selected</span>
           <Button size="sm" className="h-7 text-xs" onClick={bulkClear} disabled={bulkLog.isPending}>
             {bulkLog.isPending ? "Logging…" : "Log follow-up for all"}
@@ -1954,7 +1971,7 @@ export default function SchedulePage() {
             ].map(([keys, desc]) => (
               <div key={keys} className="flex items-center justify-between gap-4">
                 <span className="text-muted-foreground">{desc}</span>
-                <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">{keys}</kbd>
+                <kbd className="shrink-0 rounded border bg-muted px-1.5 py-0.5 tabular-nums text-xs">{keys}</kbd>
               </div>
             ))}
           </dl>

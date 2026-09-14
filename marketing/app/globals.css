@@ -1,770 +1,548 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* ═══════════════════════════════════════════════════════════════════════════
+   Upstream — the public site.
+
+   THE CURRENT.
+
+   The product is named after a river word, in an industry that speaks nothing
+   but river words and stopped hearing them: deal flow, the pipeline, the
+   source, downstream. So the page is that river. Flow only moves one way, a
+   desk that does not channel it loses it, and the one continuous line running
+   down the left of every fold is both the river and the outreach log, which
+   are the same joke: both only ever run one way and both only ever get longer.
+
+   Two things about this file are deliberate.
+
+   **The palette is semantic and it flips per fold.** Everything paints with
+   `--canvas`, `--surface`, `--fg`, `--fg-muted`, `--accent`, `--hair`. The page
+   is light at the surface; `.u-deep` re-points those six names at the deep
+   water values, so the record and security folds submerge without a single
+   component knowing which act it is in. There is no light/dark toggle. The
+   direction is one committed thing, and the dark is a place in it rather than
+   a preference.
+
+   **`--late` is the only warm colour in the system.** It appears maybe six
+   times on the whole page and every appearance means the same thing, which is
+   that this one is overdue. An accent that is everywhere is not an accent.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-display: var(--font-display);
-  --font-heading: var(--font-display);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
   --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-primary-ink: var(--primary-ink);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-accent-ink: var(--accent-ink);
+  --color-late: var(--late);
+  --color-late-ink: var(--late-ink);
+  --color-hair: var(--hair);
+
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-data);
+  --font-display: var(--font-display);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.625rem;
+
+  /* Semantic stacking. Two overlays fighting is what bare z-50s produce. */
+  --z-canvas: 0;
+  --z-channel: 5;
+  --z-grain: 8;
+  --z-nav: 40;
+  --z-skip: 70;
 }
 
-/* ─── Daylight — warm-paper light theme (keeps amber accent) ────────────── */
+/* ─── The palette ────────────────────────────────────────────────────────── */
 :root {
-  /* Warm paper background system */
-  --background:          oklch(0.975 0.004 85);  /* warm off-white, not a white room */
-  --card:                oklch(0.995 0.002 85);  /* near-white, lifts off the canvas  */
-  --popover:             oklch(1 0 0);
-  --secondary:           oklch(0.96 0.004 85);
-  --muted:               oklch(0.955 0.004 85);
+  /* Raw values, named for the world they came from. */
+  --mist: #edf2f0;
+  --paper: #f8fbfa;
+  --ink: #0b1a1c;
+  --silt: #55696b;
+  --deep: #08201f;
+  --deep-raised: #0e2c2b;
+  --shallow: #d7e2df;
 
-  /* Borders — translucent ink */
-  --border:              oklch(0 0 0 / 0.08);
-  --input:               oklch(0 0 0 / 0.12);
-  --ring:                oklch(0.66 0.15 56 / 0.5);
+  /* The two colours that mean something. `--late` is deliberately deeper than
+     its fill so it clears 4.5:1 as small text on mist; fills use --late-fill,
+     which carries paper-coloured ink and measures 5.2:1 that way round. */
+  --current: #0e6e6b;
+  --current-lift: #3fbfae;
+  --late-fill: #c2410c;
+  --late-text: #af3a08;
+  --late-lift: #f97a4b;
 
-  /* Amber accent — slightly deeper for contrast on white */
-  --primary:             oklch(0.66 0.15 56);
-  /* Ink ON the amber fill. Amber is a *light* colour: near-white label text on it
-     measured 3.16:1 here and 2.44:1 on obsidian — the primary CTA was the worst
-     contrast on the page. Dark warm ink keeps the fill bright and reads 5.4/6.7:1. */
-  --primary-foreground:  oklch(0.22 0.03 60);
-  /* Amber as *text*: the accent fill can't hold 4.5:1 at label sizes on paper,
-     so small amber copy uses this deeper ink instead (fills stay --primary). */
-  --primary-ink:         oklch(0.53 0.15 56);
+  /* ── Semantic, act one: the surface ── */
+  --canvas: var(--mist);
+  --surface: var(--paper);
+  --raised: #ffffff;
+  --fg: var(--ink);
+  --fg-muted: var(--silt);
+  --accent: var(--current);
+  --accent-ink: var(--current);
+  --late: var(--late-fill);
+  --late-ink: var(--late-text);
+  --hair: color-mix(in oklab, var(--ink) 12%, transparent);
 
-  /* Ink hierarchy */
-  --foreground:          oklch(0.24 0.012 265);  /* warm near-black ink */
-  --card-foreground:     oklch(0.24 0.012 265);
-  --popover-foreground:  oklch(0.24 0.012 265);
-  --secondary-foreground: oklch(0.32 0.012 265);
-  --muted-foreground:    oklch(0.44 0.014 265);  /* darkened for ≥4.5:1 on warm paper */
-  --accent:              oklch(0.72 0.16 58 / 0.12);
-  --accent-foreground:   oklch(0.30 0.012 265);
+  --grain: 0.03;
+  --shadow: 0 22px 48px -34px color-mix(in oklab, var(--ink) 42%, transparent);
 
-  /* Semantic */
-  --destructive:         oklch(0.58 0.22 25);
+  /* The hero canvas reads these off the page rather than hard-coding them, so
+     the film and the CSS around it cannot drift apart. Plain hex, because a
+     computed color-mix() is not guaranteed to parse as a canvas fillStyle. */
+  /* Muted ink that has to survive footage under it. The page's --fg-muted is
+     tuned for mist and measured 3.5:1 over the hero's film; this is the same
+     colour taken down until the worst pixel of the worst frame clears 4.5. */
+  --ink-onfilm: #44575a;
 
-  /* Chart colors — same hues, tuned for light */
-  --chart-1:             oklch(0.66 0.15 56);
-  --chart-2:             oklch(0.60 0.16 152);
-  --chart-3:             oklch(0.55 0.18 270);
-  --chart-4:             oklch(0.58 0.15 310);
-  --chart-5:             oklch(0.58 0.22 25);
-
-  /* Sidebar */
-  --sidebar:                    oklch(0.955 0.005 85);
-  --sidebar-foreground:         oklch(0.24 0.012 265);
-  --sidebar-primary:            oklch(0.66 0.15 56);
-  --sidebar-primary-foreground: oklch(0.99 0.005 85);
-  --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
-  --sidebar-accent-foreground:  oklch(0.24 0.012 265);
-  --sidebar-border:             oklch(0 0 0 / 0.07);
-  --sidebar-ring:               oklch(0.66 0.15 56);
-
-  --radius: 0.5rem;
+  --flow-tick: #7c9b98;
+  --flow-wash: #dfeae7;
+  --flow-rule: #b6c9c5;
 }
 
-/* ─── Obsidian Amber — dark-first design system (default) ────────────────── */
-.dark {
-  /* Background depth system */
-  --background:          oklch(0.09 0.006 265);
-  --card:                oklch(0.12 0.007 265);
-  --popover:             oklch(0.15 0.007 265);
-  --secondary:           oklch(0.14 0.006 265);
-  --muted:               oklch(0.13 0.005 265);
-
-  /* Borders — translucent, not gray */
-  --border:              oklch(1 0 0 / 0.07);
-  --input:               oklch(1 0 0 / 0.09);
-  --ring:                oklch(0.72 0.16 58 / 0.5);
-
-  /* Amber accent — the only warm color */
-  --primary:             oklch(0.72 0.16 58);
-  --primary-foreground:  oklch(0.22 0.03 60);  /* see the Daylight note above */
-  /* On obsidian the accent already clears 4.5:1 as text, so ink == accent. */
-  --primary-ink:         oklch(0.72 0.16 58);
-
-  /* Text hierarchy */
-  --foreground:          oklch(0.95 0.006 80);
-  --card-foreground:     oklch(0.95 0.006 80);
-  --popover-foreground:  oklch(0.95 0.006 80);
-  --secondary-foreground: oklch(0.80 0.006 265);
-  --muted-foreground:    oklch(0.58 0.012 265);  /* lifted for ≥4.5:1 on obsidian + card */
-  --accent:              oklch(0.72 0.16 58 / 0.12);
-  --accent-foreground:   oklch(0.95 0.006 80);
-
-  /* Semantic */
-  --destructive:         oklch(0.62 0.22 25);
-
-  /* Chart colors — vivid, not gray */
-  --chart-1:             oklch(0.72 0.16 58);
-  --chart-2:             oklch(0.65 0.18 152);
-  --chart-3:             oklch(0.65 0.18 270);
-  --chart-4:             oklch(0.65 0.15 310);
-  --chart-5:             oklch(0.62 0.22 25);
-
-  /* Sidebar */
-  --sidebar:                    oklch(0.10 0.006 265);
-  --sidebar-foreground:         oklch(0.95 0.006 80);
-  --sidebar-primary:            oklch(0.72 0.16 58);
-  --sidebar-primary-foreground: oklch(0.98 0.005 80);
-  --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
-  --sidebar-accent-foreground:  oklch(0.95 0.006 80);
-  --sidebar-border:             oklch(1 0 0 / 0.06);
-  --sidebar-ring:               oklch(0.72 0.16 58);
+/* ═══ The hero's five static gates ══════════════════════════════════════════
+   These five query strings are repeated character for character in
+   components/site/hero.tsx. If the two ever disagree, one side loads a canvas
+   the other side is hiding, or hides a stage nobody armed. Phones, portrait
+   tablets, coarse-pointer portrait, a phone held sideways (which passes every
+   width check and still has no room for the journey) and reduced motion all
+   get the composed still instead.
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* Sized in scroll distance, not seconds. The flick test decided this number:
+   at 420vh each of the four beats held full opacity for only four normal
+   120px flicks, which is under the five-to-six a caption needs to survive a
+   real reader, and the opening beat could be skipped entirely by a fast
+   double-flick. 540vh gives every beat about six. */
+.hero {
+  /* Measured twice. The flick test first pushed this to 540vh so every beat
+     held six full 120px wheel notches, and reading it end to end at that
+     height felt like work: five and a half screens of pinned stage is a long
+     time to spend in one layout, however well the film moves. 420vh gives
+     each beat a shade under five notches, which is still a plateau a reader
+     can flick past without losing the line, and takes a fifth off the climb.
+     Long enough to read, short enough to want to. */
+  height: 420vh;
+}
+.hero-static {
+  display: none;
+}
+@media (max-width: 720px), (orientation: portrait) and (max-width: 1024px),
+  (orientation: portrait) and (pointer: coarse),
+  (orientation: landscape) and (pointer: coarse) and (max-height: 560px),
+  (prefers-reduced-motion: reduce) {
+  .hero {
+    height: auto;
+  }
+  .hero-scrub {
+    display: none;
+  }
+  .hero-static {
+    display: flex;
+  }
 }
 
-/* ─── Base layer ────────────────────────────────────────────────────────── */
+/* ── Semantic, act two: below the waterline ──
+   Scoped, not global. A fold opts in and everything inside it submerges. */
+.u-deep {
+  --canvas: var(--deep);
+  --surface: var(--deep-raised);
+  --raised: #123634;
+  --fg: #e6efec;
+  --fg-muted: #8fa8a5;
+  --accent: var(--current-lift);
+  --accent-ink: var(--current-lift);
+  --late: var(--late-lift);
+  --late-ink: var(--late-lift);
+  --hair: color-mix(in oklab, #e6efec 14%, transparent);
+
+  --grain: 0.05;
+  --shadow: 0 30px 70px -40px #000000cc;
+
+  background: var(--canvas);
+  color: var(--fg);
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
-  }
-  /* One focus ring for the whole site. The inherited default (`outline: auto 1px`
-     in amber at 25% alpha) measured invisible on both canvases across 24 of 32
-     tab stops, so keyboard users had no idea where they were. */
-  :focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
-  }
-  body {
-    @apply bg-background text-foreground;
-    background-image: radial-gradient(
-      ellipse 100% 40% at 50% -5%,
-      oklch(0.72 0.16 58 / 0.05) 0%,
-      transparent 60%
-    );
+    border-color: var(--hair);
   }
   html {
-    font-family: var(--font-sans), system-ui, sans-serif;
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    /* `clip` on both, with `hidden` first as the fallback: `hidden` alone still
+       lets script scroll the page sideways, and one anchor can leave the whole
+       document shifted. */
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+  body {
+    overflow-x: hidden;
+    overflow-x: clip;
+    background: var(--canvas);
+    color: var(--fg);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+  /* One focus ring for the site, and it has to survive both acts, so it is
+     drawn in the fold's own accent with a canvas-coloured gap behind it. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent) 26%, transparent);
+    color: var(--fg);
+  }
+  /* Readouts are instruments. Numbers must not jitter as they change. */
+  .font-mono,
+  .u-mono {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Touch targets, added without changing layout or alignment. Note the
+     explicit alignment: swapping an element's display type without
+     re-declaring it left-aligns button labels and shrinks full-width rows to
+     their text. */
+  @media (pointer: coarse) {
+    .u-target {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* A link standing on its own in a list is a target, and a 21px line of
+       text is not one. Links inline inside a sentence are exempt by the
+       guideline and are deliberately left alone here. */
+    header nav a,
+    footer nav a,
+    footer a[href] {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+    }
   }
 }
 
-/* ─── Login page background ─────────────────────────────────────────────── */
-.login-bg {
-  background-color: oklch(0.09 0.006 265);
-  background-image:
-    radial-gradient(
-      ellipse 55% 45% at 50% 52%,
-      oklch(0.72 0.16 58 / 0.07) 0%,
-      transparent 65%
-    ),
-    radial-gradient(circle, oklch(1 0 0 / 0.08) 1px, transparent 1px);
-  background-size: auto, 28px 28px;
-  background-position: center, center;
+/* ═══ Type ══════════════════════════════════════════════════════════════════
+   Bricolage Grotesque carries the argument, and it is the reason the page is
+   set in a grotesk at all: it has a real width axis, so the display narrows as
+   the page descends into deep water and opens back up when it surfaces. The
+   type is doing the arc, not just reporting it. Onest is the reading face.
+   Spline Sans Mono is every number the server computed.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.u-display {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-variation-settings: "wdth" var(--wdth, 96), "opsz" var(--opsz, 24);
+  letter-spacing: -0.028em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+/* Panel and row headings: shorter measure, so less negative tracking and more
+   leading than the fold headlines above them. */
+.u-subhead {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 550;
+  font-variation-settings: "wdth" var(--wdth, 100), "opsz" 18;
+  letter-spacing: -0.014em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+/* The narrow cut, used only in the deep act. Same face, compressed, which
+   reads as pressure. */
+.u-narrow {
+  --wdth: 82;
+}
+.u-mono {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-feature-settings: "ss01";
+}
+/* Small caps label: the page's one repeating structural device. It is always
+   naming a thing the machine did, never decorating a heading. */
+.u-stamp {
+  font-family: var(--font-data), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
 }
 
-/* ─── Login glassmorphism card ───────────────────────────────────────────── */
-.login-card {
-  background: oklch(0.16 0.010 265 / 0.95);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid oklch(1 0 0 / 0.14);
-  border-radius: var(--radius-xl);
-  box-shadow:
-    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
-    0 32px 64px oklch(0 0 0 / 0.55),
-    0 8px 16px oklch(0 0 0 / 0.30),
-    inset 0 1px 0 oklch(1 0 0 / 0.10);
-  animation: card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* ═══ Surfaces ═════════════════════════════════════════════════════════════ */
+
+/* Water is never a flat field. A fixed noise plate at three percent keeps the
+   large calm areas from reading as vector emptiness, and costs no request. */
+.u-grain {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  pointer-events: none;
+  opacity: var(--grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ─── Overdue stat card amber signature ──────────────────────────────────── */
-.stat-card-overdue {
-  border-color: oklch(0.72 0.16 58 / 0.45) !important;
-  box-shadow:
-    0 0 0 1px oklch(0.72 0.16 58 / 0.15),
-    inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
-}
-
-.stat-card-overdue-active {
-  animation: amber-pulse 2.5s ease-in-out infinite;
-}
-
-/* ─── Nav item active amber indicator ───────────────────────────────────── */
-.nav-item {
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+/* The waterline. A fold that submerges does not start with a hard edge; the
+   surface tension is drawn, one hairline of light on top of the dark. */
+.u-waterline {
   position: relative;
 }
-
-.nav-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 20%;
-  height: 60%;
-  width: 2px;
-  background: var(--primary);
-  border-radius: 0 2px 2px 0;
-  transform: scaleY(0);
-  transform-origin: center;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.nav-item.active::before {
-  transform: scaleY(1);
-}
-
-/* ─── Stat card entrance animation ──────────────────────────────────────── */
-.stat-card {
-  animation: stat-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-
-/* ─── Data row entrance animation ────────────────────────────────────────── */
-.data-row {
-  animation: row-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(var(--row-i, 0) * 25ms);
-}
-
-/* ─── Keyframes ──────────────────────────────────────────────────────────── */
-@keyframes stat-enter {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.975);
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes amber-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 1px oklch(0.72 0.16 58 / 0.30),
-      inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
-  }
-  50% {
-    box-shadow:
-      0 0 0 2px oklch(0.72 0.16 58 / 0.15),
-      0 0 24px oklch(0.72 0.16 58 / 0.10),
-      inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
-  }
-}
-
-@keyframes row-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* ─── Page (route) entrance ──────────────────────────────────────────────── */
-.page-enter {
-  animation: page-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes btn-shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
-}
-
-/* ─── Button shimmer on hover ────────────────────────────────────────────── */
-button[data-slot="button"].bg-primary:hover,
-button[data-slot="button"][class*="bg-primary"]:hover {
-  background: linear-gradient(
-    105deg,
-    oklch(0.72 0.16 58) 0%,
-    oklch(0.80 0.16 58) 45%,
-    oklch(0.72 0.16 58) 100%
-  );
-  background-size: 200% auto;
-  animation: btn-shimmer 1.8s linear infinite;
-}
-
-/* ─── Schedule cockpit ───────────────────────────────────────────────────── */
-/* Cheap virtualization: rows off-screen skip layout/paint until scrolled near. */
-.cv-row {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 52px;
-}
-
-/* Keyboard-focused queue row (j/k navigation) */
-.queue-row-focused {
-  background: oklch(0.72 0.16 58 / 0.07);
-  box-shadow: inset 2px 0 0 0 var(--primary);
-}
-
-/* Momentum counter tick */
-@keyframes count-pop {
-  0% { transform: scale(1); }
-  35% { transform: scale(1.22); }
-  100% { transform: scale(1); }
-}
-.count-pop { animation: count-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-
-/* Triage band segment — big numerals read like an instrument panel */
-.triage-seg {
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-}
-
-/* ─── Scroll reveal — panels power up as they enter view ─────────────────── */
-.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  filter: blur(6px);
-  will-change: opacity, transform, filter;
-  transition:
-    opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.62s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-.reveal.reveal-shown {
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
-}
-
-/* ─── Panel hover — subtle lift + amber edge glow ────────────────────────── */
-.hover-lift {
-  transition:
-    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.28s ease,
-    border-color 0.28s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-3px);
-  border-color: oklch(0.72 0.16 58 / 0.35);
-  box-shadow:
-    0 10px 30px oklch(0 0 0 / 0.28),
-    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
-    inset 0 1px 0 oklch(1 0 0 / 0.04);
-}
-
-/* ─── Project detail hero — amber corner glow behind the title ───────────── */
-.project-hero {
-  position: relative;
-  overflow: hidden;
-}
-.project-hero::after {
+.u-waterline::before {
   content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--current-lift) 55%, transparent) 22%,
+    color-mix(in oklab, var(--current-lift) 55%, transparent) 78%,
+    transparent
+  );
+  opacity: 0.5;
+}
+
+.u-elev {
+  box-shadow: var(--shadow);
+}
+
+/* Panels do not lift on hover, because a grid of cards that all lift on hover
+   is the tell. Light crosses the edge where the pointer is instead, and the
+   panel itself never moves. */
+.u-lit {
+  position: relative;
+  isolation: isolate;
+}
+.u-lit::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    240px circle at var(--px, 50%) var(--py, 0%),
+    color-mix(in oklab, var(--accent) 70%, transparent),
+    transparent 72%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.u-lit:hover::before,
+.u-lit:focus-within::before {
+  opacity: 1;
+}
+
+/* ═══ The hero's legibility system ═════════════════════════════════════════
+   Live canvas behind type is a background nobody controls frame to frame, so
+   every band gets all of it: a base scrim always on, a per-band scrim that
+   deepens only while that band is up, a three-layer text shadow, and a chip
+   for anything small.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.u-scrim {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: radial-gradient(
-    130% 150% at 100% -20%,
-    oklch(0.72 0.16 58 / 0.13),
-    transparent 55%
+    ellipse 120% 92% at 50% 42%,
+    color-mix(in oklab, var(--mist) 0%, transparent) 30%,
+    color-mix(in oklab, var(--mist) 76%, transparent) 100%
   );
 }
-
-/* ─── Response meter — engagement cards fill their responded-rate bar ─────── */
-.meter {
-  position: relative;
-  height: 5px;
-  width: 100%;
-  border-radius: 999px;
-  background: color-mix(in oklch, var(--foreground) 10%, transparent);
-  overflow: hidden;
+.u-band {
+  text-shadow:
+    0 1px 0 color-mix(in oklab, var(--mist) 70%, transparent),
+    0 2px 14px color-mix(in oklab, var(--mist) 82%, transparent),
+    0 10px 44px color-mix(in oklab, var(--mist) 74%, transparent);
 }
-.meter > i {
-  display: block;
-  height: 100%;
-  width: var(--meter, 0%);
-  border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--accent-color, var(--primary)) 78%, transparent),
-    var(--accent-color, var(--primary))
-  );
-  box-shadow: 0 0 8px color-mix(in oklch, var(--accent-color, var(--primary)) 40%, transparent);
-  transform-origin: left center;
-  animation: meter-grow 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--meter-delay, 0ms);
-}
-@keyframes meter-grow {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
-/* ─── Grid company row — amber rail slides in on hover ───────────────────── */
-.grid-row {
-  box-shadow: inset 2px 0 0 0 transparent;
-  transition: background-color 0.16s ease, box-shadow 0.2s ease;
-}
-.grid-row:hover {
-  box-shadow: inset 2px 0 0 0 var(--primary);
-}
-
-/* ─── Sourcing cockpit — amber rail sweeps down as the panel powers up ────── */
-.cockpit-rail {
-  transform-origin: top;
-  animation: rail-grow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes rail-grow {
-  from { transform: scaleY(0); }
-  to   { transform: scaleY(1); }
-}
-
-/* ─── Funnel board — tape hand-off flashes the targeted column once ───────── */
-.col-flash {
-  animation: col-flash 1.2s ease-out both;
-}
-@keyframes col-flash {
-  0%   { box-shadow: 0 0 0 2px oklch(0.72 0.16 58 / 0.65), 0 0 24px oklch(0.72 0.16 58 / 0.18); }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-
-/* ─── Floating bulk-action bar — rises from the bottom edge ───────────────── */
-.bar-rise {
-  animation: bar-rise 0.34s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes bar-rise {
-  from { opacity: 0; transform: translate(-50%, 18px); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
-}
-
-/* ─── Horizon rail — each cell's load underbar grows in from the left ─────── */
-.horizon-load {
-  transform-origin: left center;
-  animation: horizon-grow 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--load-delay, 0ms);
-  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes horizon-grow {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
-}
-
-/* Row cleared — a satisfying collapse the instant a touch is logged */
-.row-clear {
-  animation: row-clear 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  overflow: hidden;
+.u-band::before {
+  content: "";
+  position: absolute;
+  inset: -6% -8%;
   pointer-events: none;
+  z-index: -1;
+  opacity: calc(0.3 + 0.7 * var(--k, 1));
+  background: radial-gradient(
+    ellipse 76% 64% at 50% 50%,
+    color-mix(in oklab, var(--mist) 88%, transparent) 0%,
+    color-mix(in oklab, var(--mist) 62%, transparent) 48%,
+    transparent 78%
+  );
 }
-@keyframes row-clear {
-  0%   { opacity: 1; max-height: 120px; background: oklch(0.65 0.18 152 / 0); }
-  18%  { opacity: 1; background: oklch(0.65 0.18 152 / 0.16); }
-  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; transform: translateX(14px); background: oklch(0.65 0.18 152 / 0); }
+.u-band .u-btn {
+  text-shadow: none;
 }
-
-/* Focus Mode — the room dims to one company at a time */
-.focus-scrim {
-  animation: focus-scrim-in 0.28s ease both;
-}
-@keyframes focus-scrim-in {
-  from { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
-  to   { opacity: 1; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-}
-.focus-card {
-  animation: focus-card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes focus-card-in {
-  from { opacity: 0; transform: translateY(16px) scale(0.985); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-/* Advancing to the next card in Focus Mode */
-.focus-advance {
-  animation: focus-advance 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes focus-advance {
-  0%   { opacity: 0; transform: translateX(24px); }
-  100% { opacity: 1; transform: translateX(0); }
+.u-chip {
+  background: color-mix(in oklab, var(--paper) 72%, transparent);
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
+  text-shadow: none;
 }
 
-/* ─── Compose sheet — slides in from the right like a drawn-out letter ────── */
-.sheet-pane[data-open] {
-  animation: sheet-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+/* ═══ Text choreography ════════════════════════════════════════════════════
+   Every band's words assemble off one custom property, `--k`, written by the
+   drive loop. Transform and opacity only, fully reversible on scroll up. Each
+   entrance echoes what the canvas is doing underneath it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Drift down: words start above their rest and fall into it. The opening
+   band, over a current that is falling. */
+.u-drift .w {
+  --kc: clamp(0, (var(--k, 0) - var(--th, 0)) * 2.8, 1);
+  opacity: var(--kc);
+  transform: translateY(calc((1 - var(--kc)) * -26px));
 }
-.sheet-pane[data-closed] {
-  animation: sheet-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+/* Halves parting: the line splits the way the current does. The opacity ramp
+   is steeper than the other entrances so the two halves are still faint while
+   they are passing each other. */
+.u-part .w {
+  --kc: clamp(0, (var(--k, 0) - var(--th, 0)) * 4.2, 1);
+  opacity: var(--kc);
+  transform: translateX(calc((1 - var(--kc)) * var(--jx, 0px)));
 }
-@keyframes sheet-in {
-  from { opacity: 0.4; transform: translateX(48px); }
-  to   { opacity: 1; transform: translateX(0); }
+/* Scatter: characters gather out of the flow, the way the ticks do when the
+   walls dissolve. */
+.u-scatter .c {
+  --kc: clamp(0, (var(--k, 0) - var(--th, 0)) * 2.6, 1);
+  opacity: var(--kc);
+  transform: translate(calc((1 - var(--kc)) * var(--jx, 0px)), calc((1 - var(--kc)) * var(--jy, 0px)))
+    rotate(calc((1 - var(--kc)) * var(--jr, 0deg)));
 }
-@keyframes sheet-out {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(48px); }
+/* The settle: words rise in reading order, then the subline, then the buttons.
+   Three arrivals in one band, matching the footage coming to rest. */
+.u-settle .w {
+  --kc: clamp(0, (var(--k, 0) - var(--th, 0)) * 3, 1);
+  opacity: var(--kc);
+  transform: translateY(calc((1 - var(--kc)) * 18px));
+}
+.u-settle .sub {
+  opacity: clamp(0, (var(--k, 0) - 0.6) * 4, 1);
+}
+.u-settle .row {
+  opacity: clamp(0, (var(--k, 0) - 0.74) * 5, 1);
+  transform: translateY(calc((1 - clamp(0, (var(--k, 0) - 0.74) * 5, 1)) * 10px));
+}
+.w,
+.c {
+  display: inline-block;
+  /* Masked and clipped reveals eat the tails off g, y and p without this. */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+  will-change: transform, opacity;
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+/* ═══ The channel ══════════════════════════════════════════════════════════
+   The signature. One drawn line down the page, and the stamps that drop into
+   it. The stroke is dashed by JS through `--draw`; nothing else animates.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.u-channel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: var(--z-channel);
+}
+.u-channel path {
+  fill: none;
+  stroke: color-mix(in oklab, var(--accent) 58%, transparent);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+}
+.u-channel .bed {
+  stroke: color-mix(in oklab, var(--fg) 12%, transparent);
+  stroke-width: 1;
+}
+
+/* One heartbeat on the page, on the single overdue row, because overdue is the
+   one thing the product wants you to look at. */
+.u-pulse {
+  animation: u-pulse 3.2s ease-in-out infinite;
+  animation-delay: -1.1s;
+}
+@keyframes u-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--late) 45%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 7px color-mix(in oklab, var(--late) 0%, transparent);
+  }
+}
+
+/* Anything looping is paused off screen and on a hidden tab.
+   `animation-play-state` does not inherit, so it is set on everything. */
+body.u-paused *,
+body.u-paused *::before,
+body.u-paused *::after {
+  animation-play-state: paused !important;
+}
+
+/* ═══ Reduced motion ═══════════════════════════════════════════════════════
+   Declared last: a media query adds no specificity, so an earlier global block
+   would win. Motion handles its own through `useReducedMotion`; this is the
+   CSS half. Note the explicit `animation: none` on the loop: a blanket 0.01ms
+   duration only helps one-shot animations, while an infinite loop at 0.01ms
+   restarts every frame forever.
+   ═══════════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
   }
-  /* Never leave scroll-reveal content stuck in its hidden pre-state. */
-  .reveal {
-    opacity: 1;
-    transform: none;
-    filter: none;
+  .u-pulse {
+    animation: none !important;
   }
-  .hover-lift:hover {
-    transform: none;
+  /* Every choreographed word shows its finished state. */
+  .u-drift .w,
+  .u-part .w,
+  .u-scatter .c,
+  .u-settle .w {
+    opacity: 1 !important;
+    transform: none !important;
   }
-  .mkt-marquee { animation: none !important; }
-  .mkt-spot { animation: none !important; }
+  .u-settle .sub,
+  .u-settle .row {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
-/* ═══ Marketing landing ══════════════════════════════════════════════════════
-   The public site is a faithful extension of the app's Obsidian-Amber identity:
-   obsidian canvas, a dotted-ledger grid, amber signal, hairline rules. ═══════ */
+/* The last fold of the deep act fades back to the surface over its final
+   160px. The class is a marker as much as a hook: the nav reads it to know
+   that the fold has stopped looking dark before it has stopped being dark.
+   ────────────────────────────────────────────────────────────────────────── */
+.u-surfacing {
+  --surfacing-tail: 160px;
+}
 
-/* Dotted-ledger backdrop — the desk surface, echoing the login grid.
-   Dots track the foreground ink, so they read as light specks on obsidian and
-   faint graphite on warm paper — no auto-invert artifacts. */
-.mkt-grid {
-  background-image: radial-gradient(
-    circle,
-    color-mix(in oklch, var(--foreground) 6%, transparent) 1px,
-    transparent 1px
+/* ═══ Redaction ════════════════════════════════════════════════════════════
+   The security fold shows the demo book as somebody without access receives
+   it. The bar is woven ink rather than flat black, so it reads as deliberate
+   rather than as a rendering failure, and the text under it is genuinely
+   absent from the DOM (see depth.tsx) rather than hidden behind a rectangle.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.u-redact {
+  background: repeating-linear-gradient(
+    -45deg,
+    color-mix(in oklab, var(--fg) 15%, transparent) 0 3px,
+    color-mix(in oklab, var(--fg) 7%, transparent) 3px 6px
   );
-  background-size: 30px 30px;
-  background-position: center;
-}
-
-/* Ambient amber spotlight behind the hero. Static by design: it used to breathe on
-   a 14s loop, which put a second rhythm above the fold against the live desk's
-   2.4s pulse (and kept a blurred 42rem layer compositing forever). The glow is
-   the atmosphere; the pulse is the signature. */
-.mkt-spot {
-  position: absolute;
-  pointer-events: none;
-  border-radius: 999px;
-  background: radial-gradient(circle, oklch(0.72 0.16 58 / 0.20), transparent 68%);
-  filter: blur(24px);
-}
-/* Daylight: soften the glow so amber warms the paper instead of muddying it. */
-:root:not(.dark) .mkt-spot {
-  background: radial-gradient(circle, oklch(0.72 0.16 58 / 0.11), transparent 70%);
-  filter: blur(30px);
-}
-
-/* ─── Motion budget: looping animation only while its section is on screen ─────
-   Measured at the page bottom, nine loops were still compositing off-screen (the
-   hero pulse, three mechanism beams, three marquee columns, the CTA sheen). Each
-   section that owns a loop is a <MotionSection>, which flips data-motion as it
-   enters and leaves the viewport; everything below pauses in place when it's
-   nowhere near the reader. */
-[data-motion="off"] .mkt-live,
-[data-motion="off"] .mkt-beam-pulse,
-[data-motion="off"] .mkt-marquee,
-[data-motion="off"] .mkt-hub-pulse,
-[data-motion="off"] .mkt-shimmer::after {
-  animation-play-state: paused;
-}
-
-/* Signature elevation for the hero desk + product shots. A deep drop on obsidian;
-   a soft, believable paper shadow in Daylight (never a harsh black slab). */
-.mkt-elev {
-  box-shadow: 0 30px 60px -30px oklch(0.55 0.03 265 / 0.22);
-}
-.dark .mkt-elev {
-  box-shadow: 0 40px 80px -40px oklch(0 0 0 / 0.8);
-}
-@keyframes mkt-drift {
-  from { transform: translate3d(-4%, -3%, 0) scale(1);    opacity: 0.75; }
-  to   { transform: translate3d(5%, 4%, 0)  scale(1.12);  opacity: 1; }
-}
-
-/* One-shot sheen sweeping across the hero artifact on entrance. */
-.mkt-sheen { position: relative; overflow: hidden; }
-.mkt-sheen::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(115deg, transparent 30%, oklch(1 0 0 / 0.06) 48%, transparent 66%);
-  transform: translateX(-120%);
-  animation: mkt-sweep 2.4s cubic-bezier(0.16, 1, 0.3, 1) 0.5s 1;
-}
-@keyframes mkt-sweep { to { transform: translateX(120%); } }
-
-/* Security card — ciphertext surfacing through a mask that follows the pointer.
-   The position arrives as custom properties set on the card (no React re-render
-   per mousemove); keyboard focus and tap fall back to the centred default. */
-.mkt-decrypt-layer {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  -webkit-mask-image: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), black 10%, transparent 65%);
-  mask-image: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), black 10%, transparent 65%);
-}
-.mkt-decrypt[data-open] .mkt-decrypt-layer {
-  opacity: 1;
-}
-
-/* Vertical testimonial marquee — desks scrolling past. Pauses on hover. */
-.mkt-marquee { animation: mkt-up var(--dur, 40s) linear infinite; }
-.mkt-marquee-group:hover .mkt-marquee { animation-play-state: paused; }
-@keyframes mkt-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
-
-/* World-map arcs draw themselves in. */
-.mkt-arc {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: mkt-draw 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  animation-delay: var(--arc-delay, 0ms);
-}
-@keyframes mkt-draw { to { stroke-dashoffset: 0; } }
-
-/* The Mumbai hub breathing under the arcs. CSS, not SVG <animate>: SMIL ignores
-   prefers-reduced-motion entirely, so the old markup kept pulsing for readers who
-   asked everything to hold still. */
-.mkt-hub-pulse {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: mkt-hub 2.6s ease-in-out infinite;
-}
-@keyframes mkt-hub {
-  0%, 100% { transform: scale(0.7);  opacity: 0.22; }
-  50%      { transform: scale(1.35); opacity: 0.05; }
-}
-
-/* Live overdue dot — reuses the amber-pulse language from the app's stat cards. */
-.mkt-live { animation: amber-pulse 2.4s ease-in-out infinite; }
-
-/* ─── Mechanism beams — sheet rows travelling into the system ─────────────────
-   Paths are measured from the DOM (components/marketing/animated-beam.tsx) and
-   normalised with pathLength="1", so one dash length works at every breakpoint. */
-.mkt-beam-rail {
-  fill: none;
-  stroke: color-mix(in oklch, var(--foreground) 14%, transparent);
-  stroke-width: 1.25;
-}
-.mkt-beam-pulse {
-  fill: none;
-  stroke: var(--primary);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-dasharray: 0.14 0.86;
-  stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 5px color-mix(in oklch, var(--primary) 50%, transparent));
-  animation: mkt-beam var(--beam-dur, 3.2s) linear infinite;
-  animation-delay: var(--beam-delay, 0ms);
-}
-@keyframes mkt-beam { to { stroke-dashoffset: 0; } }
-
-/* How-it-works rail — draws left-to-right once the section reveals. */
-.mkt-step-rail {
-  transform: scaleX(0);
-  transform-origin: left center;
-}
-.reveal-shown .mkt-step-rail {
-  animation: mkt-rail-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.12s forwards;
-}
-@keyframes mkt-rail-draw { to { transform: scaleX(1); } }
-
-/* Closing CTA — a slow sheen crosses the amber button: the page's last signal,
-   and the only looping motion below the fold. */
-.mkt-shimmer {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
-.mkt-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(105deg, transparent 38%, oklch(1 0 0 / 0.38) 50%, transparent 62%);
-  transform: translateX(-150%);
-  animation: mkt-sheen-sweep 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-@keyframes mkt-sheen-sweep {
-  0%        { transform: translateX(-150%); }
-  45%, 100% { transform: translateX(150%); }
-}
-
-/* Reduced-motion fallbacks. Declared here, after the rules above, because a media
-   query adds no specificity — the earlier global block would otherwise lose. */
-@media (prefers-reduced-motion: reduce) {
-  /* Park the travelling packet: the rail stays a static amber trace, so
-     "three sheets → one system" still reads with no motion at all. */
-  .mkt-beam-pulse {
-    animation: none !important;
-    stroke-dasharray: none;
-    stroke-dashoffset: 0;
-    stroke-width: 1.5;
-    filter: none;
-    opacity: 0.75;
-  }
-  /* <Reveal> skips its observer under reduced motion, so `.reveal-shown` never
-     lands and the draw-in never fires — the rail must start fully drawn. */
-  .mkt-step-rail { transform: none; }
-
-  /* The blanket `animation-duration: 0.01ms !important` above only helps one-shot
-     animations: an *infinite* loop at 0.01ms restarts every frame, forever. Kill
-     the looping decoratives outright — the live dot and the hub stay as static
-     amber marks, which is all they ever needed to say. */
-  .mkt-live,
-  .mkt-hub-pulse {
-    animation: none !important;
-  }
-  .mkt-hub-pulse { transform: none; opacity: 0.22; }
-
-  /* The CTA keeps its amber weight; only the sweep goes. */
-  .mkt-shimmer::after {
-    animation: none !important;
-    opacity: 0;
-  }
 }

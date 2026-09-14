@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const MONO = { fontFamily: "var(--font-mono)" };
+const MONO = { fontVariantNumeric: "tabular-nums" } as const;
 
 /**
  * Floating selection action bar for the P2 DataTable pattern. Appears (bottom-centre)
@@ -40,7 +40,7 @@ export function BulkBar({
         role="toolbar"
         aria-label="Bulk actions"
         className={cn(
-          "pointer-events-auto flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-2 rounded-xl border border-border bg-card/95 px-3 py-2 shadow-lg ring-1 ring-border backdrop-blur duration-200 animate-in fade-in-0 slide-in-from-bottom-2 supports-[backdrop-filter]:bg-card/85",
+          "pointer-events-auto flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-2 rounded-lg bg-card px-2.5 py-2 shadow-lg ring-1 ring-border-strong duration-200 animate-in fade-in-0 slide-in-from-bottom-2",
           className,
         )}
       >

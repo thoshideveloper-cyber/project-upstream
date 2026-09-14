@@ -1,5 +1,16 @@
 """
-Seed script for Project Upstream — India-market demo data.
+Faker demo data for local development — NOT the deploy path.
+
+A deployed Upstream starts empty and fills from the firm's own uploaded workbooks; the
+only pre-filled surface is the Discover company database, which is real (see
+``app/data/company_pool.py``). Use ``python -m app.seed.bootstrap --reset`` for that
+genuine day-one state. This script exists to fabricate a *fat* book locally when you need
+one screen full of every state at once — a cold company, a restarted cadence,
+cross-mandate duplicates — without importing spreadsheets first.
+
+Everything it writes is invented, so it refuses to run against anything but SQLite
+(``--i-know`` overrides, if you really mean it). Never point it at a production database:
+fake revenue on a screen an analyst makes calls from is worse than a blank one.
 
 Usage:
     python -m app.seed.seed           # add data (skip if firm exists)
@@ -964,9 +975,27 @@ def run_seed(session: Session) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Seed the Upstream CRM database.")
+    parser = argparse.ArgumentParser(
+        description="Fabricate a Faker demo book (local SQLite only)."
+    )
     parser.add_argument("--reset", action="store_true", help="Wipe all data before seeding.")
+    parser.add_argument(
+        "--i-know",
+        action="store_true",
+        help="Allow a non-SQLite target. Fake data in a real database — don't.",
+    )
     args = parser.parse_args()
+
+    # A managed Postgres URL here means someone is about to fill a deployed app with
+    # invented companies. That has happened; hence the guard rather than a docstring.
+    if not settings.sync_database_url.startswith("sqlite") and not args.i_know:
+        sys.exit(
+            "Refusing to seed fake data into a non-SQLite database "
+            f"({settings.sync_database_url.split('://')[0]}://…).\n"
+            "A deployment starts empty: run `python -m app.seed.bootstrap --reset` "
+            "instead (firm + users + the real company database).\n"
+            "Pass --i-know only if you genuinely want demo data in this database."
+        )
 
     import sqlalchemy as sa
 

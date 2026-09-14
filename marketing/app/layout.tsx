@@ -1,63 +1,103 @@
 import type { Metadata } from "next";
-import { Cormorant, Outfit, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Onest, Spline_Sans_Mono } from "next/font/google";
 import "./globals.css";
 
-import { THEME_INIT_SCRIPT } from "@/components/theme";
-
-// Only the weights the landing actually renders: display at 500/600, sans at
-// 400/500, mono at 400/500/600. Cormorant 700 and Outfit 300/600/700 were declared
-// but never used — browsers fetch faces on demand, so this trims the font CSS and
-// removes four faces that could only ever be requested by mistake.
-const cormorant = Cormorant({
+/**
+ * Three faces, three jobs.
+ *
+ *   Bricolage Grotesque  the argument. A variable grotesk with a real width
+ *                        axis, which is the reason it is here: the display
+ *                        narrows as the page descends into deep water and
+ *                        opens back out when it surfaces, so the type carries
+ *                        the arc rather than reporting it. Nobody reaches for
+ *                        this face by default, which is the other reason.
+ *   Onest                the reading face. Warm, neutral, drawn for small
+ *                        sizes, and not Inter.
+ *   Spline Sans Mono     every number the server computed: dates, counts,
+ *                        stamps, days late. Engineered and slightly narrow, so
+ *                        a column of figures reads as an instrument.
+ *
+ * Weights are trimmed to the ones actually in use. Bricolage ships variable, so
+ * the width axis costs nothing extra.
+ */
+const display = Bricolage_Grotesque({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  axes: ["opsz", "wdth"],
   display: "swap",
 });
 
-const outfit = Outfit({
-  variable: "--font-sans",
+const body = Onest({
+  variable: "--font-body",
   subsets: ["latin"],
   weight: ["400", "500"],
   display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+const data = Spline_Sans_Mono({
+  variable: "--font-data",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Upstream — Sourcing, outreach and relationship CRM",
-  description:
-    "Upstream runs the whole loop on one record: find the organisations worth reaching, work the follow-ups on a computed cadence, and keep the relationship memory with the team instead of in someone's inbox.",
+const title = "Upstream · log the email, the rest is derived";
+const description =
+  "The origination and outreach system for boutique M&A desks. One book for the firm, follow-ups computed from a fixed anchor, and a log that is never overwritten. You type one word: sent.";
+
+/**
+ * The share card, rendered from the page's own world (mist over cold water,
+ * the drawn channel, one late mark) rather than dropped in from a template, so
+ * a link pasted into a thread already looks like the page it opens.
+ *
+ * `basePath` is prepended by hand: Next rewrites `next/link` hrefs and
+ * `next/image` srcs for a sub-path deployment, but a metadata image URL is
+ * passed through untouched, so on GitHub Pages the card 404s without this.
+ */
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+const ogImage = {
+  url: `${basePath}/og.jpg`,
+  width: 1200,
+  height: 630,
+  alt: "Upstream. Log the email. The clock, the queue and the record are derived.",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const metadata: Metadata = {
+  ...(siteUrl ? { metadataBase: new URL(siteUrl) } : {}),
+  title,
+  description,
+  applicationName: "Upstream",
+  keywords: [
+    "M&A deal sourcing",
+    "origination CRM",
+    "outreach cadence",
+    "buyer list management",
+    "investment banking CRM",
+  ],
+  openGraph: { title, description, siteName: "Upstream", type: "website", images: [ogImage] },
+  twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${cormorant.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${display.variable} ${body.variable} ${data.variable} h-full`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* One committed direction, no toggle: the page opens at the surface and
+            the browser chrome should match the water it is standing on. */}
+        <meta name="color-scheme" content="light" />
+        <meta name="theme-color" content="#edf2f0" />
       </head>
-      <body className="bg-background text-foreground min-h-full" suppressHydrationWarning>
-        {/* Bypass the nav block (WCAG 2.4.1) — the first tab stop used to be the
-            logo, with six nav links between a keyboard user and the page. */}
+      <body className="min-h-full">
+        {/* Bypass the nav block (WCAG 2.4.1). Without it the first tab stop is
+            the wordmark and there are six links before the page itself. */}
         <a
           href="#content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[70] focus:rounded-md focus:bg-accent focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-[color:var(--paper)]"
         >
           Skip to content
         </a>
+        <div aria-hidden className="u-grain" />
         {children}
       </body>
     </html>

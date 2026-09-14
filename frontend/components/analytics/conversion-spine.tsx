@@ -1,19 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { contactedCount, repliedCount, interestedCount } from "@/lib/analytics";
 import { MONO } from "@/lib/design";
 
 /**
- * The Conversion Spine — the page's one bold instrument, and the honest reframe of
- * "response rate". The OUTREACH outcome funnel (Contacted → Replied → Interested),
- * distinct from the sourcing-stage funnel on /sourcing/analytics. Built from
- * overview.by_status (healthy-n: the whole book), painted in the status-dot colours,
- * every stage drilling to the companies behind it, and the weakest step flagged so
- * the eye lands on where outreach actually leaks.
+ * The Conversion Spine — the honest reframe of "response rate". The OUTREACH outcome
+ * funnel (Contacted → Replied → Interested), distinct from the sourcing-stage funnel on
+ * /sourcing/analytics. Built from overview.by_status (healthy-n: the whole book).
+ *
+ * Laid out as one ruled strip — three cells and the two step conversions between them —
+ * rather than three cards inside a card. Each stage wears its status glyph, every stage
+ * drills to the companies behind it, and the weakest step is marked red so the eye
+ * lands on where outreach actually leaks.
  */
 
 interface Stage {
@@ -21,8 +23,8 @@ interface Stage {
   label: string;
   sub: string;
   value: number;
-  dot: string; // Tailwind bg for the status dot
-  bar: string; // Tailwind bg for the proportional fill
+  dot: string; // status glyph
+  bar: string; // proportional fill
   href: string;
 }
 
@@ -43,8 +45,8 @@ export function ConversionSpine({
       label: "Contacted",
       sub: "first email sent",
       value: contacted,
-      dot: "bg-sky-500",
-      bar: "bg-sky-500/70",
+      dot: "hb hb-25 hb-info",
+      bar: "bg-info",
       href: "/master?view=firm-wide",
     },
     {
@@ -52,8 +54,8 @@ export function ConversionSpine({
       label: "Replied",
       sub: "any response",
       value: replied,
-      dot: "bg-emerald-500",
-      bar: "bg-emerald-500/70",
+      dot: "hb hb-50 hb-success",
+      bar: "bg-success",
       href: "/master?view=firm-wide",
     },
     {
@@ -61,8 +63,8 @@ export function ConversionSpine({
       label: "Interested",
       sub: "warm leads",
       value: interested,
-      dot: "bg-violet-500",
-      bar: "bg-violet-500/70",
+      dot: "hb hb-100 hb-success",
+      bar: "bg-success",
       href: "/master?view=firm-wide&status=INTERESTED",
     },
   ];
@@ -85,72 +87,73 @@ export function ConversionSpine({
   const maxV = Math.max(1, ...stages.map((s) => s.value));
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Stage flow — horizontal on desktop, stacked on mobile */}
-      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-        {stages.map((s, i) => {
-          const pctOfContacted = contacted > 0 ? Math.round((s.value / contacted) * 100) : 0;
-          return (
-            <div key={s.key} className="contents">
-              <Link
-                href={s.href}
-                className="group flex-1 rounded-xl bg-muted/30 p-4 ring-1 ring-border transition-colors hover:bg-muted/60"
-              >
-                <div className="flex items-center gap-2">
-                  <span className={cn("h-2 w-2 shrink-0 rounded-full", s.dot)} aria-hidden />
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                    {s.label}
+    <div className="flex flex-col items-stretch overflow-hidden rounded-lg ring-1 ring-border sm:flex-row">
+      {stages.map((s, i) => {
+        const pctOfContacted = contacted > 0 ? Math.round((s.value / contacted) * 100) : 0;
+        return (
+          <div key={s.key} className="contents">
+            <Link
+              href={s.href}
+              className="group flex-1 bg-card p-4 transition-colors hover:bg-subtle focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50"
+            >
+              <div className="flex items-center gap-2">
+                <span className={s.dot} aria-hidden />
+                <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
+                <ArrowUpRight className="ml-auto h-3.5 w-3.5 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100" />
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-2">
+                <span className="text-2xl font-semibold leading-8 tracking-[-0.01em] text-foreground" style={MONO}>
+                  {s.value.toLocaleString()}
+                </span>
+                {i > 0 && (
+                  <span className="text-xs text-muted-foreground" style={MONO}>
+                    {pctOfContacted}% of contacted
                   </span>
-                  <ArrowRight className="ml-auto h-3.5 w-3.5 text-muted-foreground/0 transition-colors group-hover:text-muted-foreground" />
-                </div>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-3xl font-semibold tabular-nums text-foreground" style={MONO}>
-                    {s.value}
-                  </span>
-                  {i > 0 && (
-                    <span className="text-xs tabular-nums text-muted-foreground" style={MONO}>
-                      {pctOfContacted}% of contacted
-                    </span>
-                  )}
-                </div>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">{s.sub}</p>
-                {/* Proportional fill */}
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className={cn("h-full rounded-full transition-[width] duration-700", s.bar)}
-                    style={{ width: `${Math.max(s.value > 0 ? 6 : 0, (s.value / maxV) * 100)}%` }}
-                  />
-                </div>
-              </Link>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">{s.sub}</p>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink-100">
+                <div
+                  className={cn("h-full rounded-full transition-[width] duration-300", s.bar)}
+                  style={{ width: `${Math.max(s.value > 0 ? 4 : 0, (s.value / maxV) * 100)}%` }}
+                />
+              </div>
+            </Link>
 
-              {/* Connector — step conversion, worst step flagged */}
-              {i < stages.length - 1 && (
-                <div className="flex shrink-0 flex-row items-center justify-center gap-1 px-1 sm:flex-col">
-                  <span
-                    className={cn(
-                      "font-mono text-xs font-semibold tabular-nums",
-                      worstStep === i ? "text-primary-ink" : "text-muted-foreground",
-                    )}
-                  >
-                    {Math.round(conv[i] * 100)}%
-                  </span>
-                  <ArrowRight
-                    className={cn(
-                      "h-4 w-4 rotate-90 sm:rotate-0",
-                      worstStep === i ? "text-primary-ink" : "text-muted-foreground",
-                    )}
-                  />
-                  {worstStep === i && (
-                    <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-ink">
-                      biggest drop-off
-                    </span>
+            {/* Connector — the step conversion, worst step marked. */}
+            {i < stages.length - 1 && (
+              <div
+                className={cn(
+                  "flex shrink-0 items-center justify-center gap-1.5 border-y border-border px-3 py-2 sm:w-28 sm:flex-col sm:border-x sm:border-y-0 sm:py-0",
+                  worstStep === i ? "bg-danger-soft" : "bg-muted",
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-sm font-semibold",
+                    worstStep === i ? "text-danger-ink" : "text-foreground",
                   )}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                  style={MONO}
+                >
+                  {Math.round(conv[i] * 100)}%
+                </span>
+                <ArrowRight
+                  className={cn(
+                    "h-3.5 w-3.5 rotate-90 sm:rotate-0",
+                    worstStep === i ? "text-danger-ink" : "text-muted-foreground",
+                  )}
+                  aria-hidden
+                />
+                {worstStep === i && (
+                  <span className="whitespace-nowrap text-xs font-medium text-danger-ink">
+                    Biggest drop-off
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

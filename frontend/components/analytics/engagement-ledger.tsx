@@ -32,7 +32,7 @@ export function EngagementLedger({
   health?: Map<number, EngagementHealth>;
   loading?: boolean;
 }) {
-  if (loading) return <div className="h-40 animate-pulse rounded-md bg-muted" />;
+  if (loading) return <div className="h-40 animate-pulse rounded-md bg-ink-100" />;
   if (rows.length === 0)
     return <p className="py-8 text-center text-sm text-muted-foreground">No engagement activity yet.</p>;
 
@@ -42,7 +42,7 @@ export function EngagementLedger({
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          <tr className="border-b border-border text-xs font-medium text-muted-foreground">
             <th className="pb-2 text-left">Engagement</th>
             <th className="min-w-40 pb-2 text-left">Emails sent</th>
             <th className="pb-2 text-right">Replies</th>
@@ -57,7 +57,7 @@ export function EngagementLedger({
             return (
               <tr
                 key={r.mandate_id}
-                className="data-row transition-colors hover:bg-primary/[0.04]"
+                className="data-row transition-colors hover:bg-subtle"
                 style={{ ["--row-i" as string]: i }}
               >
                 <td className="py-2.5 pr-3">
@@ -88,23 +88,23 @@ export function EngagementLedger({
                         style={{ width: `${(r.emails_sent / maxSent) * 100}%` }}
                       />
                     </div>
-                    <span className="w-8 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground" style={MONO}>
+                    <span className="w-8 shrink-0 text-right tabular-nums text-xs tabular-nums text-muted-foreground" style={MONO}>
                       {r.emails_sent}
                     </span>
                   </div>
                 </td>
                 <td className="py-2.5 text-right">
-                  <span className="font-mono text-sm font-medium tabular-nums text-foreground" style={MONO}>
+                  <span className="tabular-nums text-sm font-medium tabular-nums text-foreground" style={MONO}>
                     {pctLabel(r.response_rate)}
                   </span>{" "}
-                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground" style={MONO}>
+                  <span className="tabular-nums text-[11px] tabular-nums text-muted-foreground" style={MONO}>
                     {r.responded}/{r.total_companies}
                   </span>
                 </td>
                 <td className="hidden py-2.5 text-right sm:table-cell">
                   <span
                     className={cn(
-                      "font-mono text-xs tabular-nums",
+                      "tabular-nums text-xs tabular-nums",
                       r.bounced > 0 ? "text-destructive-ink" : "text-muted-foreground",
                     )}
                     style={MONO}
@@ -117,13 +117,13 @@ export function EngagementLedger({
                     {h && h.overdue > 0 && (
                       <span className="inline-flex items-center gap-1 text-xs text-primary-ink" title="overdue a follow-up">
                         <AlertTriangle className="h-3 w-3" />
-                        <span className="font-mono tabular-nums" style={MONO}>{h.overdue}</span>
+                        <span className="tabular-nums" style={MONO}>{h.overdue}</span>
                       </span>
                     )}
                     {h && h.needsFirst > 0 && (
                       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title="never emailed">
                         <Mail className="h-3 w-3" />
-                        <span className="font-mono tabular-nums" style={MONO}>{h.needsFirst}</span>
+                        <span className="tabular-nums" style={MONO}>{h.needsFirst}</span>
                       </span>
                     )}
                     {(!h || (h.overdue === 0 && h.needsFirst === 0)) && (

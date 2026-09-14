@@ -195,7 +195,7 @@ export function PushToDialog({
             )}
 
             {res && res.can_create === true && (
-              <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs">
+              <div className="rounded-md border border-foreground bg-card p-2 text-xs">
                 No {side.replace("_", " ").toLowerCase()} engagement yet.
                 <Button size="sm" className="ml-2 h-7 text-xs" onClick={offerCreate}>
                   Create it & push
@@ -203,7 +203,7 @@ export function PushToDialog({
               </div>
             )}
             {res && res.can_create === false && (
-              <div className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs">
+              <div className="rounded-md border border-foreground bg-card p-2 text-xs">
                 No engagement of this side exists. Ask a partner to create one.
                 {res.existing_sides && res.existing_sides.length > 0 && (
                   <span> Existing sides: {res.existing_sides.join(", ")}.</span>

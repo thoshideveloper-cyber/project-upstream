@@ -2,435 +2,387 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* The product is light-only. The variant stays declared because the vendored shadcn
+   primitives still carry `dark:` utilities; with no `.dark` ancestor anywhere they
+   compile to nothing and never match. The navigation rail is dark by design, but it is
+   styled through the `--sidebar-*` tokens, not the dark variant. */
 @custom-variant dark (&:is(.dark *));
 
+/* ─── Type scale ───────────────────────────────────────────────────────────────
+   A product scale, fixed rem, ratio ≈1.15. `text-sm` is 13px — the working size of
+   every table cell, control and body line — so the whole app reads at the density of
+   the tools analysts compare it with, without a single call site spelling "13px". */
+@theme {
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-display: var(--font-display);
-  --font-heading: var(--font-display);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-destructive-ink: var(--destructive-ink);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
+  --font-display: var(--font-sans);
+  --font-heading: var(--font-sans);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-ink: var(--primary-ink);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-ink: var(--destructive-ink);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-subtle: var(--subtle);
+
+  /* State. Four families, each with a solid (dots, bars), an ink (text on white),
+     a soft ground and a line — the only colour in the product. */
+  --color-danger: var(--danger);
+  --color-danger-ink: var(--danger-ink);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
+  --color-warning: var(--warning);
+  --color-warning-ink: var(--warning-ink);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-line: var(--warning-line);
+  --color-success: var(--success);
+  --color-success-ink: var(--success-ink);
+  --color-success-soft: var(--success-soft);
+  --color-success-line: var(--success-line);
+  --color-info: var(--info);
+  --color-info-ink: var(--info-ink);
+  --color-info-soft: var(--info-soft);
+  --color-info-line: var(--info-line);
+
+  --color-ink-900: var(--ink-900);
+  --color-ink-700: var(--ink-700);
+  --color-ink-500: var(--ink-500);
+  --color-ink-400: var(--ink-400);
+  --color-ink-300: var(--ink-300);
+  --color-ink-200: var(--ink-200);
+  --color-ink-100: var(--ink-100);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 1.75);
+  --radius-4xl: calc(var(--radius) * 2);
+
+  --shadow-xs: 0 1px 0 0 oklch(0.2 0.01 265 / 0.05);
+  --shadow-sm: 0 1px 2px 0 oklch(0.2 0.01 265 / 0.06);
+  --shadow-md: 0 2px 4px -1px oklch(0.2 0.01 265 / 0.06), 0 8px 12px -4px oklch(0.2 0.01 265 / 0.1);
+  --shadow-lg: 0 4px 8px -2px oklch(0.2 0.01 265 / 0.08), 0 12px 14px -6px oklch(0.2 0.01 265 / 0.14);
 }
 
-/* ─── Daylight — warm-paper light theme (keeps amber accent) ────────────── */
+/* ─── Ledger — black, white, and state ────────────────────────────────────────
+   The foundation is ink on white with a faint cool cast (hue 265, chroma < 0.01), so
+   the neutrals read as crisp rather than warm-grey. Emphasis comes from ink density,
+   weight and one filled black action per surface.
+
+   Colour is reserved for state and means the same thing on every screen:
+     danger   red    late, bounced, failed, destructive
+     warning  amber  due soon, blocked, needs a decision
+     success  green  replied, interested, done, connected
+     info     blue   contacted, in progress, the focus ring
+   If a colour is on screen, it is a fact about a record — never decoration.        */
 :root {
-  /* Warm paper background system */
-  --background:          oklch(0.975 0.004 85);  /* warm off-white, not a white room */
-  --card:                oklch(0.995 0.002 85);  /* near-white, lifts off the canvas  */
-  --popover:             oklch(1 0 0);
-  --secondary:           oklch(0.96 0.004 85);
-  --muted:               oklch(0.955 0.004 85);
+  --background:           oklch(1 0 0);
+  --foreground:           oklch(0.185 0.006 265);
+  --card:                 oklch(1 0 0);
+  --card-foreground:      oklch(0.185 0.006 265);
+  --popover:              oklch(1 0 0);
+  --popover-foreground:   oklch(0.185 0.006 265);
 
-  /* Borders — translucent ink.
-     One hairline weight for the whole product. Panels used to spell their edge
-     six ways (border-border/40…/80 plus ring-foreground/10), all dilutions of a
-     token that is itself translucent. Everything now resolves here, so the value
-     is set once — slightly stronger than before to hold up as the only edge. */
-  --border:              oklch(0 0 0 / 0.10);
-  --input:               oklch(0 0 0 / 0.12);
-  --ring:                oklch(0.66 0.15 56 / 0.5);
+  /* Surfaces below white: table headers, toolbars, recessed wells. */
+  --muted:                oklch(0.977 0.002 265);
+  --subtle:               oklch(0.985 0.0015 265);
+  --secondary:            oklch(0.963 0.003 265);
+  --secondary-foreground: oklch(0.28 0.008 265);
+  --accent:               oklch(0.962 0.003 265);
+  --accent-foreground:    oklch(0.185 0.006 265);
 
-  /* Amber accent — slightly deeper for contrast on white */
-  --primary:             oklch(0.66 0.15 56);
-  /* Ink ON the amber fill. Amber is a *light* colour: near-white label text on it
-     measured 3.16:1 here and 2.45:1 on obsidian, making the primary button the
-     worst contrast in the app. Dark warm ink keeps the fill bright and reads 5.4/6.7:1. */
-  --primary-foreground:  oklch(0.22 0.03 60);
-  /* Amber as *text*: the accent fill is only 3.03:1 on paper at label sizes, so
-     small amber copy uses this deeper ink instead (fills/icons stay --primary). */
-  --primary-ink:         oklch(0.53 0.15 56);
+  /* 5.3:1 on white, 5.0:1 on the muted ground. */
+  --muted-foreground:     oklch(0.5 0.011 265);
 
-  /* Ink hierarchy */
-  --foreground:          oklch(0.24 0.012 265);  /* warm near-black ink */
-  --card-foreground:     oklch(0.24 0.012 265);
-  --popover-foreground:  oklch(0.24 0.012 265);
-  --secondary-foreground: oklch(0.34 0.012 265);
-  --muted-foreground:    oklch(0.50 0.012 265);
-  --accent:              oklch(0.72 0.16 58 / 0.12);
-  --accent-foreground:   oklch(0.30 0.012 265);
+  /* Hairlines are solid, not translucent ink, so a border is the same colour on every
+     ground and a table's rules never go darker where two panels overlap. */
+  --border:               oklch(0.918 0.004 265);
+  --border-strong:        oklch(0.855 0.006 265);
+  --input:                oklch(0.868 0.006 265);
+  --ring:                 oklch(0.56 0.15 258);
 
-  /* Semantic */
-  --destructive:         oklch(0.58 0.22 25);
-  /* Red as *text*. The fill tone is tuned for filled buttons and tinted pills; as
-     small text on paper (or on its own 10% tint) it fell under 4.5:1. */
-  --destructive-ink:     oklch(0.48 0.20 25);
+  --primary:              oklch(0.185 0.006 265);
+  --primary-foreground:   oklch(0.99 0 0);
+  --primary-ink:          oklch(0.185 0.006 265);
 
-  /* Chart colors — same hues, tuned for light */
-  --chart-1:             oklch(0.66 0.15 56);
-  --chart-2:             oklch(0.60 0.16 152);
-  --chart-3:             oklch(0.55 0.18 270);
-  --chart-4:             oklch(0.58 0.15 310);
-  --chart-5:             oklch(0.58 0.22 25);
+  --destructive:          oklch(0.57 0.2 27);
+  --destructive-ink:      oklch(0.49 0.18 27);
 
-  /* Sidebar */
-  --sidebar:                    oklch(0.955 0.005 85);
-  --sidebar-foreground:         oklch(0.24 0.012 265);
-  --sidebar-primary:            oklch(0.66 0.15 56);
-  --sidebar-primary-foreground: oklch(0.99 0.005 85);
-  --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
-  --sidebar-accent-foreground:  oklch(0.24 0.012 265);
-  --sidebar-border:             oklch(0 0 0 / 0.10);
-  --sidebar-ring:               oklch(0.66 0.15 56);
+  --danger:               oklch(0.6 0.2 27);
+  --danger-ink:           oklch(0.49 0.18 27);
+  --danger-soft:          oklch(0.972 0.013 22);
+  --danger-line:          oklch(0.885 0.05 22);
+
+  --warning:              oklch(0.77 0.15 72);
+  --warning-ink:          oklch(0.5 0.105 60);
+  --warning-soft:         oklch(0.978 0.028 88);
+  --warning-line:         oklch(0.88 0.075 82);
+
+  --success:              oklch(0.64 0.14 155);
+  --success-ink:          oklch(0.46 0.1 155);
+  --success-soft:         oklch(0.975 0.02 158);
+  --success-line:         oklch(0.88 0.055 158);
+
+  --info:                 oklch(0.58 0.17 258);
+  --info-ink:             oklch(0.49 0.16 260);
+  --info-soft:            oklch(0.973 0.013 258);
+  --info-line:            oklch(0.885 0.045 258);
+
+  --ink-900:              oklch(0.185 0.006 265);
+  --ink-700:              oklch(0.36 0.008 265);
+  --ink-500:              oklch(0.52 0.01 265);
+  --ink-400:              oklch(0.64 0.01 265);
+  --ink-300:              oklch(0.76 0.008 265);
+  --ink-200:              oklch(0.885 0.005 265);
+  --ink-100:              oklch(0.955 0.003 265);
+
+  /* Series 1 is always the one everything else is compared against. */
+  --chart-1:              oklch(0.185 0.006 265);
+  --chart-2:              oklch(0.58 0.17 258);
+  --chart-3:              oklch(0.64 0.14 155);
+  --chart-4:              oklch(0.77 0.15 72);
+  --chart-5:              oklch(0.76 0.008 265);
+
+  /* The navigation rail: the one dark surface — the frame, never the work. */
+  --sidebar:                    oklch(0.18 0.006 265);
+  --sidebar-foreground:         oklch(0.965 0.003 265);
+  --sidebar-muted:              oklch(0.72 0.009 265);
+  --sidebar-primary:            oklch(0.99 0 0);
+  --sidebar-primary-foreground: oklch(0.185 0.006 265);
+  --sidebar-accent:             oklch(0.25 0.007 265);
+  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-border:             oklch(0.275 0.007 265);
+  --sidebar-ring:               oklch(0.74 0.12 256);
 
   --radius: 0.5rem;
+
+  color-scheme: light;
 }
 
-/* ─── Obsidian Amber — dark-first design system (default) ────────────────── */
-.dark {
-  /* Background depth system */
-  --background:          oklch(0.09 0.006 265);
-  --card:                oklch(0.12 0.007 265);
-  --popover:             oklch(0.15 0.007 265);
-  --secondary:           oklch(0.14 0.006 265);
-  --muted:               oklch(0.13 0.005 265);
-
-  /* Borders — translucent, not gray. See the Daylight note: one hairline weight,
-     set here, for every panel edge and divider in the product. */
-  --border:              oklch(1 0 0 / 0.09);
-  --input:               oklch(1 0 0 / 0.11);
-  --ring:                oklch(0.72 0.16 58 / 0.5);
-
-  /* Amber accent — the only warm color */
-  --primary:             oklch(0.72 0.16 58);
-  --primary-foreground:  oklch(0.22 0.03 60);  /* see the Daylight note above */
-  /* On obsidian the accent already clears 4.5:1 as text, so ink == accent. */
-  --primary-ink:         oklch(0.72 0.16 58);
-
-  /* Text hierarchy */
-  --foreground:          oklch(0.95 0.006 80);
-  --card-foreground:     oklch(0.95 0.006 80);
-  --popover-foreground:  oklch(0.95 0.006 80);
-  --secondary-foreground: oklch(0.80 0.006 265);
-  /* Lifted from 0.52, where this measured 3.76:1 on --background, 3.68 on --card
-     and 3.65 on --muted — every muted line in the dark theme failed 4.5:1. 0.61
-     clears it on all three surfaces, including muted-on-muted controls. */
-  --muted-foreground:    oklch(0.61 0.012 265);
-  --accent:              oklch(0.72 0.16 58 / 0.12);
-  --accent-foreground:   oklch(0.95 0.006 80);
-
-  /* Semantic */
-  --destructive:         oklch(0.62 0.22 25);
-  --destructive-ink:     oklch(0.72 0.19 25);  /* see the Daylight note above */
-
-  /* Chart colors — vivid, not gray */
-  --chart-1:             oklch(0.72 0.16 58);
-  --chart-2:             oklch(0.65 0.18 152);
-  --chart-3:             oklch(0.65 0.18 270);
-  --chart-4:             oklch(0.65 0.15 310);
-  --chart-5:             oklch(0.62 0.22 25);
-
-  /* Sidebar */
-  --sidebar:                    oklch(0.10 0.006 265);
-  --sidebar-foreground:         oklch(0.95 0.006 80);
-  --sidebar-primary:            oklch(0.72 0.16 58);
-  --sidebar-primary-foreground: oklch(0.98 0.005 80);
-  --sidebar-accent:             oklch(0.72 0.16 58 / 0.10);
-  --sidebar-accent-foreground:  oklch(0.95 0.006 80);
-  --sidebar-border:             oklch(1 0 0 / 0.09);
-  --sidebar-ring:               oklch(0.72 0.16 58);
-}
-
-/* ─── Base layer ────────────────────────────────────────────────────────── */
+/* ─── Base layer ────────────────────────────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-    background-image: radial-gradient(
-      ellipse 100% 40% at 50% -5%,
-      oklch(0.72 0.16 58 / 0.05) 0%,
-      transparent 60%
-    );
-  }
   html {
     font-family: var(--font-sans), system-ui, sans-serif;
   }
+  body {
+    @apply bg-background text-sm text-foreground;
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: oklch(0.56 0.15 258 / 0.2);
+    color: var(--foreground);
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--muted-foreground);
+  }
 }
 
-/* ─── Login page background ─────────────────────────────────────────────── */
+/* ─── Status glyph ─────────────────────────────────────────────────────────────
+   A small circle whose FILL says how far a record has come and whose COLOUR says what
+   kind of state it is. Two channels for one fact, so it still reads for a colour-blind
+   analyst and in greyscale print.
+
+     hb-dashed  ◌  not started, no clock    (intro pending · backlog)
+     hb-0       ○  not started              (not contacted)
+     hb-25      ◔  touched                  (contacted — info)
+     hb-50      ◑  answered / under way     (responded · in progress)
+     hb-100     ●  carried forward          (interested · done — success)
+     hb-mute    ●  closed                   (declined)
+     hb-void    ⊘  cannot move              (bounced · blocked)
+
+   Deliberately NOT inside a cascade layer: call sites size dots with utilities
+   (`h-1.5 w-1.5`) and an unlayered rule wins, so one glyph size holds everywhere. */
+.hb {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 999px;
+  color: var(--ink-500);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.4px currentColor;
+}
+.hb.hb-lg {
+  width: 0.6875rem;
+  height: 0.6875rem;
+}
+.hb-0 {
+  color: var(--ink-400);
+}
+.hb-dashed {
+  color: var(--ink-400);
+  box-shadow: none;
+  border: 1.4px dashed currentColor;
+}
+.hb-25 {
+  background: conic-gradient(currentColor 0 25%, transparent 0);
+}
+.hb-50 {
+  background: conic-gradient(currentColor 0 50%, transparent 0);
+}
+.hb-75 {
+  background: conic-gradient(currentColor 0 75%, transparent 0);
+}
+.hb-100 {
+  background: currentColor;
+}
+.hb-mute {
+  color: var(--ink-300);
+  background: currentColor;
+}
+.hb-void {
+  background: linear-gradient(
+    135deg,
+    transparent calc(50% - 0.75px),
+    currentColor calc(50% - 0.75px) calc(50% + 0.75px),
+    transparent calc(50% + 0.75px)
+  );
+}
+.hb.hb-info    { color: var(--info); }
+.hb.hb-success { color: var(--success); }
+.hb.hb-warning { color: var(--warning); }
+.hb.hb-danger  { color: var(--danger); }
+.hb.hb-ink     { color: var(--foreground); }
+
+/* A hollow bar segment — "exists, but the clock has not started". Drawn as an inset
+   hairline so it keeps its width inside a segmented bar without adding a pixel. */
+.ink-hollow {
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--ink-400);
+}
+
+/* ─── Login ─────────────────────────────────────────────────────────────────── */
 .login-bg {
-  background-color: oklch(0.09 0.006 265);
-  background-image:
-    radial-gradient(
-      ellipse 55% 45% at 50% 52%,
-      oklch(0.72 0.16 58 / 0.07) 0%,
-      transparent 65%
-    ),
-    radial-gradient(circle, oklch(1 0 0 / 0.08) 1px, transparent 1px);
-  background-size: auto, 28px 28px;
-  background-position: center, center;
+  background-color: var(--background);
 }
 
-/* ─── Login glassmorphism card ───────────────────────────────────────────── */
 .login-card {
-  background: oklch(0.16 0.010 265 / 0.95);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid oklch(1 0 0 / 0.14);
-  border-radius: var(--radius-xl);
-  box-shadow:
-    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
-    0 32px 64px oklch(0 0 0 / 0.55),
-    0 8px 16px oklch(0 0 0 / 0.30),
-    inset 0 1px 0 oklch(1 0 0 / 0.10);
-  animation: card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
-/* ─── Overdue stat card amber signature ──────────────────────────────────── */
+/* ─── Overdue stat card — a red edge, never a pulse ──────────────────────────── */
 .stat-card-overdue {
-  border-color: oklch(0.72 0.16 58 / 0.45) !important;
-  box-shadow:
-    0 0 0 1px oklch(0.72 0.16 58 / 0.15),
-    inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
+  border-color: var(--danger-line) !important;
+  box-shadow: inset 0 0 0 1px var(--danger-line);
 }
 
-.stat-card-overdue-active {
-  animation: amber-pulse 2.5s ease-in-out infinite;
-}
-
-/* ─── Nav item active amber indicator ───────────────────────────────────── */
-.nav-item {
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+/* ─── Retired motion hooks ──────────────────────────────────────────────────────
+   These class names are still on elements across the app. Entrances and hover lifts
+   were decorative — a product loads into a task — so the hooks stay and do nothing. */
+.nav-item,
+.stat-card,
+.data-row,
+.hover-lift,
+.project-hero,
+.triage-seg {
   position: relative;
 }
 
-.nav-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 20%;
-  height: 60%;
-  width: 2px;
-  background: var(--primary);
-  border-radius: 0 2px 2px 0;
-  transform: scaleY(0);
-  transform-origin: center;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.nav-item.active::before {
-  transform: scaleY(1);
-}
-
-/* ─── Stat card entrance animation ──────────────────────────────────────── */
-.stat-card {
-  animation: stat-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-}
-
-/* ─── Data row entrance animation ────────────────────────────────────────── */
-.data-row {
-  animation: row-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  animation-delay: calc(var(--row-i, 0) * 25ms);
-}
-
-/* ─── Keyframes ──────────────────────────────────────────────────────────── */
-@keyframes stat-enter {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.975);
-    filter: blur(3px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0);
-  }
-}
-
-@keyframes amber-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 1px oklch(0.72 0.16 58 / 0.30),
-      inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
-  }
-  50% {
-    box-shadow:
-      0 0 0 2px oklch(0.72 0.16 58 / 0.15),
-      0 0 24px oklch(0.72 0.16 58 / 0.10),
-      inset 0 1px 0 oklch(0.72 0.16 58 / 0.08);
-  }
-}
-
-@keyframes row-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* ─── Page (route) entrance ──────────────────────────────────────────────── */
+/* Route change: a short crossfade, no travel. */
 .page-enter {
-  animation: page-enter 0.34s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: page-enter 0.16s ease-out both;
 }
-
 @keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0.001; }
+  to   { opacity: 1; }
 }
 
-@keyframes btn-shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
+/* Scroll reveal is a no-op: content is never gated on a transition firing. */
+.reveal,
+.reveal.reveal-shown {
+  opacity: 1;
+  transform: none;
 }
 
-/* ─── Button shimmer on hover ────────────────────────────────────────────── */
-button[data-slot="button"].bg-primary:hover,
-button[data-slot="button"][class*="bg-primary"]:hover {
-  background: linear-gradient(
-    105deg,
-    oklch(0.72 0.16 58) 0%,
-    oklch(0.80 0.16 58) 45%,
-    oklch(0.72 0.16 58) 100%
-  );
-  background-size: 200% auto;
-  animation: btn-shimmer 1.8s linear infinite;
-}
-
-/* ─── Schedule cockpit ───────────────────────────────────────────────────── */
+/* ─── Outreach desk ─────────────────────────────────────────────────────────── */
 /* Cheap virtualization: rows off-screen skip layout/paint until scrolled near. */
 .cv-row {
   content-visibility: auto;
   contain-intrinsic-size: auto 52px;
 }
 
-/* Keyboard-focused queue row (j/k navigation) */
+/* Keyboard-focused queue row (j/k navigation) — an inset focus frame, which survives
+   rows sitting flush against each other where an outline would be clipped. */
 .queue-row-focused {
-  background: oklch(0.72 0.16 58 / 0.07);
-  box-shadow: inset 2px 0 0 0 var(--primary);
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1.5px var(--ring);
 }
 
-/* Momentum counter tick */
+/* Momentum counter tick — feedback that a row was cleared. */
 @keyframes count-pop {
   0% { transform: scale(1); }
-  35% { transform: scale(1.22); }
+  40% { transform: scale(1.12); }
   100% { transform: scale(1); }
 }
-.count-pop { animation: count-pop 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.count-pop { animation: count-pop 0.3s cubic-bezier(0.23, 1, 0.32, 1); }
 
-/* Triage band segment — big numerals read like an instrument panel */
-.triage-seg {
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
-}
-
-/* ─── Scroll reveal — panels power up as they enter view ─────────────────── */
-.reveal {
-  opacity: 0;
-  transform: translateY(24px);
-  filter: blur(6px);
-  will-change: opacity, transform, filter;
-  transition:
-    opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 0.62s cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-.reveal.reveal-shown {
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
-}
-
-/* ─── Panel hover — subtle lift + amber edge glow ────────────────────────── */
-.hover-lift {
-  transition:
-    transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.28s ease,
-    border-color 0.28s ease;
-}
-.hover-lift:hover {
-  transform: translateY(-3px);
-  border-color: oklch(0.72 0.16 58 / 0.35);
-  box-shadow:
-    0 10px 30px oklch(0 0 0 / 0.28),
-    0 0 0 1px oklch(0.72 0.16 58 / 0.12),
-    inset 0 1px 0 oklch(1 0 0 / 0.04);
-}
-
-/* ─── Project detail hero — amber corner glow behind the title ───────────── */
-.project-hero {
-  position: relative;
-  overflow: hidden;
-}
-.project-hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    130% 150% at 100% -20%,
-    oklch(0.72 0.16 58 / 0.13),
-    transparent 55%
-  );
-}
-
-/* ─── Response meter — engagement cards fill their responded-rate bar ─────── */
+/* ─── Meter — a filled bar ─────────────────────────────────────────────────── */
 .meter {
   position: relative;
-  height: 5px;
+  height: 4px;
   width: 100%;
   border-radius: 999px;
-  background: color-mix(in oklch, var(--foreground) 10%, transparent);
+  background: var(--ink-100);
   overflow: hidden;
 }
 .meter > i {
@@ -438,135 +390,101 @@ button[data-slot="button"][class*="bg-primary"]:hover {
   height: 100%;
   width: var(--meter, 0%);
   border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklch, var(--accent-color, var(--primary)) 78%, transparent),
-    var(--accent-color, var(--primary))
-  );
-  box-shadow: 0 0 8px color-mix(in oklch, var(--accent-color, var(--primary)) 40%, transparent);
-  transform-origin: left center;
-  animation: meter-grow 1s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--meter-delay, 0ms);
-}
-@keyframes meter-grow {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+  background: var(--accent-color, var(--foreground));
 }
 
-/* ─── Grid company row — amber rail slides in on hover ───────────────────── */
-.grid-row {
-  box-shadow: inset 2px 0 0 0 transparent;
-  transition: background-color 0.16s ease, box-shadow 0.2s ease;
-}
-.grid-row:hover {
-  box-shadow: inset 2px 0 0 0 var(--primary);
-}
-
-/* ─── Sourcing cockpit — amber rail sweeps down as the panel powers up ────── */
 .cockpit-rail {
   transform-origin: top;
-  animation: rail-grow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes rail-grow {
-  from { transform: scaleY(0); }
-  to   { transform: scaleY(1); }
 }
 
-/* ─── Funnel board — tape hand-off flashes the targeted column once ───────── */
+/* ─── Funnel board — hand-off frames the targeted column once ──────────────── */
 .col-flash {
-  animation: col-flash 1.2s ease-out both;
+  animation: col-flash 1s ease-out both;
 }
 @keyframes col-flash {
-  0%   { box-shadow: 0 0 0 2px oklch(0.72 0.16 58 / 0.65), 0 0 24px oklch(0.72 0.16 58 / 0.18); }
+  0%   { box-shadow: 0 0 0 2px var(--ring); }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
 
 /* ─── Floating bulk-action bar — rises from the bottom edge ───────────────── */
 .bar-rise {
-  animation: bar-rise 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: bar-rise 0.2s cubic-bezier(0.23, 1, 0.32, 1);
 }
 @keyframes bar-rise {
-  from { opacity: 0; transform: translate(-50%, 18px); }
+  from { opacity: 0; transform: translate(-50%, 10px); }
   to   { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* ─── Horizon rail — each cell's load underbar grows in from the left ─────── */
+/* Load bars: width follows the data. No grow-in — the bar is the number. */
 .horizon-load {
   transform-origin: left center;
-  animation: horizon-grow 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: var(--load-delay, 0ms);
-  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes horizon-grow {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
+  transition: width 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Row cleared — a satisfying collapse the instant a touch is logged */
+/* Row cleared — a short wash, then the row collapses away. */
 .row-clear {
-  animation: row-clear 0.44s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: row-clear 0.36s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   overflow: hidden;
   pointer-events: none;
 }
 @keyframes row-clear {
-  0%   { opacity: 1; max-height: 120px; background: oklch(0.65 0.18 152 / 0); }
-  18%  { opacity: 1; background: oklch(0.65 0.18 152 / 0.16); }
-  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; transform: translateX(14px); background: oklch(0.65 0.18 152 / 0); }
+  0%   { opacity: 1; max-height: 120px; background: transparent; }
+  20%  { opacity: 1; background: var(--success-soft); }
+  100% { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; background: transparent; }
 }
 
-/* Focus Mode — the room dims to one company at a time */
+/* Focus Mode — one company at a time */
 .focus-scrim {
-  animation: focus-scrim-in 0.28s ease both;
+  animation: focus-scrim-in 0.2s ease both;
 }
 @keyframes focus-scrim-in {
-  from { opacity: 0; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); }
-  to   { opacity: 1; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .focus-card {
-  animation: focus-card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: focus-card-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 @keyframes focus-card-in {
-  from { opacity: 0; transform: translateY(16px) scale(0.985); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-/* Advancing to the next card in Focus Mode */
 .focus-advance {
-  animation: focus-advance 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: focus-advance 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 @keyframes focus-advance {
-  0%   { opacity: 0; transform: translateX(24px); }
+  0%   { opacity: 0; transform: translateX(12px); }
   100% { opacity: 1; transform: translateX(0); }
 }
 
-/* ─── Compose sheet — slides in from the right like a drawn-out letter ────── */
+/* ─── Sheets slide in from the right edge ─────────────────────────────────── */
 .sheet-pane[data-open] {
-  animation: sheet-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: sheet-in 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 .sheet-pane[data-closed] {
-  animation: sheet-out 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+  animation: sheet-out 0.16s cubic-bezier(0.4, 0, 1, 1) both;
 }
 @keyframes sheet-in {
-  from { opacity: 0.4; transform: translateX(48px); }
+  from { opacity: 0.6; transform: translateX(32px); }
   to   { opacity: 1; transform: translateX(0); }
 }
 @keyframes sheet-out {
   from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 0; transform: translateX(32px); }
 }
 
-/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+/* ─── The navigation rail ──────────────────────────────────────────────────── */
+.app-rail {
+  color-scheme: dark;
+}
+.app-rail :focus-visible {
+  outline: 2px solid var(--sidebar-ring);
+  outline-offset: -2px;
+}
+
+/* ─── Reduced motion ──────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
-  }
-  /* Never leave scroll-reveal content stuck in its hidden pre-state. */
-  .reveal {
-    opacity: 1;
-    transform: none;
-    filter: none;
-  }
-  .hover-lift:hover {
-    transform: none;
   }
 }

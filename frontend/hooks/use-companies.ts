@@ -19,6 +19,8 @@ export interface CompanyFilters {
   sourcing_layer_id?: number;
   unsorted?: boolean;
   mandate_id?: number;
+  /** Every engagement in one project — the deal room's whole book in one read. */
+  project_id?: number;
   source?: string;
   sort?: string;
   page?: number;
@@ -37,6 +39,7 @@ function buildQS(filters: CompanyFilters): string {
   if (filters.sourcing_layer_id) p.set("sourcing_layer_id", String(filters.sourcing_layer_id));
   if (filters.unsorted) p.set("unsorted", "true");
   if (filters.mandate_id) p.set("mandate_id", String(filters.mandate_id));
+  if (filters.project_id) p.set("project_id", String(filters.project_id));
   if (filters.source) p.set("source", filters.source);
   if (filters.sort) p.set("sort", filters.sort);
   if (filters.page) p.set("page", String(filters.page));

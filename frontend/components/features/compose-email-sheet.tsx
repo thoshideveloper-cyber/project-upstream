@@ -36,7 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuGroup,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -44,7 +43,7 @@ import { cn } from "@/lib/utils";
 import type { MandateType } from "@/types";
 
 const DISPLAY = { fontFamily: "var(--font-display)" };
-const MONO = { fontFamily: "var(--font-mono)" };
+const MONO = { fontVariantNumeric: "tabular-nums" } as const;
 
 const MONTH = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -177,7 +176,7 @@ function SendHealth({ checks }: { checks: HealthCheck[] }) {
             key={c.key}
             className={cn(
               "h-1.5 w-1.5 rounded-full transition-colors",
-              c.ok ? "bg-emerald-500" : "bg-amber-500",
+              c.ok ? "bg-foreground" : "bg-card ring-1 ring-inset ring-foreground",
             )}
           />
         ))}
@@ -416,7 +415,7 @@ export function ComposeEmailSheet({
           {/* ── Envelope header ── */}
           <div className="border-b border-border px-5 pb-4 pt-5 sm:px-7">
             <div className="flex items-start justify-between gap-3">
-              <p className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-ink">
+              <p className="flex items-center gap-2 text-xs font-medium text-primary-ink">
                 <Mail className="h-3.5 w-3.5" aria-hidden />
                 {awaiting ? "New email · Introduction" : "New email · Follow-up"}
               </p>
@@ -456,7 +455,7 @@ export function ComposeEmailSheet({
                 {/* To / From */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-11 shrink-0 text-right text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    <span className="w-11 shrink-0 text-right text-xs font-medium text-muted-foreground">
                       To
                     </span>
                     {contacts.length > 0 ? (
@@ -494,13 +493,13 @@ export function ComposeEmailSheet({
                     )}
                   </div>
                   <div className="flex items-center gap-2.5">
-                    <span className="w-11 shrink-0 text-right text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    <span className="w-11 shrink-0 text-right text-xs font-medium text-muted-foreground">
                       From
                     </span>
                     <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
                       <span className="truncate" style={MONO}>{account?.email_address}</span>
                       {account?.provider === "SANDBOX" && (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-indigo-500/30 bg-indigo-500/[0.08] px-1.5 py-px text-[10px] font-semibold text-indigo-700 dark:text-indigo-300">
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-[4px] border border-dashed border-border-strong bg-card px-1.5 py-px text-[11px] font-medium text-foreground">
                           <FlaskConical className="h-2.5 w-2.5" aria-hidden /> Simulated
                         </span>
                       )}
@@ -558,7 +557,7 @@ export function ComposeEmailSheet({
                       aria-expanded={aiOpen}
                       className={cn(
                         "h-7 gap-1.5 px-2.5 text-xs",
-                        aiOpen && "border-primary/50 bg-primary/[0.06] text-primary-ink",
+                        aiOpen && "border-border-strong bg-subtle text-primary-ink",
                       )}
                     >
                       <Sparkles className="h-3 w-3" aria-hidden /> Draft with AI
@@ -576,7 +575,7 @@ export function ComposeEmailSheet({
                           key={chip.label}
                           onClick={() => insertVar(chip.value!)}
                           title="Insert at cursor"
-                          className="rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[11px] text-muted-foreground outline-none transition-colors hover:border-primary/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                          className="rounded-md border border-border bg-card px-2 py-0.5 text-xs text-muted-foreground outline-none transition-colors hover:border-border-strong hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           {chip.label}
                         </button>
@@ -586,7 +585,7 @@ export function ComposeEmailSheet({
 
                 {/* AI panel */}
                 {aiOpen && (
-                  <div className="space-y-2.5 rounded-xl border border-primary/25 bg-primary/[0.04] p-3 duration-200 animate-in fade-in slide-in-from-top-1">
+                  <div className="space-y-2.5 rounded-lg border border-border-strong bg-subtle p-3 duration-200 animate-in fade-in slide-in-from-top-1">
                     <div className="flex items-center gap-1.5">
                       {(["direct", "warm", "formal"] as const).map((t) => (
                         <button
@@ -660,7 +659,7 @@ export function ComposeEmailSheet({
                     <p className="whitespace-pre-line text-xs leading-relaxed text-muted-foreground">
                       {account.signature}
                     </p>
-                    <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    <p className="mt-1 text-xs font-medium text-muted-foreground">
                       Signature — appended on send · edit in Settings
                     </p>
                   </div>
@@ -690,7 +689,7 @@ export function ComposeEmailSheet({
                   </span>
                 </div>
                 {limitReached && (
-                  <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                  <p className="mt-1.5 text-[11px] font-medium text-foreground">
                     Daily send limit reached — pacing keeps your mail out of spam. Raise it in Settings.
                   </p>
                 )}

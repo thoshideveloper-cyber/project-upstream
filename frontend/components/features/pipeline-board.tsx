@@ -32,7 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { Company } from "@/types";
 
-const MONO = { fontFamily: "var(--font-mono)" } as const;
+const MONO = { fontVariantNumeric: "tabular-nums" } as const;
 
 export interface BoardRow {
   c: Company;
@@ -43,7 +43,7 @@ export interface BoardRow {
 function CadenceChip({ c }: { c: Company }) {
   if (c.schedule_status === "AWAITING_INITIAL")
     return (
-      <span className="text-[10px] text-indigo-600 dark:text-indigo-400" style={MONO}>
+      <span className="text-[11px] text-secondary-foreground" style={MONO}>
         intro pending
       </span>
     );
@@ -241,8 +241,8 @@ export function PipelineBoard({ rows }: { rows: BoardRow[] }) {
               key={col.id}
               aria-label={`${col.label} — ${items.length} ${items.length === 1 ? "company" : "companies"}`}
               className={cn(
-                "flex w-[250px] shrink-0 flex-col rounded-xl border bg-muted/20 transition-colors",
-                isOver && !blocked && "border-primary/60 bg-primary/5 ring-1 ring-primary/30",
+                "flex w-[250px] shrink-0 flex-col rounded-lg border bg-muted/20 transition-colors",
+                isOver && !blocked && "border-border-strong bg-accent ring-1 ring-border-strong",
                 // A refusal is visible before the drop, not after it.
                 blocked && "opacity-45",
               )}
@@ -295,8 +295,7 @@ export function PipelineBoard({ rows }: { rows: BoardRow[] }) {
                       stopAutoScroll();
                     }}
                     className={cn(
-                      "group cursor-grab rounded-lg border border-l-[3px] bg-card p-2.5 text-xs shadow-sm transition-shadow",
-                      col.edge,
+                      "group cursor-grab rounded-lg border bg-card p-2.5 text-xs shadow-sm transition-shadow",
                       "hover:shadow-md active:cursor-grabbing",
                       dragId === c.id && "opacity-50",
                     )}
@@ -310,7 +309,7 @@ export function PipelineBoard({ rows }: { rows: BoardRow[] }) {
                       </Link>
                       <div className="flex shrink-0 items-center">
                         <GripVertical
-                          className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-muted-foreground"
+                          className="h-3.5 w-3.5 text-ink-300 group-hover:text-muted-foreground"
                           aria-hidden
                         />
                         <MoveMenu company={c} onMove={requestMove} />
@@ -336,7 +335,7 @@ export function PipelineBoard({ rows }: { rows: BoardRow[] }) {
                   <p
                     className={cn(
                       "rounded-lg border border-dashed px-2 py-6 text-center text-[11px] text-muted-foreground",
-                      isOver && !blocked && "border-primary/50 text-primary-ink",
+                      isOver && !blocked && "border-border-strong text-primary-ink",
                     )}
                   >
                     {isOver && blocked

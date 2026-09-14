@@ -14,8 +14,13 @@ build status is tracked in [`PROGRESS.md`](PROGRESS.md).
 
 | | URL |
 |---|---|
-| **Frontend** | https://frontend-navy-pi-11.vercel.app |
-| **API / Docs** | https://upstream-api-production-0a58.up.railway.app/docs |
+| **Frontend** | https://frontend-theta-two-22.vercel.app |
+| **API / Docs** | https://backend-production-0cef.up.railway.app/docs |
+
+The deployment starts **empty on purpose**: Discover opens on the shipped database of 164 real
+companies, and every other screen is blank until someone imports the firm's workbooks at
+`/import`. A partner can clear that book again from **Settings → Workspace** and re-import.
+`/signup` creates a separate firm with its own copy of the database and its own empty book.
 
 ### Login Credentials
 
@@ -23,11 +28,9 @@ build status is tracked in [`PROGRESS.md`](PROGRESS.md).
 
 | Email | Role | Access |
 |---|---|---|
-| `partner@upstream.test` | Partner | All mandates, analytics, team management |
-| `analyst1@upstream.test` | Analyst | Assigned mandates only |
-| `analyst2@upstream.test` | Analyst | Assigned mandates only |
-| `analyst3@upstream.test` | Analyst | Assigned mandates only |
-| `analyst4@upstream.test` | Analyst | Assigned mandates only |
+| `partner@upstream.test` | Partner | Everything: all engagements, analytics, team, workspace reset |
+| `analyst1@upstream.test` | Analyst | Assigned engagements only |
+| `analyst2@upstream.test` | Analyst | Assigned engagements only |
 
 See [`docs/Project_Upstream_User_Guide.pdf`](docs/Project_Upstream_User_Guide.pdf) for the full user guide.
 
@@ -57,9 +60,16 @@ uvicorn app.main:app --reload
 
 Health check: `GET http://localhost:8000/health` → `{"status": "ok"}`.
 
-Seeding (available from Phase 1):
+Initialising the database:
 
 ```bash
+# The real day-one state: one firm, its users, and the shipped company database
+# (164 real organisations). No projects, companies, contacts or schedules — those
+# arrive when you import the firm's own workbooks at /import.
+python -m app.seed.bootstrap --reset
+
+# Optional: a Faker demo book, for when you want every UI state on one screen.
+# Local SQLite only — it refuses to run against a managed database.
 python -m app.seed.seed --reset
 ```
 
@@ -94,8 +104,11 @@ cd backend && pytest                                   # macOS/Linux
 # Frontend unit/component (Vitest)
 cd frontend && npm test
 
-# Frontend E2E (Playwright critical paths) — needs both servers + a seeded DB
-cd backend && python -m app.seed.seed --reset
+# Frontend E2E (Playwright critical paths) — needs both servers + an initialised DB.
+# The sweep suites expect the real onboarding: bootstrap, then the three phase_2
+# workbooks imported as projects "GAIL" and "22by7", with analyst1 assigned to the
+# book and analyst2 deliberately left with none.
+cd backend && python -m app.seed.bootstrap --reset
 # terminal 1:  cd backend  && uvicorn app.main:app --reload
 # terminal 2:  cd frontend && npm run dev
 # terminal 3:
@@ -120,15 +133,25 @@ Set environment variables:
   frontend and backend share a site, e.g. local dev.)
 
 Release step: `alembic upgrade head` before starting `uvicorn app.main:app` (bind `$PORT`).
-If you want the Railway Postgres to start with the same demo tables/data as local dev, run the
-seed script once after the migration step:
+
+**A deployment starts empty.** Run the bootstrap once against the managed database and nothing
+else — it creates the firm, its users, its vocabulary, and the shipped company database that makes
+Discover searchable on day one:
 
 ```bash
-python -m app.seed.seed --reset
+DATABASE_URL=<the managed URL> python -m app.seed.bootstrap --reset
 ```
 
-That populates the backend tables inside the Railway database. The local SQLite file itself is not
-deployed; only the schema/data created by migrations and seed are.
+The book (projects, companies, contacts, schedules, outreach) is not seeded and never should be:
+it arrives when the firm imports its own workbooks at `/import`, and a partner can clear it again
+from **Settings → Workspace** to re-import cleanly. `app.seed.seed` fabricates Faker data and
+refuses to run against a non-SQLite database for that reason. The local SQLite file itself is not
+deployed; only what migrations and the bootstrap create.
+
+### Who sees what
+A **firm is the workspace**, so multi-tenancy needs no extra machinery: `/signup` creates a new
+firm that comes up with the company database and an empty book, and nothing it imports is visible
+to any other firm. The demo firm is just another tenant whose book happens to be loaded.
 
 ### Frontend (Vercel)
 - `NEXT_PUBLIC_API_URL=https://<your-backend-host>` (the API origin; the typed client sends

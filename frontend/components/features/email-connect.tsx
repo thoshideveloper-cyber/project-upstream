@@ -11,15 +11,19 @@ import {
 } from "@/hooks/use-email";
 import { cn } from "@/lib/utils";
 
-/** Brand glyphs kept as tiny inline SVGs — no external assets. */
+/**
+ * Provider glyphs, as tiny inline SVGs — no external assets. Drawn in one ink
+ * (`currentColor`, with the facets told apart by opacity) like every other icon in the
+ * product; the provider's name always sits beside the mark.
+ */
 export function GmailGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <path fill="#EA4335" d="M12 11.1 3.6 5.4v.9L12 12l8.4-5.7v-.9L12 11.1Z" />
-      <path fill="#4285F4" d="M20.4 5.4 12 11.1 3.6 5.4C3.6 4.6 4.2 4 5 4h14c.8 0 1.4.6 1.4 1.4Z" opacity=".9" />
-      <path fill="#34A853" d="M3.6 6.3V18c0 .8.6 1.4 1.4 1.4h1.8V9.9L3.6 6.3Z" />
-      <path fill="#FBBC04" d="M20.4 6.3 17.2 9.9v9.5H19c.8 0 1.4-.6 1.4-1.4V6.3Z" />
-      <path fill="#C5221F" d="M6.8 9.9 12 13.5l5.2-3.6v9.5H6.8V9.9Z" opacity=".18" />
+      <path fill="currentColor" d="M12 11.1 3.6 5.4v.9L12 12l8.4-5.7v-.9L12 11.1Z" />
+      <path fill="currentColor" d="M20.4 5.4 12 11.1 3.6 5.4C3.6 4.6 4.2 4 5 4h14c.8 0 1.4.6 1.4 1.4Z" opacity=".5" />
+      <path fill="currentColor" d="M3.6 6.3V18c0 .8.6 1.4 1.4 1.4h1.8V9.9L3.6 6.3Z" />
+      <path fill="currentColor" d="M20.4 6.3 17.2 9.9v9.5H19c.8 0 1.4-.6 1.4-1.4V6.3Z" />
+      <path fill="currentColor" d="M6.8 9.9 12 13.5l5.2-3.6v9.5H6.8V9.9Z" opacity=".15" />
     </svg>
   );
 }
@@ -27,10 +31,10 @@ export function GmailGlyph({ className }: { className?: string }) {
 export function OutlookGlyph({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <rect x="10" y="5" width="10" height="14" rx="1.2" fill="#1066B5" opacity=".85" />
-      <rect x="11.5" y="7" width="7" height="4.5" fill="#fff" opacity=".85" />
-      <ellipse cx="8" cy="12" rx="6" ry="6.5" fill="#0F78D4" />
-      <ellipse cx="8" cy="12" rx="2.6" ry="3.1" fill="#fff" />
+      <rect x="10" y="5" width="10" height="14" rx="1.2" fill="currentColor" opacity=".55" />
+      <rect x="11.5" y="7" width="7" height="4.5" fill="var(--card)" opacity=".85" />
+      <ellipse cx="8" cy="12" rx="6" ry="6.5" fill="currentColor" />
+      <ellipse cx="8" cy="12" rx="2.6" ry="3.1" fill="var(--card)" />
     </svg>
   );
 }
@@ -96,7 +100,7 @@ export function EmailConnectPanel({ compact, onConnected }: Props) {
       key: "sandbox",
       label: "Use the sandbox",
       sub: "Simulated sends — try the full flow safely",
-      icon: <FlaskConical className="h-5 w-5 text-indigo-600 dark:text-indigo-400" aria-hidden />,
+      icon: <FlaskConical className="h-5 w-5 text-foreground" aria-hidden />,
       available: !!providers.sandbox,
       onClick: connectSandbox,
     },
@@ -110,9 +114,9 @@ export function EmailConnectPanel({ compact, onConnected }: Props) {
           onClick={o.onClick}
           disabled={!o.available || busy !== null}
           className={cn(
-            "flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring",
+            "flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-ring",
             o.available
-              ? "hover:border-primary/40 hover:bg-muted/40 active:scale-[0.995]"
+              ? "hover:border-border-strong hover:bg-muted/40 active:scale-[0.995]"
               : "cursor-not-allowed opacity-45",
           )}
         >
@@ -126,7 +130,7 @@ export function EmailConnectPanel({ compact, onConnected }: Props) {
         </button>
       ))}
       <p className="mt-1 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden />
         Emails send from your own mailbox through {`Google or Microsoft's`} official API —
         signed by your domain, saved to your Sent folder, replies land in your inbox.
         Recipients see a normal 1-to-1 email, never a relay or a bot.

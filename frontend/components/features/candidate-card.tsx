@@ -16,29 +16,33 @@ import {
 import type { SourcingPoolItem, SourcingStageKind } from "@/types";
 import { Button } from "@/components/ui/button";
 import { AnimatedNumber } from "@/components/features/animated-number";
+import { SEGMENT_META } from "@/lib/design";
 import { cn } from "@/lib/utils";
 
 /** Data numerals use the mono face — true lining tabular figures, desk-ticker feel. */
-const MONO = { fontFamily: "var(--font-mono)" };
+const MONO = { fontVariantNumeric: "tabular-nums" } as const;
 
-/** Colour band for an AI fit score (0–100). Pure — unit-tested. */
+/**
+ * Ink band for an AI fit score (0–100). Pure — unit-tested. A stronger fit is a darker
+ * chip; the two strongest bands invert to paper-white type so both clear contrast.
+ */
 export function scoreTone(score: number | null | undefined): string {
   if (score == null) return "bg-muted text-muted-foreground";
-  if (score >= 80) return "bg-emerald-100 text-emerald-800";
-  if (score >= 60) return "bg-emerald-500/[0.12] text-emerald-800 dark:text-emerald-300";
-  if (score >= 40) return "bg-amber-100 text-amber-800";
-  if (score >= 20) return "bg-amber-500/[0.12] text-amber-800 dark:text-amber-300";
-  return "bg-destructive/[0.12] text-destructive-ink";
+  if (score >= 80) return "bg-ink-900 text-background";
+  if (score >= 60) return "bg-ink-700 text-background";
+  if (score >= 40) return "bg-ink-200 text-foreground";
+  if (score >= 20) return "bg-ink-100 text-foreground";
+  return "bg-card text-muted-foreground ring-1 ring-inset ring-border";
 }
 
-/** Solid fill for the score meter — matches the tone band. Pure. */
+/** Solid fill for the score meter — the same ladder as the tone band. Pure. */
 export function scoreFill(score: number | null | undefined): string {
-  if (score == null) return "bg-muted-foreground/40";
-  if (score >= 80) return "bg-emerald-500";
-  if (score >= 60) return "bg-emerald-500";
-  if (score >= 40) return "bg-amber-500";
-  if (score >= 20) return "bg-amber-500";
-  return "bg-destructive";
+  if (score == null) return "bg-ink-200";
+  if (score >= 80) return "bg-ink-900";
+  if (score >= 60) return "bg-ink-700";
+  if (score >= 40) return "bg-ink-400";
+  if (score >= 20) return "bg-ink-300";
+  return "bg-ink-200";
 }
 
 /** Compact revenue label. */
@@ -68,20 +72,21 @@ function fmtTouch(iso: string | null): string | null {
   return `${d} ${MONTH[m - 1]} ${y}`;
 }
 
-// Stage dots mirror the funnel board's KIND_ACCENT hues, so the stage chip on a
-// pool row and the board column carrying the card share one colour language.
+// Stage glyphs mirror the funnel board's KIND_ACCENT, so the stage chip on a pool row
+// and the board column carrying the card share one mark: a Harvey ball that fills as
+// the stage advances, grey once a target is passed on.
 const STAGE_DOT: Record<SourcingStageKind, string> = {
-  RESEARCH: "bg-muted-foreground/50",
-  SHORTLIST: "bg-primary",
-  ACTIVE: "bg-sky-500",
-  ENGAGED: "bg-emerald-500",
-  PASSED: "bg-muted-foreground/50",
-  CUSTOM: "bg-violet-400",
+  RESEARCH: "hb hb-0",
+  SHORTLIST: "hb hb-25",
+  ACTIVE: "hb hb-50",
+  ENGAGED: "hb hb-100",
+  PASSED: "hb hb-mute",
+  CUSTOM: "hb hb-75",
 };
 
-// ── Fit rail — the row-level signature. One color-banded score per row; the eye
-//    runs down the left edge and reads the whole pool's fit quality in a single
-//    sweep. It is the Sourcing desk's answer to the Outreach desk's due token. ────
+// ── Fit rail — the row-level signature. One ink-banded score per row; the eye runs
+//    down the left edge and reads the whole pool's fit quality in a single sweep:
+//    the darker the rail, the stronger the fit. ─────────────────────────────────────
 
 type FitBand = "strong" | "good" | "moderate" | "weak" | "poor" | "none" | "lowdata";
 
@@ -96,18 +101,19 @@ function fitBand(score: number | null | undefined, insufficient: boolean): FitBa
 }
 
 const FIT_RAIL: Record<FitBand, { text: string; edge: string; bg: string; caption: string }> = {
-  strong: { text: "text-emerald-500", edge: "bg-emerald-500", bg: "from-emerald-500/[0.15] to-emerald-500/0", caption: "fit" },
-  good: { text: "text-emerald-700 dark:text-emerald-400", edge: "bg-emerald-500", bg: "from-emerald-500/[0.14] to-emerald-500/0", caption: "fit" },
-  moderate: { text: "text-amber-500", edge: "bg-amber-500", bg: "from-amber-500/[0.14] to-amber-500/0", caption: "fit" },
-  weak: { text: "text-primary-ink", edge: "bg-amber-500", bg: "from-amber-500/[0.14] to-amber-500/0", caption: "fit" },
-  poor: { text: "text-destructive-ink", edge: "bg-destructive", bg: "from-destructive/[0.14] to-destructive/0", caption: "fit" },
-  none: { text: "text-muted-foreground", edge: "bg-muted-foreground/40", bg: "from-muted-foreground/[0.05] to-transparent", caption: "unscored" },
-  lowdata: { text: "text-muted-foreground", edge: "bg-muted-foreground/40", bg: "from-muted-foreground/[0.05] to-transparent", caption: "low data" },
+  strong: { text: "font-semibold text-foreground", edge: "bg-ink-900", bg: "from-foreground/[0.07] to-transparent", caption: "fit" },
+  good: { text: "text-foreground", edge: "bg-ink-700", bg: "from-foreground/[0.05] to-transparent", caption: "fit" },
+  moderate: { text: "text-foreground", edge: "bg-ink-400", bg: "from-foreground/[0.03] to-transparent", caption: "fit" },
+  weak: { text: "text-muted-foreground", edge: "bg-ink-300", bg: "from-foreground/[0.02] to-transparent", caption: "fit" },
+  poor: { text: "text-muted-foreground", edge: "bg-ink-200", bg: "from-transparent to-transparent", caption: "fit" },
+  none: { text: "text-muted-foreground", edge: "bg-ink-200", bg: "from-transparent to-transparent", caption: "unscored" },
+  lowdata: { text: "text-muted-foreground", edge: "bg-ink-200", bg: "from-transparent to-transparent", caption: "low data" },
 };
 
 function FitRail({
   score,
   insufficient,
+  segment,
   index,
   expanded,
   onToggle,
@@ -115,6 +121,8 @@ function FitRail({
 }: {
   score: number | null | undefined;
   insufficient: boolean;
+  /** Fallback content: with no score, the column says which side of the market this is. */
+  segment: SourcingPoolItem["segment"];
   index: number;
   expanded: boolean;
   onToggle: () => void;
@@ -123,25 +131,27 @@ function FitRail({
   const band = fitBand(score, insufficient);
   const t = FIT_RAIL[band];
   const showNum = band !== "none" && band !== "lowdata" && score != null;
+  // An unscored row used to spend 58px of the most prominent column on an em dash. A
+  // company's segment is known from the moment it enters the database, so the column
+  // carries that instead and the list stays scannable by side of the market.
+  const seg = !showNum && band !== "lowdata" && segment ? SEGMENT_META[segment] : null;
+  // No stripe and no wash: the score is the signal, set as a number in its own column,
+  // so the column needs no coloured edge to say how strong the fit is.
   return (
     <button
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
       aria-label={ariaLabel}
+      // No `h-full`: height:100% resolves against the row's *min*-height, which is
+      // indefinite, and setting any height at all opts the item out of `align-self:
+      // stretch`. The button then shrink-wrapped its text and sat at the top of the row.
+      // self-stretch alone gives it the row's full height, which is what centres it.
       className={cn(
-        "relative flex h-full w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 self-stretch bg-gradient-to-r outline-none transition-[filter] duration-200",
-        "group-hover:brightness-115 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
-        t.bg,
+        "relative flex w-[58px] shrink-0 flex-col items-center justify-center gap-0.5 self-stretch border-r border-border outline-none transition-colors duration-150",
+        "hover:bg-subtle focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
       )}
     >
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-1.5 left-0 w-[3px] rounded-r transition-all duration-200 group-hover:inset-y-1 group-hover:w-1",
-          t.edge,
-        )}
-      />
       {showNum ? (
         <AnimatedNumber
           value={score!}
@@ -149,13 +159,63 @@ function FitRail({
           className={cn("text-lg font-bold leading-none tabular-nums", t.text)}
           style={MONO}
         />
+      ) : seg ? (
+        // Token alone: a caption under 25 identical tokens is 25 repetitions of a word
+        // the colour and the glyph already say.
+        <span
+          className={cn("text-sm font-bold leading-none tracking-tight", seg.ink)}
+          style={MONO}
+          title={`${seg.label} — side of the market`}
+        >
+          {seg.token}
+        </span>
       ) : (
         <span className={cn("text-lg font-bold leading-none", t.text)} style={MONO} aria-hidden>
           —
         </span>
       )}
-      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{t.caption}</span>
+      {!seg && (
+        <span className="text-xs font-medium text-muted-foreground">
+          {t.caption}
+        </span>
+      )}
     </button>
+  );
+}
+
+/**
+ * One field of the record, blank included.
+ *
+ * An em dash is the point: on a database that ships with names and cities but no
+ * financials, showing which fields are empty is what tells an analyst whether to trust
+ * the row or go enrich it.
+ */
+function Fact({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
+  const empty = value == null || value === "";
+  return (
+    <div className="min-w-0">
+      <dt className="text-xs font-medium text-muted-foreground">
+        {label}
+      </dt>
+      <dd
+        className={cn(
+          "mt-0.5 truncate",
+          empty ? "text-muted-foreground" : "text-foreground",
+          mono && "tabular-nums",
+        )}
+        style={mono ? MONO : undefined}
+      >
+        {empty ? "—" : value}
+      </dd>
+    </div>
   );
 }
 
@@ -168,7 +228,7 @@ function SubscoreMeter({ label, value }: { label: string; value: number }) {
       <span className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
         <span className={cn("block h-full rounded-full", scoreFill(v))} style={{ width: `${Math.max(3, v)}%` }} />
       </span>
-      <span className="w-7 shrink-0 text-right tabular-nums text-foreground/80" style={MONO}>
+      <span className="w-7 shrink-0 text-right tabular-nums text-secondary-foreground" style={MONO}>
         {v}
       </span>
     </div>
@@ -222,9 +282,15 @@ export function CandidateRow({
   const insufficient = !!cand?.insufficient_data;
   const scored = cand?.fit_score != null && !insufficient;
   const subscores = scored ? Object.entries(cand?.subscores ?? {}) : [];
+  const segMeta = item.segment ? SEGMENT_META[item.segment] : null;
 
+  // What the row can honestly say. On a firm's first day that is a city, a sector and a
+  // domain; revenue and headcount join in as imports enrich the record. Ordered
+  // identity-first so the line reads the same whether it has three facts or five.
   const meta = [
     item.hq,
+    item.sector,
+    item.domain_key,
     item.revenue_inr_cr ? revLabel(item.revenue_inr_cr) : null,
     item.headcount ? `${item.headcount.toLocaleString("en-IN")} staff` : null,
   ]
@@ -238,17 +304,18 @@ export function CandidateRow({
       : `${item.company_name} — not scored yet. ${expanded ? "Hide" : "Show"} details.`;
 
   return (
-    <div className={cn("overflow-hidden", selected && "bg-primary/[0.05]")}>
+    <div className={cn("overflow-hidden", selected && "bg-subtle")}>
       {/* Scannable row */}
       <div
         className={cn(
           "group flex min-h-[58px] items-stretch transition-[background-color] duration-150",
-          "hover:bg-primary/[0.045]",
+          "hover:bg-subtle",
         )}
       >
         <FitRail
           score={cand?.fit_score}
           insufficient={insufficient}
+          segment={item.segment}
           index={index}
           expanded={expanded}
           onToggle={toggle}
@@ -267,7 +334,7 @@ export function CandidateRow({
                 selected
                   ? "scale-110 border-primary bg-primary text-primary-foreground"
                   : cn(
-                      "border-input hover:border-primary/60",
+                      "border-input hover:border-border-strong",
                       anySelected ? "opacity-60" : "opacity-0 group-hover:opacity-100",
                     ),
               )}
@@ -280,8 +347,21 @@ export function CandidateRow({
             {/* Line 1 — identity + signals. */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="truncate text-sm font-semibold text-foreground">{item.company_name}</span>
+              {/* The rail carries the segment only while there is no score to show. When a
+                  score takes the column, the fact moves here — stated exactly once. */}
+              {segMeta && (scored || insufficient) && (
+                <span
+                  className={cn(
+                    "shrink-0 rounded px-1.5 py-px text-xs font-medium",
+                    segMeta.chip,
+                  )}
+                  title={`${segMeta.label} — side of the market`}
+                >
+                  {segMeta.token}
+                </span>
+              )}
               {cand?.stage_name && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border px-1.5 py-px text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded border border-border px-1.5 py-px text-xs font-medium text-muted-foreground">
                   <span
                     className={cn("h-1.5 w-1.5 rounded-full", STAGE_DOT[cand.stage_kind ?? "CUSTOM"])}
                     aria-hidden
@@ -291,7 +371,7 @@ export function CandidateRow({
               )}
               {priorWork > 0 && (
                 <span
-                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 px-1.5 py-px text-[10px] font-medium text-primary-ink"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border-strong px-1.5 py-px text-[10px] font-medium text-primary-ink"
                   title={`Worked before in ${priorWork} engagement${priorWork > 1 ? "s" : ""}`}
                 >
                   <History className="h-3 w-3" aria-hidden />
@@ -304,7 +384,7 @@ export function CandidateRow({
             </div>
             {/* Line 2 — recessive firmographics. */}
             <div className="mt-0.5 truncate text-xs text-muted-foreground" style={MONO}>
-              {meta || "No firmographics yet"}
+              {meta || "Name only — no research on file"}
             </div>
           </div>
 
@@ -316,7 +396,7 @@ export function CandidateRow({
                 onClick={() => onShortlist(item)}
                 title="Shortlist — add to this deal's funnel"
                 aria-label={`Shortlist ${item.company_name}`}
-                className="rounded-md p-1.5 text-muted-foreground outline-none transition-colors hover:bg-primary/10 hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="rounded-md p-1.5 text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-primary-ink focus-visible:ring-2 focus-visible:ring-ring/50"
               >
                 <Star className="h-4 w-4" aria-hidden />
               </button>
@@ -326,7 +406,7 @@ export function CandidateRow({
                 size="sm"
                 variant="outline"
                 aria-label={`Push ${item.company_name} to a deal`}
-                className="h-7 text-xs font-normal transition-colors group-hover:border-primary/40 group-hover:bg-primary group-hover:text-primary-foreground"
+                className="h-7 text-xs font-normal transition-colors group-hover:border-border-strong group-hover:bg-primary group-hover:text-primary-foreground"
                 onClick={() => onPush(item)}
               >
                 <Send className="h-3 w-3 sm:mr-1" aria-hidden />
@@ -349,16 +429,56 @@ export function CandidateRow({
       {/* The "why" — revealed by the rail. */}
       {expanded && (
         <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3 pl-[62px] text-xs">
-          {item.website && (
-            <a
-              href={item.website.startsWith("http") ? item.website : `https://${item.website}`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-primary-ink hover:underline"
-            >
-              <ExternalLink className="h-3 w-3" aria-hidden /> {item.domain_key ?? item.website}
-            </a>
-          )}
+          {/* The record card: every fact the database holds, blanks included. An analyst
+              about to make a call needs to see the gaps as clearly as the facts. */}
+          {/* Three columns, not four: a real HQ string is "Fargo, North Dakota, United
+              States" and a quarter of the row ellipsised it. */}
+          <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+            <Fact label="Side" value={segMeta?.label} />
+            <Fact label="Sector" value={item.sector} />
+            <Fact label="HQ" value={item.hq} />
+            <Fact
+              label="Revenue"
+              value={item.revenue_inr_cr ? revLabel(item.revenue_inr_cr) : null}
+              mono
+            />
+            <Fact
+              label="Headcount"
+              value={item.headcount ? item.headcount.toLocaleString("en-IN") : null}
+              mono
+            />
+            <Fact
+              label="Website"
+              value={
+                item.website ? (
+                  <a
+                    href={item.website.startsWith("http") ? item.website : `https://${item.website}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-primary-ink hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" aria-hidden />
+                    {item.domain_key ?? item.website}
+                  </a>
+                ) : null
+              }
+            />
+            {item.linkedin && (
+              <Fact
+                label="LinkedIn"
+                value={
+                  <a
+                    href={item.linkedin.startsWith("http") ? item.linkedin : `https://${item.linkedin}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-primary-ink hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" aria-hidden /> profile
+                  </a>
+                }
+              />
+            )}
+          </dl>
           {cand?.rationale && (
             <div className="rounded-lg bg-card/70 p-2.5">
               <p className="text-muted-foreground">
@@ -377,7 +497,7 @@ export function CandidateRow({
                   <button
                     onClick={() => onFeedback(cand.id, "UP")}
                     aria-label="Fit looks right"
-                    className="rounded outline-none hover:text-emerald-600 focus-visible:ring-2 focus-visible:ring-ring/50"
+                    className="rounded underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50"
                   >
                     <ThumbsUp className="h-3 w-3" aria-hidden />
                   </button>
@@ -406,15 +526,19 @@ export function CandidateRow({
                         {w.last_touch ? ` · last touch ${fmtTouch(w.last_touch)}` : ""}
                       </>
                     ) : (
-                      <span className="italic">worked by another team</span>
+                      <span>worked by another team</span>
                     )}
                   </li>
                 ))}
               </ul>
             </div>
           )}
-          {!cand?.rationale && !item.website && priorWork === 0 && (
-            <p className="text-muted-foreground">No enrichment yet. Score this deal to generate a fit rationale.</p>
+          {!cand?.rationale && priorWork === 0 && (
+            <p className="text-muted-foreground">
+              {onShortlist
+                ? "No fit rationale yet — score this company against the open deal to generate one."
+                : "Firm research only. Open an engagement to score this company against a thesis."}
+            </p>
           )}
         </div>
       )}

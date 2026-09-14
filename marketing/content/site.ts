@@ -1,391 +1,486 @@
 /**
- * The one place the landing page's content is edited.
+ * The one place this page's words are edited.
  *
- * What the product actually is (product brief v3, §5–§6): an origination and
- * outreach operating system — a relationship CRM that runs the whole loop
- * **source → reach → track → remember** at the level of the whole team, not one
- * person's inbox. It is explicitly NOT an email scheduler and NOT a mass sender;
- * the cadence engine is one module of several, and the durable value is the
- * cross-project memory that survives staff turnover.
+ * ── Where the copy comes from ──────────────────────────────────────────────
+ * `docs/landing-v2-design-package.md` §6. Every string below was authored
+ * there and ships verbatim; a build pass wires it in and never paraphrases it.
  *
- * The page is sold to organisations in different industries — a recruiting firm, a
- * sales team, a fundraising team, an advisory desk — so the copy here names
- * capabilities and mechanics, never figures, and never a claimed customer.
+ * ── Grounding ──────────────────────────────────────────────────────────────
+ * Every claim traces to the product brief (`M&A product brief v3`), to
+ * `plan.md` / `CLAUDE.md`, or to something actually shipped in
+ * `backend/app/api/*` and `frontend/app/**`. Upstream is the origination and
+ * outreach system for boutique and mid-market M&A advisory desks: the master
+ * list, the cadence engine and the contact record, joined.
+ *
+ * ── The claim ledger ───────────────────────────────────────────────────────
+ * Every claim gets exactly ONE home. The previous page was audited once and
+ * found stating the duplicate-outreach claim five times across twelve
+ * sections, which is the single loudest tell that nobody was in charge of it.
+ *
+ *   the four losses              LOSSES     pain only, never the fix
+ *   anchor / derivation          MECHANISM  performed by the reader, not claimed
+ *   what the product looks like  DESK       real screenshots, one caption each
+ *   cross-mandate memory         RECORD     the differentiator, given a fold
+ *   auth, tenancy, deletes       DEPTH      its own fold
+ *   everything still unanswered  FAQ        five, and the first one is the real one
+ *
+ * ── House style ────────────────────────────────────────────────────────────
+ * 1. No em dashes in rendered copy. Comma, colon or full stop. JSDoc exempt.
+ * 2. Say the concrete thing. "You find out from the CFO" beats "poor visibility".
+ * 3. No AI vocabulary: seamless, leverage, robust, empower, streamline, elevate,
+ *    unlock, actionable, solutions.
+ * 4. No outcome numbers. There are no customers yet, so there are no results.
+ *    The only figures on the page are inside the demo book, which is labelled.
+ * 5. Write like someone who has sat on the desk: plain, a little dry, and
+ *    allowed to notice that losing a warm thread actually stings.
  */
 
 /* ------------------------------------------------------------------ *
- * Where the CTAs go.
+ * Wiring
  * ------------------------------------------------------------------ */
+
+/** Where every call to action on the page points. */
+export const CTA_HREF = "/coming-soon";
 
 /**
- * The product app's origin. This site is deployed on its own domain and has no
- * `/login` route of its own, so a relative CTA 404s in production — every
- * "Book a demo" / "Sign in" link has to be absolute.
+ * The live product, which is a separate deployment on its own domain.
  *
- * Set NEXT_PUBLIC_APP_URL per deployment (no trailing slash) to point the funnel
- * at your own install; the default is the current product deployment.
+ * Not what the buttons point at. Every call to action still lands on
+ * `/coming-soon`, because access is limited and sending a stranger straight to
+ * a login screen they have no account for is a worse first minute than a page
+ * that says so. That page carries this link for the people who do have one.
  */
-export const APP_URL = (
-  process.env.NEXT_PUBLIC_APP_URL || "https://frontend-navy-pi-11.vercel.app"
-).replace(/\/+$/, "");
+export const APP_URL = "https://frontend-theta-two-22.vercel.app";
 
-/** Single destination for every CTA on the page. */
-export const SIGN_IN_URL = `${APP_URL}/login`;
+/**
+ * Prefix for plain `public/` asset paths. Next rewrites `next/link` hrefs for a
+ * sub-path deployment, but an unoptimized `next/image` src is passed through
+ * untouched, so the screenshots 404 on GitHub Pages without this.
+ */
+export const ASSET_PREFIX = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+/**
+ * The demo mandate's calendar. One fictional book, one set of dates, used by
+ * the hero queue, the interactive derivation and the record fold, so a reader
+ * who checks the dates against each other finds them consistent.
+ *
+ * 12 March is the anchor. The cadence interval is 14 days, which is the
+ * product's default, so the follow-ups fall where §5.2 of plan.md says they do:
+ * initial_date + n x interval, and a late send never moves them.
+ */
+export const DEMO = {
+  anchor: "12 Mar",
+  interval: 14,
+  followups: ["26 Mar", "9 Apr", "23 Apr"],
+} as const;
 
 /* ------------------------------------------------------------------ *
- * Social proof — real content only, empty until a deployment has it.
+ * NAV
  * ------------------------------------------------------------------ */
 
-/** A named quote. Every field is attributed content — only ever real. */
-export type Review = {
-  quote: string;
-  name: string;
-  role: string;
-  /** Their organisation, as they want it printed. */
-  org: string;
+export const NAV: { label: string; href: string }[] = [
+  { label: "The cost", href: "#cost" },
+  { label: "The mechanism", href: "#mechanism" },
+  { label: "The desk", href: "#desk" },
+  { label: "The record", href: "#record" },
+  { label: "Questions", href: "#questions" },
+];
+
+/* ------------------------------------------------------------------ *
+ * HERO. Four bands over the scrubbed canvas, then the settle.
+ * ------------------------------------------------------------------ */
+
+export type Band = {
+  id: string;
+  /** Scroll progress through the pinned hero, [start, end]. */
+  range: [number, number];
+  eyebrow?: string;
+  head: string;
+  sub: string;
+  /** Which entrance the words take. Each echoes what the canvas is doing. */
+  entrance: "drift" | "part" | "scatter" | "settle";
 };
 
-/**
- * A review given the large card at the top of the section. The extra fields are
- * optional so a deployment can supply a plain quote and still render correctly —
- * the card drops the persona row and the outcome line when they are absent.
- */
-export type FeaturedReview = Review & {
-  /** Who they are on the team, e.g. "The operator" — the label above the quote. */
-  persona?: string;
-  /** The feeling the quote is evidence of, e.g. "Control". Shown beside persona. */
-  driver?: string;
-  /** The specific result that makes the quote credible. Its own line, ruled off. */
-  outcome?: string;
+export const BANDS: Band[] = [
+  {
+    id: "hook",
+    range: [0.0, 0.22],
+    eyebrow: "Deal flow, kept",
+    head: "Two analysts. One CFO. Same Tuesday.",
+    sub: "Nobody did anything wrong. The client still remembers it.",
+    entrance: "drift",
+  },
+  {
+    id: "split",
+    range: [0.24, 0.47],
+    head: "One sheet per mandate is one memory per mandate.",
+    sub: "The file cannot see the other file, so the desk finds out from the target.",
+    entrance: "part",
+  },
+  {
+    id: "channel",
+    range: [0.49, 0.72],
+    head: "Upstream keeps the whole current.",
+    sub: "One book for the firm. Every name arrives carrying what already happened to it.",
+    entrance: "scatter",
+  },
+  {
+    id: "settle",
+    range: [0.74, 1.0],
+    head: "Log the email. The rest is derived.",
+    sub: "The clock, the queue, the analytics and the next mandate's head start all come out of that one act.",
+    entrance: "settle",
+  },
+];
+
+/** The composed hero for phones and reduced motion, over the poster. */
+export const STATIC_HERO = {
+  eyebrow: "Deal flow, kept",
+  head: "Log the email. The rest is derived.",
+  sub: "One book for the whole firm. The clock, the queue and the analytics all come out of the one act you were already doing.",
+  cta: "See it running",
 };
 
-/** A customer wordmark. Rendered as text today — no image assets involved. */
-export type Logo = { name: string };
+export const HERO_CTA = { primary: "See it running", secondary: "How the clock works" };
 
 /**
- * Empty by default: we ship no claimed customers.
+ * The queue that resolves out of the canvas at the settle.
  *
- * Populate per deployment with quotes you have written permission to print. Do NOT
- * add illustrative or persona quotes to make the section look full — a fabricated
- * endorsement on a sales page is the one thing this file exists to prevent. While
- * these are empty the section still stands (see {@link SHOW_TEMPLATE_SLOTS}), but
- * it shows labelled empty slots, never invented praise.
- */
-export const REVIEWS: Review[] = [];
-
-/** Empty by default, for the same reason as {@link REVIEWS}. Supply one or two. */
-export const FEATURED_REVIEWS: FeaturedReview[] = [];
-
-/** Empty by default: we ship no claimed customers. Names only, with permission. */
-export const LOGOS: Logo[] = [];
-
-/**
- * Keep the social-proof sections on the page while their content is empty,
- * rendered from the placeholder profiles below.
+ * Every row is lifted from the demo book the product actually ships with, not
+ * composed for the page: the companies, the people, their titles, the
+ * follow-up numbers and the lateness are what `/schedule/due` returns for
+ * `partner@upstream.test` against the seeded book. The panel says "demo book"
+ * on its own face, because a marketing page showing a firm's queue without
+ * saying whose it is is the one thing this page cannot do.
  *
- * The sections are part of the pitch's structure, so they stay standing rather
- * than vanishing. Set this to `false` for a public launch where you would rather
- * they not appear at all until {@link REVIEWS} / {@link LOGOS} are filled in.
+ * The ordering is not a design decision. It is the cadence engine's output,
+ * sorted by how late each row is, and exactly one row is promoted as the thing
+ * to do next. The book is badly behind, which is left alone: a demo desk
+ * tidied up to look calm would be arguing against the fold above it.
  */
-export const SHOW_TEMPLATE_SLOTS = true;
+export type QueueRow = {
+  company: string;
+  contact: string;
+  /** Negative is overdue, in days. Zero is due today. */
+  due: number;
+  touch: string;
+  stage: string;
+};
 
-/**
- * Placeholder profiles, so the section renders at full fidelity — the same cards,
- * avatars and scrolling columns a populated deployment gets.
- *
- * The quote is literally "To be reviewed", and the names are the standard
- * placeholder people (Jane Doe, Jack Roe …). Nothing here can be read as an
- * endorsement, because nothing here says anything. Replace by filling
- * {@link REVIEWS} and {@link FEATURED_REVIEWS}; these disappear automatically.
- */
-const PENDING = "To be reviewed";
-
-const PLACEHOLDER_FEATURED: FeaturedReview[] = [
-  {
-    persona: "The operator",
-    driver: "Pending",
-    quote: PENDING,
-    outcome: "Outcome to be confirmed",
-    name: "Jane Doe",
-    role: "Outreach lead",
-    org: "Organisation A",
-  },
-  {
-    persona: "The accountable one",
-    driver: "Pending",
-    quote: PENDING,
-    outcome: "Outcome to be confirmed",
-    name: "Jack Roe",
-    role: "Managing director",
-    org: "Organisation B",
-  },
-];
-
-const PLACEHOLDER_REVIEWS: Review[] = [
-  { quote: PENDING, name: "Ada Doe", role: "Team lead", org: "Organisation C" },
-  { quote: PENDING, name: "Sam Roe", role: "Head of pipeline", org: "Organisation D" },
-  { quote: PENDING, name: "Lee Doe", role: "Operations lead", org: "Organisation E" },
-  { quote: PENDING, name: "Nina Roe", role: "Relationship lead", org: "Organisation F" },
-  { quote: PENDING, name: "Max Doe", role: "Programme lead", org: "Organisation G" },
-  { quote: PENDING, name: "Ruth Roe", role: "Business development", org: "Organisation H" },
-  { quote: PENDING, name: "Theo Doe", role: "Director", org: "Organisation I" },
-  { quote: PENDING, name: "Iris Roe", role: "Partnerships", org: "Organisation J" },
-  { quote: PENDING, name: "Otto Doe", role: "Head of research", org: "Organisation K" },
-];
-
-export const HAS_REVIEWS = REVIEWS.length > 0 || FEATURED_REVIEWS.length > 0;
-export const HAS_LOGOS = LOGOS.length > 0;
-/** Whether the customers section renders at all — real content, or the template. */
-export const SHOW_REVIEWS_SECTION = HAS_REVIEWS || SHOW_TEMPLATE_SLOTS;
-export const SHOW_LOGO_SECTION = HAS_LOGOS || SHOW_TEMPLATE_SLOTS;
-
-/** What the section actually renders: real reviews if there are any, else the template. */
-export const DISPLAY_FEATURED_REVIEWS: FeaturedReview[] = HAS_REVIEWS
-  ? FEATURED_REVIEWS
-  : PLACEHOLDER_FEATURED;
-export const DISPLAY_REVIEWS: Review[] = HAS_REVIEWS ? REVIEWS : PLACEHOLDER_REVIEWS;
-
-/* ------------------------------------------------------------------ *
- * The loop — the band under the hero.
- * ------------------------------------------------------------------ */
-
-/**
- * A cell in the band under the hero.
- *
- * NOTE: no numeric field, deliberately. The band used to count up figures from a
- * seeded demo database; every organisation's aggregates differ, so quoting any is
- * a claim we cannot stand behind. The cells state the loop instead.
- */
-export type Metric = { label: string; context: string };
-
-/** Source → reach → track → remember: the whole product in four cells. */
-export const CAPABILITIES: Metric[] = [
-  {
-    label: "Source",
-    context: "Search one shared pool against your thesis, then push what fits into a project",
-  },
-  {
-    label: "Reach",
-    context: "Send from your own mailbox, on your own templates — the touch logs itself",
-  },
-  {
-    label: "Track",
-    context: "Next-due, days remaining and overdue computed server-side, never by hand",
-  },
-  {
-    label: "Remember",
-    context: "Every touch, contact and outcome stays on the team's record, across projects",
-  },
+export const QUEUE: QueueRow[] = [
+  { company: "Glenmark Pharma", contact: "Osha Suri, Head of Strategy", due: -75, touch: "Follow-up 2", stage: "Contacted" },
+  { company: "Minda Industries", contact: "Jyoti Bhardwaj, General Manager", due: -68, touch: "Follow-up 2", stage: "Contacted" },
+  { company: "Ipca Laboratories", contact: "Triya Dalal, COO", due: -59, touch: "Follow-up 3", stage: "Interested" },
+  { company: "Dr Reddy's Laboratories", contact: "Warda Nair, COO", due: -54, touch: "Follow-up 4", stage: "Contacted" },
+  { company: "Strides Pharma", contact: "Thomas Sura, VP Corp Dev", due: 0, touch: "Follow-up 3", stage: "Contacted" },
 ];
 
 /* ------------------------------------------------------------------ *
- * Modules — the tabbed section with product screenshots.
+ * THE COST. Brief §2.1, stated as loss and nothing else.
  * ------------------------------------------------------------------ */
 
-export type Module = {
+/**
+ * `found` is the column that makes this a reckoning rather than a grid of
+ * feature-shaped complaints: every one of these is already expensive by the
+ * time the firm hears about it, and the lateness is the argument. No row
+ * explains the fix.
+ */
+export type Loss = { n: string; event: string; found: string; cost: string };
+
+export const LOSSES: Loss[] = [
+  {
+    n: "01",
+    event: "Two analysts email the same CFO.",
+    found: "From the CFO.",
+    cost: "One reply, spent twice.",
+  },
+  {
+    n: "02",
+    event: "The follow-up date passes on a Tuesday.",
+    found: "Three weeks later.",
+    cost: "A warm thread, cold.",
+  },
+  {
+    n: "03",
+    event: "A buyer you have known for years opens as a stranger.",
+    found: "You don't.",
+    cost: "The same ground, walked twice.",
+  },
+  {
+    n: "04",
+    event: "An analyst leaves on Friday.",
+    found: "In the handover.",
+    cost: "Ten years of instinct, out the door.",
+  },
+];
+
+export const COST_HEAD = "Four ways a desk loses what it already earned.";
+
+/** The breath between two dense folds. One line, one band, mostly empty. */
+export const TURN = {
+  line: "All four are the same failure.",
+  turn: "The work was done. It had nowhere to live.",
+};
+
+/* ------------------------------------------------------------------ *
+ * THE MECHANISM. The reader performs the product's one idea.
+ * ------------------------------------------------------------------ */
+
+export const MECHANISM = {
+  head: "You type one word. It is sent.",
+  lede: "That is the whole input. Everything under it is computed on the server, so there is no second job called keeping the CRM up to date.",
+  hold: "Hold to log: initial email sent",
+  held: "Logged. 12 March.",
+  hint: "Press and hold",
+};
+
+export type Consequence = { key: string; label: string; line: string; note: string };
+
+export const CONSEQUENCES: Consequence[] = [
+  {
+    key: "clock",
+    label: "The clock",
+    line: "Anchored to 12 March. Follow-ups fall on 26 March, 9 April, 23 April.",
+    note: "The anchor never moves. A follow-up sent late does not buy the next one more time, which is the whole reason the date is trustworthy.",
+  },
+  {
+    key: "queue",
+    label: "The queue",
+    line: "The row stops waiting for its first email and joins the day queue, sorted by how late it is.",
+    note: "Nobody sets a reminder. The queue is the schedule, recomputed every morning against today's date.",
+  },
+  {
+    key: "report",
+    label: "The report",
+    line: "Volume and response rate move. Nobody compiles anything on Monday.",
+    note: "The chart is a by-product of the log, so there is no status report to submit and nothing to reconcile.",
+  },
+  {
+    key: "record",
+    label: "The record",
+    line: "A line is appended that the next mandate will read.",
+    note: "It is never edited and never overwritten. Three years later it still says what actually happened.",
+  },
+];
+
+/* ------------------------------------------------------------------ *
+ * THE DESK. The product, shown rather than described.
+ * ------------------------------------------------------------------ */
+
+export type Surface = {
   id: string;
   tab: string;
   title: string;
-  blurb: string;
-  bullets: string[];
-  /** Must be a real screenshot of the product. Do not add a tab without one. */
-  image: string;
-  caption: string;
+  detail: string;
+  src: string;
+  /** Describes what the screenshot shows, not that it is a screenshot. */
+  alt: string;
+  notes: { label: string; text: string }[];
 };
 
-export const MODULES: Module[] = [
+export const DESK_HEAD = "The whole tool is three screens.";
+export const DESK_LEDE = "Screenshots of the running app against a demo book, not renderings.";
+
+export const SURFACES: Surface[] = [
   {
-    id: "registry",
-    tab: "The registry",
-    title: "One row per organisation. Shared by everyone on the project.",
-    blurb: "Your central list, made relational — and impossible to double-work.",
-    bullets: [
-      "Linked to its project, and to the people inside it",
-      "Where the name came from, and how good that source was",
-      "Your own book, or the whole team's",
-      "Duplicate warnings before anyone reaches out cold",
+    id: "master",
+    tab: "Master list",
+    title: "One row per company, enriched by everyone who touches it.",
+    detail:
+      "The register the desk already keeps, except a company exists once for the whole firm and carries every mandate it has ever appeared on. Switch between your book and the firm database without changing screens.",
+    src: "/product/master.webp",
+    alt: "The Master List register: one row per company showing headquarters, the mandates each company sits on, which analyst worked it, revenue, headcount and a deal count.",
+    notes: [
+      { label: "Worked by", text: "The analyst who owns the relationship, on the row." },
+      { label: "Deals", text: "How many mandates this name has already appeared on." },
+      { label: "Firm database", text: "One toggle from your book to everything the firm holds." },
     ],
-    image: "/product/master.png",
-    caption: "upstream · registry",
   },
   {
-    id: "outreach",
+    id: "schedule",
     tab: "Outreach desk",
-    title: "The queue says who to chase. You chase them from here.",
-    blurb: "Follow-ups anchored to your first message and computed server-side.",
-    bullets: [
-      "Overdue, due today, upcoming — backlog first",
-      "An append-only log; history is never rewritten",
-      "Send from your own mailbox and it logs itself",
-      "Stops on a reply, a bounce or a decline",
+    title: "Today, sorted by how late it is.",
+    detail:
+      "Not an inbox and not a task list. The queue is ordered by the cadence engine, so the first thing on screen is the thing that has been waiting longest, and clearing it is the whole job.",
+    src: "/product/schedule.webp",
+    alt: "The Outreach desk: a day strip counting late, today and the week ahead, then a priority queue of companies with days overdue, contact name, last touch and a log-follow-up action on each row.",
+    notes: [
+      { label: "Late", text: "Computed, not typed. Nobody maintains this number." },
+      { label: "Now", text: "One row promoted above the rest. Start here." },
+      { label: "Log follow-up", text: "Appends an event. It never overwrites the last one." },
     ],
-    image: "/product/schedule.png",
-    caption: "upstream · outreach desk",
   },
   {
     id: "analytics",
     tab: "Analytics",
-    title: "Know what's working before you're asked.",
-    blurb: "Response performance by segment and by person, benchmarked against your own average.",
-    bullets: [
-      "Sourced → contacted → replied → interested",
-      "Response rate by segment, source and layer",
-      "Per-person volume, response and conversion",
-      "A going-quiet signal on projects gone silent",
+    title: "What the partner asks on Monday, already answered.",
+    detail:
+      "Volume, response rate and where each mandate sits against the firm average. Built from the same event log the analysts fill in by working, so nobody is compiling a status report.",
+    src: "/product/analytics.webp",
+    alt: "The Analytics screen: a line reading sixty-nine companies are overdue a follow-up, then emails sent, reply rate, interested and bounce rate tiles, an outreach funnel from contacted through replied to interested marking the biggest drop-off, and a twelve-week volume and replies chart beside reply timing.",
+    notes: [
+      { label: "The finding", text: "The screen opens on what is wrong, then shows the numbers." },
+      { label: "The funnel", text: "Contacted, replied, interested, with the worst step named." },
+      { label: "No reporting", text: "The chart is a by-product of the log. There is nothing to submit." },
     ],
-    image: "/product/analytics.png",
-    caption: "upstream · analytics",
   },
 ];
 
 /* ------------------------------------------------------------------ *
- * The rest of the surface — capability groups without a screenshot.
+ * THE RECORD. Brief §6.4, "the defensibility layer". The dark act.
  * ------------------------------------------------------------------ */
 
-export type CapabilityGroup = {
-  /** lucide-react icon name, resolved in the component. */
-  icon: "search" | "send" | "users" | "network" | "gauge" | "lock";
-  title: string;
-  blurb: string;
-  points: string[];
+export const RECORD = {
+  // Named after the two mandates actually on screen below it. The line used to
+  // say March and September, which was true of the invented company it used to
+  // show and is not true of Tata Power.
+  head: "May's target is June's buyer, and June opens already knowing.",
+  lede: "The firm is the unit, not the mandate. That one decision in the data model is what makes the rest of this possible, and it is not a setting you can switch on later.",
 };
 
-export const CAPABILITY_GROUPS: CapabilityGroup[] = [
+export const RECORD_ITEMS: { n: string; title: string; detail: string }[] = [
   {
-    icon: "search",
-    title: "Sourcing",
-    blurb: "Find the organisations worth reaching before you start reaching.",
-    points: [
-      "Search one shared pool by sector, geography, size and type",
-      "Research → shortlist → active, on a board",
-      "Push into a project and the cadence starts with it",
-    ],
+    n: "01",
+    title: "A name already in play is flagged before you send.",
+    detail:
+      "Upstream checks it against every live mandate, near-matches included, and shows what happened last time. It advises. It does not block, because sometimes the second approach is the right call.",
   },
   {
-    icon: "send",
-    title: "Outreach",
-    blurb: "Messages leave through your mailbox, not a relay — and land on the record anyway.",
-    points: [
-      "Templates with variables that fill from the record",
-      "Drafting help from real context; you always edit",
-      "Paced per person. No bulk send, by design",
-    ],
+    n: "02",
+    title: "Nothing is ever overwritten.",
+    detail:
+      "Outreach is an append-only log and records are archived rather than deleted. You cannot quietly rewrite what happened on a deal, which is exactly why the record is worth trusting three years later.",
   },
   {
-    icon: "users",
-    title: "Contacts",
-    blurb: "The relationship belongs to the team, not to whoever owns the inbox.",
-    points: [
-      "Person-level records with role, status and history",
-      "Every touch attributed, in sequence, with its outcome",
-      "Someone moves on and their book stays put",
-    ],
+    n: "03",
+    title: "The relationship outlives the analyst.",
+    detail:
+      "Who reached them, what they said, whether the call was worth making. It stays on the desk when the person leaves.",
   },
   {
-    icon: "network",
-    title: "Cross-project memory",
-    blurb: "The part that compounds: what you learn once shows up next time.",
-    points: [
-      "Duplicate detection across projects, near-matches included",
-      "A contact from one project surfaces with context on the next",
-      "Nobody reaches out cold to a name you already own",
-    ],
-  },
-  {
-    icon: "gauge",
-    title: "Oversight",
-    blurb: "The dashboard is the log, so there is nothing to reconcile.",
-    points: [
-      "Every project's health, and who is behind, in one view",
-      "Escalation on overdue; a signal on projects gone quiet",
-      "Drill from any number into the records behind it",
-    ],
-  },
-  {
-    icon: "lock",
-    title: "Governance",
-    blurb: "Scoped, reversible and auditable before it was ever pretty.",
-    points: [
-      "People see only the projects they're on",
-      "Imports previewed, de-duplicated and reversible",
-      "Soft delete only — archived, never destroyed",
-    ],
+    n: "04",
+    title: "The second mandate starts ahead of the first.",
+    detail: "The desk compounds instead of resetting.",
   },
 ];
 
+/**
+ * One name on two mandates. The moat is hard to say and easy to show, so the
+ * fold shows it rather than claiming it.
+ *
+ * This is not an illustration. Tata Power Company sits twice in the demo book,
+ * once as a target on GreenGrow Ventures' capital raise and once as a buyer on
+ * IndInfra Capital's buy-side, under two different analysts. It replied on one
+ * and declined on the other. A desk keeping a sheet per mandate has those two
+ * facts in two files that cannot see each other, and whoever opens the second
+ * one starts from nothing.
+ *
+ * The right-hand column is what the record already holds about this name. Every
+ * line of it is derived from the left-hand column: no field on that side is
+ * typed by anybody.
+ */
+export const RECORD_TRACE = {
+  company: "Tata Power Company",
+  first: {
+    label: "GreenGrow Ventures · capital raise",
+    role: "Approached as a target",
+    events: [
+      "22 May · initial email · Priya Sharma",
+      "5 Jun · follow-up 2 · no reply yet",
+      "17 Aug · replied · 87 days after the first email",
+      "Gauri Om, General Manager, is the live contact",
+    ],
+  },
+  second: {
+    label: "IndInfra Capital · buy-side",
+    role: "Opens already knowing",
+    events: [
+      "Already in play since 22 May, under Priya Sharma",
+      "Declined here on 25 Jun, after two follow-ups",
+      "Hardik Sharaf said no; Gauri Om did not",
+      "Said no to this deal, not to the firm",
+    ],
+  },
+  note: "Nobody typed the right-hand column. It is the left-hand column, read back.",
+};
+
 /* ------------------------------------------------------------------ *
- * The two people the product has to serve (brief §3).
+ * BELOW THE WATERLINE. Security, all of it true to the codebase.
  * ------------------------------------------------------------------ */
 
-export type Persona = {
-  label: string;
-  title: string;
-  blurb: string;
-  points: string[];
+export const DEPTH = {
+  head: "A buyer list is the most confidential document a desk owns.",
+  lede: "So the answer to who can see what is enforced on the server, where a URL cannot argue with it.",
+  /** Above the redacted panel. The names in it are genuinely not in the DOM. */
+  redactHead: "Your book, to somebody who should not have it",
+  redactNote: "Not a black rectangle over the text. The rows never load.",
 };
 
-export const PERSONAS: Persona[] = [
+export const SECURITY: { term: string; detail: string }[] = [
   {
-    label: "The operator",
-    title: "Faster than the spreadsheet, or it doesn't get used.",
-    blurb: "One prioritised queue, and the ability to act without losing your place.",
-    points: [
-      "Overdue first, then due today, then what's coming",
-      "Log, send or schedule from the row",
-      "List, board or grid — whichever way you think",
-      "Your project's vocabulary, not a generic one",
-    ],
+    term: "No token is readable from the browser.",
+    detail: "Auth is httpOnly, Secure cookies. Nothing is ever written to localStorage.",
   },
   {
-    label: "The accountable one",
-    title: "Nothing slipping, and nothing embarrassing.",
-    blurb: "The view that used to mean asking everyone individually.",
-    points: [
-      "Every project's health, without a status update",
-      "Duplicate outreach caught before it lands",
-      "First contact through to interested, as one funnel",
-      "The relationships stay when the people move on",
-    ],
+    term: "A leaver is logged out everywhere at once.",
+    detail: "Refresh tokens rotate and are revoked server-side, not on their laptop.",
+  },
+  {
+    term: "Firm-scoped at the query, not at the view.",
+    detail: "An analyst cannot reach a mandate they are not on, because the row never loads.",
+  },
+  {
+    term: "Nothing is deleted.",
+    detail: "Records are archived. It is the same decision that makes the history survive.",
+  },
+  {
+    term: "Password hashes never leave the server.",
+    detail: "Not in a response body, not in a log line, not in an export.",
   },
 ];
 
 /* ------------------------------------------------------------------ *
- * FAQ.
+ * QUESTIONS. The researched objections. The first one is the real one.
  * ------------------------------------------------------------------ */
 
 export type QA = { q: string; a: string };
 
+export const FAQ_HEAD = "What is left.";
+
 export const FAQ: QA[] = [
   {
-    q: "Is this an email scheduler?",
-    a: "No — sending is one part of it. Upstream holds the registry of organisations you're working, the people inside them, an append-only record of every touch, and the cross-project memory that makes the next project better informed. There is deliberately no mass sending.",
+    q: "Our last CRM died because nobody updated it. Why is this different?",
+    a: "Because updating it was a second job, done after the real one, from memory, on a Friday. Here the update is the send. You log the email in the tool you sent it from, and the clock, the queue and the report are all computed from that. There is no field anyone has to remember to fill in for the numbers to be right.",
   },
   {
-    q: "How is it different from Salesforce or HubSpot?",
-    a: "Generic CRMs need heavy customization before they fit a team that works project by project. This is built around projects, organisations, contacts and an outreach log — the model your team already thinks in.",
+    q: "Our desk has run on these spreadsheets for years. Why change?",
+    a: "The spreadsheets work right up until they do not: a file gets overwritten, a mandate closes and its sheet is archived somewhere nobody looks, an analyst leaves. This is those exact sheets with the fragility removed. The fields, the buckets and the cadence are the ones you already use.",
   },
   {
-    q: "How does the follow-up cadence work?",
-    a: "Each schedule anchors to the date you log the first message, and that anchor never moves. Next-due and overdue are computed server-side on one shared clock, and the sequence stops itself when someone responds, bounces or declines.",
+    q: "How long until we are actually running on it?",
+    a: "Days, not a quarter, because there is nothing to configure into a shape you recognise. It already is that shape. You upload the workbooks you keep today and the import maps them column by column, so the first screen you see is your own book.",
   },
   {
-    q: "How does our data get in?",
-    a: "Two ways, and neither is retyping. Upload a spreadsheet and a guided flow maps the columns, previews duplicates and applies the batch reversibly — or connect a mailbox so outreach is recorded as you send it.",
+    q: "Will it send email on our behalf?",
+    a: "It sends from your mailbox, one message at a time, when you press send. No relay, no shared sending domain, no bulk send. Your deliverability stays yours, and a target never receives something that reads like a campaign.",
   },
   {
-    q: "Does it help us find new organisations to reach?",
-    a: "Yes. Search a shared pool against a project's thesis, shortlist what fits, and push it into the project — the outreach schedule starts with it. Ranking assistance sorts; it never decides, and everything works with it off.",
-  },
-  {
-    q: "Can two people reach the same organisation by mistake?",
-    a: "That's the failure the cross-project layer exists to prevent. Upstream flags an organisation or contact already live on another project — near-matches included — before anyone sends, and shows what came of it last time.",
-  },
-  {
-    q: "Who can see what?",
-    a: "People see only the projects they're assigned to; whoever is accountable for the whole book sees everything, plus analytics and escalation. Scoping happens at the query, not in the interface.",
-  },
-  {
-    q: "Is our data secure?",
-    a: "Auth uses httpOnly, Secure cookies — no tokens touch the browser. Refresh tokens rotate and are revocable, and deletes are soft: records are archived, never destroyed.",
+    q: "What if we outgrow it?",
+    a: "Upstream covers origination and outreach deliberately and stops there. Execution, bid management and diligence are the next stage, not a checkbox we have quietly shipped. If you need those today, we are the wrong tool today.",
   },
 ];
+
+/* ------------------------------------------------------------------ *
+ * CLOSING
+ * ------------------------------------------------------------------ */
+
+export const CLOSING = {
+  eyebrow: "One mandate is enough to tell",
+  head: "Start with the mandate you are running now.",
+  lede: "Import the workbook you already keep. If the first week does not read like your own desk, you have lost a week and a spreadsheet.",
+  primary: "See it running",
+  secondary: "Read the mechanics",
+};
+
+export const FOOTER_NOTE =
+  "The book shown in the screenshots is seeded demo data. Upstream ships empty except for a database of real organisations someone checked by hand.";

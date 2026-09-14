@@ -205,7 +205,7 @@ export function LogOutreachDialog({
             <p
               className={`flex items-start gap-1.5 rounded-lg border px-2.5 py-2 text-xs ${
                 HINT[eventType].stops
-                  ? "border-amber-500/25 bg-amber-500/[0.07] text-amber-700 dark:text-amber-400"
+                  ? "border-foreground bg-card font-medium text-foreground"
                   : "border-border bg-muted/40 text-muted-foreground"
               }`}
             >
@@ -216,7 +216,7 @@ export function LogOutreachDialog({
 
           {isPerson && (
             <div className="rounded-md border border-border p-3 space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Who</p>
+              <p className="text-xs font-semibold text-muted-foreground">Who</p>
               <select
                 value={contactChoice}
                 onChange={(e) => setContactChoice(e.target.value)}
